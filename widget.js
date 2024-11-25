@@ -3,6 +3,7 @@ class ProductSearchWidget {
         this.triggerInputId = triggerInputId;
         this.apiUrl = 'https://search-module-chi.vercel.app/api/search';
         this.suggestionsUrl = 'https://search-module-chi.vercel.app/api/suggestions';
+        this.correctionUrl = 'https://search-module-chi.vercel.app/api/correct'; // Новый роут для исправлений
 
         this.initWidget();
     }
@@ -67,11 +68,21 @@ class ProductSearchWidget {
 
         searchInput.addEventListener('input', async (e) => {
             const query = e.target.value.trim();
+            const lastChar = e.target.value.slice(-1); // Получаем последний символ
+
+            if (lastChar === ' ') {
+                const lastWord = query.split(' ').slice(-1)[0]; // Получаем последнее слово
+                if (lastWord) {
+                    await this.correctQuery(lastWord, searchInput); // Исправляем последнее слово
+                }
+            }
+
             if (query.length < 3) {
                 resultContainer.innerHTML = '<p>Type at least 3 characters...</p>';
                 return;
             }
 
+            // Обновить историю поиска
             this.fetchSuggestions(query, historyList);
 
             try {
@@ -117,6 +128,50 @@ class ProductSearchWidget {
         });
     }
 
+    async correctQuery(word, searchInput) {
+        try {
+            console.log(`Correcting word: ${word}`);
+
+            const response = await fetch(this.correctionUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ word }),
+            });
+
+            console.log(`Correction response status: ${response.status}`);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const correctionResponse = await response.json();
+            console.log('Correction returned by API:', correctionResponse);
+
+            if (
+                correctionResponse &&
+                correctionResponse.incorrectWord &&
+                correctionResponse.correctWord
+            ) {
+                const correctedQuery = searchInput.value
+                    .trim()
+                    .split(' ')
+                    .map((w) =>
+                        w.toLowerCase() === correctionResponse.incorrectWord.toLowerCase()
+                            ? correctionResponse.correctWord
+                            : w
+                    )
+                    .join(' ');
+
+                searchInput.value = correctedQuery;
+                console.log(`Query corrected to: ${correctedQuery}`);
+            }
+        } catch (error) {
+            console.error('Error correcting query:', error);
+        }
+    }
+
     async fetchSuggestions(query, historyList) {
         try {
             console.log(`Fetching suggestions for query: ${query}`);
@@ -157,11 +212,8 @@ class ProductSearchWidget {
                         wordElement.style.marginRight = '10px';
 
                         wordElement.addEventListener('click', () => {
-                            const searchInput = document.querySelector('.widget-search-input');
-                            if (searchInput) {
-                                searchInput.value = word;
-                                searchInput.dispatchEvent(new Event('input'));
-                            }
+                            searchInput.value = word;
+                            searchInput.dispatchEvent(new Event('input'));
                         });
 
                         suggestionRowElement.appendChild(wordElement);
@@ -171,7 +223,7 @@ class ProductSearchWidget {
                 }
             } else {
                 console.log('Suggestions are empty or not an array');
-                historyList.innerHTML = '<p>No suggestions found.</p>';
+                historyList.innerHTML = '<p>...</p>';
             }
         } catch (error) {
             console.error('Error fetching suggestions:', error);
@@ -179,7 +231,6 @@ class ProductSearchWidget {
         }
     }
 }
-
 
 document.addEventListener('DOMContentLoaded', () => {
     const triggerInputId = 'searchInput';
