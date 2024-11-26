@@ -1,4 +1,3 @@
-
 .widget-container {
     position: fixed;
     top: 2%;
@@ -9,23 +8,22 @@
     display: none;
     flex-direction: column;
     justify-content: flex-start;
-    align-items: center;
+    align-items: flex-start; /* Выравнивание влево */
     padding: 0;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     z-index: 1000;
     overflow: hidden;
+    font-family: "Montserrat", sans-serif;
 }
-
 
 .widget-input-wrapper {
     position: relative;
     width: 100%;
 }
 
-
 .widget-search-input {
     width: 100%;
-    padding: 15px 20px 15px 45px;
+    padding: 15px 20px 15px 70px; /* Отступ для значка лупы */
     font-size: 18px;
     border: none;
     outline: none;
@@ -33,17 +31,15 @@
     color: #333;
     transition: background-color 0.3s ease;
     box-sizing: border-box;
-    padding-left: 70px;
 }
 
 .widget-search-input:focus {
     background-color: #eef7ff;
 }
 
-
 .widget-search-icon {
     position: absolute;
-    top: 45%;
+    top: 50%;
     left: 15px;
     transform: translateY(-50%);
     width: 15px;
@@ -51,7 +47,7 @@
     border: 2px solid #777;
     border-radius: 50%;
     box-sizing: border-box;
-    cursor: pointer;
+    pointer-events: none; /* Сделать лупу неактивной */
 }
 
 .widget-search-icon::after {
@@ -60,12 +56,11 @@
     width: 10px;
     height: 2px;
     background-color: #777;
-    top: 10px;
-    left: 10px;
+    top: 9px;
+    left: 9px;
     transform: rotate(45deg);
     transform-origin: top left;
 }
-
 
 .widget-close-button {
     position: absolute;
@@ -84,17 +79,6 @@
     color: #000;
 }
 
-
-.widget-result-container {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-    width: 100%;
-    padding: 20px;
-    box-sizing: border-box;
-    background-color: #fff;
-    overflow-y: auto;
-}
 
 
 .widget-result-item {
@@ -115,7 +99,6 @@
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
 }
 
-
 .widget-result-item img {
     width: 100px;
     height: 100px;
@@ -124,26 +107,21 @@
     margin-right: 15px;
 }
 
-
 .widget-result-item .product-name {
     font-size: 14px;
     color: #333;
 }
-
 
 .widget-result-item .product-presence {
     font-size: 12px;
     color: #2ecc71;
 }
 
-
 .product-price {
     font-size: 13px;
     margin-top: 3px;
     margin-bottom: 5px;
 }
-
-
 
 .widget-history-container {
     width: 100%;
@@ -169,20 +147,165 @@
 
 .widget-history-item {
     font-size: 13px;
+    font-style: italic;
     color: #333;
     cursor: pointer;
     transition: color 0.3s ease;
+    margin-bottom: 5px;
 }
 
 .widget-history-item:hover {
     color: #007bff;
 }
 
+/* Новый блок для категорий */
+.categories-container {
+    width: 20%;
+    max-height: 100%;
+    overflow-y: auto;
+    background-color: #f9f9f9;
+    padding: 10px;
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
+}
 
-
-.widget-history-item {
-    font-size: 13px;
-    font-style: italic; 
+.category-item {
+    font-size: 14px;
+    padding: 8px;
+    cursor: pointer;
     color: #333;
+    border-left: 4px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.category-item:hover,
+.category-item.active {
+    background-color: #eef7ff;
+    border-left: 4px solid #007bff;
+    color: #007bff;
+}
+
+.category-block {
+    margin-bottom: 20px;
+}
+
+.category-block h3 {
+    font-size: 16px;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.more-link {
+    font-size: 14px;
+    color: #007bff;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.more-link:hover {
+    text-decoration: underline;
+}
+
+/* Existing styles... */
+
+/* Updated styles for suggestions */
+.widget-history-container {
+    width: 100%;
+    background-color: #f5f5f5;
+    padding: 10px;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+    color: #555;
+}
+
+.widget-history-title {
+    font-size: 14px;
+    font-style: italic;
+    color: #888;
     margin-bottom: 5px;
+}
+
+.widget-history-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.suggestion-word {
+    font-size: 13px;
+    font-style: italic;
+    color: #333;
+    cursor: pointer;
+    transition: color 0.3s ease;
+    padding: 5px;
+    border-radius: 4px;
+}
+
+.suggestion-word:hover {
+    color: #007bff;
+}
+
+
+/* Updated styles for suggestions */
+.widget-history-container {
+    width: 100%;
+    background-color: #f5f5f5;
+    padding: 10px;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+    color: #555;
+}
+
+.widget-history-title {
+    font-size: 14px;
+    font-style: italic;
+    color: #888;
+    margin-bottom: 5px;
+}
+
+.widget-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.suggestion-row {
+    display: flex;
+    gap: 10px;
+}
+
+.suggestion-word {
+    font-size: 13px;
+    font-style: italic;
+    color: #333;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.suggestion-word:hover {
+    color: #007bff;
+    text-decoration: underline;
+}
+
+.main-content-container {
+    display: flex; /* Make categories and results appear side by side */
+    height: 100%; /* Fill the height of the widget */
+    width: 100%; /* Fill the width of the widget */
+}
+
+.categories-container {
+    width: 20%; /* Categories take 20% width */
+    max-height: 100%; /* Ensure it spans the full height */
+    overflow-y: auto; /* Add scrolling for long content */
+    background-color: #f9f9f9; /* Optional background */
+    padding: 10px; /* Optional padding */
+    box-sizing: border-box;
+}
+
+.widget-result-container {
+    flex-grow: 1; /* Results take the remaining space */
+    overflow-y: auto; /* Add scrolling for results */
+    background-color: #fff; /* Optional background */
+    padding: 20px; /* Optional padding */
+    box-sizing: border-box;
 }
