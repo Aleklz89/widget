@@ -8,7 +8,8 @@
     display: none;
     flex-direction: column;
     justify-content: flex-start;
-    align-items: flex-start; /* Выравнивание влево */
+    align-items: flex-start;
+    /* Выравнивание влево */
     padding: 0;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     z-index: 1000;
@@ -23,7 +24,8 @@
 
 .widget-search-input {
     width: 100%;
-    padding: 15px 20px 15px 70px; /* Отступ для значка лупы */
+    padding: 15px 20px 15px 70px;
+    /* Отступ для значка лупы */
     font-size: 18px;
     border: none;
     outline: none;
@@ -47,7 +49,8 @@
     border: 2px solid #777;
     border-radius: 50%;
     box-sizing: border-box;
-    pointer-events: none; /* Сделать лупу неактивной */
+    pointer-events: none;
+    /* Сделать лупу неактивной */
 }
 
 .widget-search-icon::after {
@@ -297,24 +300,118 @@
 }
 
 .main-content-container {
-    display: flex; /* Make categories and results appear side by side */
-    height: 100%; /* Fill the height of the widget */
-    width: 100%; /* Fill the width of the widget */
+    display: flex;
+    /* Make categories and results appear side by side */
+    height: 100%;
+    /* Fill the height of the widget */
+    width: 100%;
+    /* Fill the width of the widget */
 }
 
 .categories-container {
-    width: 20%; /* Categories take 20% width */
-    max-height: 100%; /* Ensure it spans the full height */
-    overflow-y: auto; /* Add scrolling for long content */
-    background-color: #f9f9f9; /* Optional background */
-    padding: 10px; /* Optional padding */
+    width: 20%;
+    /* Categories take 20% width */
+    max-height: 100%;
+    /* Ensure it spans the full height */
+    overflow-y: auto;
+    /* Add scrolling for long content */
+    background-color: #f9f9f9;
+    /* Optional background */
+    padding: 10px;
+    /* Optional padding */
     box-sizing: border-box;
 }
 
 .widget-result-container {
-    flex-grow: 1; /* Results take the remaining space */
-    overflow-y: auto; /* Add scrolling for results */
-    background-color: #fff; /* Optional background */
-    padding: 20px; /* Optional padding */
+    flex-grow: 1;
+    /* Results take the remaining space */
+    overflow-y: auto;
+    /* Add scrolling for results */
+    background-color: #fff;
+    /* Optional background */
+    padding: 20px;
+    /* Optional padding */
     box-sizing: border-box;
+}
+
+.widget-loader {
+    display: none;
+    /* Убедитесь, что лоадер скрыт изначально */
+    width: 100%;
+    height: 100%;
+    background-color: rgba(173, 216, 230, 0.5);
+    /* Светло-голубой цвет */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    /* Поверх всех товаров */
+}
+
+.widget-loader span {
+    display: block;
+    width: 50px;
+    height: 50px;
+    border: 5px solid #add8e6;
+    /* Цвет бордера */
+    border-top: 5px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@media (max-width: 400px) {
+    .main-content-container {
+        display: flex;
+        flex-direction: column;
+        /* Make categories and results appear side by side */
+        height: 100%;
+        /* Fill the height of the widget */
+        width: 100%;
+        /* Fill the width of the widget */
+    }
+
+    .categories-container {
+        width: 100%;
+        height: 200px;
+        /* Categories take 20% width */
+        max-height: 100%;
+        /* Ensure it spans the full height */
+        overflow-y: auto;
+        /* Add scrolling for long content */
+        background-color: #f9f9f9;
+        /* Optional background */
+        padding: 10px;
+        /* Optional padding */
+        box-sizing: border-box;
+    }
+
+    .widget-result-container {
+        display: flex;
+        flex-wrap: wrap;
+        /* Позволяет переносить элементы на новую строку */
+        justify-content: flex-start;
+        align-items: flex-start;
+        gap: 20px;
+        /* Расстояние между элементами */
+        height: 90%;
+        flex-grow: 1;
+        overflow-y: auto;
+        background-color: #fff;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+
 }
