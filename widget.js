@@ -85,6 +85,9 @@ class ProductSearchWidget {
             const query = e.target.value.trim();
             const lastChar = e.target.value.slice(-1);
 
+            // Обновляем актуальное значение текущего запроса
+            this.currentQuery = query;
+
             if (lastChar === ' ') {
                 const lastWord = query.split(' ').slice(-1)[0];
                 if (lastWord) {
@@ -104,6 +107,7 @@ class ProductSearchWidget {
 
             this.fetchProducts(query, categoriesContainer, resultContainer);
         });
+
     }
 
     async correctQuery(word, searchInput) {
@@ -160,6 +164,12 @@ class ProductSearchWidget {
 
             const suggestionsResponse = await response.json();
 
+            // Проверяем, не изменился ли текст
+            if (searchInput.value.trim() !== this.currentQuery) {
+                console.log('Input text changed, skipping suggestions update.');
+                return;
+            }
+
             historyList.innerHTML = '';
 
             const suggestions = suggestionsResponse.suggestions;
@@ -202,13 +212,19 @@ class ProductSearchWidget {
                 },
                 body: JSON.stringify({ word: query }),
             });
-
+    
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-
+    
             const products = await response.json();
-
+    
+            // Проверяем, не изменился ли текст
+            if (this.currentQuery !== query) {
+                console.log('Input text changed, skipping product update.');
+                return;
+            }
+    
             if (products.length === 0) {
                 resultContainer.innerHTML = '<p>No products found.</p>';
                 categoriesContainer.innerHTML = '';
