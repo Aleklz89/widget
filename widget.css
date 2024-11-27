@@ -82,15 +82,22 @@
     color: #000;
 }
 
+/* Общий стиль для .widget-result-container */
 .widget-result-container {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    display: flex;
+    flex-wrap: wrap;
     gap: 20px;
     width: 100%;
     padding: 20px;
     box-sizing: border-box;
     background-color: #fff;
     overflow-y: auto;
+}
+
+/* Стиль для "Всі результати" */
+.widget-result-container.all-results {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
 }
 
 .widget-result-item {
@@ -322,44 +329,82 @@
     box-sizing: border-box;
 }
 
-.widget-result-container {
-    flex-grow: 1;
-    /* Results take the remaining space */
-    overflow-y: auto;
-    /* Add scrolling for results */
-    background-color: #fff;
-    /* Optional background */
+
+
+.loader {
+    text-align: center;
     padding: 20px;
-    /* Optional padding */
-    box-sizing: border-box;
-}
-
-.widget-loader {
-    display: none;
-    /* Убедитесь, что лоадер скрыт изначально */
-    width: 100%;
-    height: 100%;
-    background-color: rgba(173, 216, 230, 0.5);
-    /* Светло-голубой цвет */
+    width: 300%;
     display: flex;
-    justify-content: center;
     align-items: center;
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 10;
-    /* Поверх всех товаров */
+    justify-content: center;
 }
 
-.widget-loader span {
-    display: block;
+.loader-circle {
     width: 50px;
     height: 50px;
-    border: 5px solid #add8e6;
-    /* Цвет бордера */
-    border-top: 5px solid white;
-    border-radius: 50%;
+    border: 5px solid #3b82f6;
+    border-top-color: transparent;
+    border-radius: 60%;
     animation: spin 1s linear infinite;
+}
+
+.product-container {
+    display: flex;
+    flex-wrap: wrap;
+    /* Позволяет товарам переноситься на новую строку */
+    gap: 20px;
+    /* Отступы между товарами */
+    align-items: flex-start;
+    /* Выравнивание по верхнему краю */
+}
+
+.more-link {
+    width: 100%;
+    /* Занимает всю ширину строки */
+    font-size: 14px;
+    color: #007bff;
+    cursor: pointer;
+    text-align: left;
+    /* Центрирует текст */
+    margin-top: 10px;
+    display: block;
+    /* Принудительно делает элемент блочным */
+}
+
+.more-link:hover {
+    text-decoration: underline;
+}
+
+.category-single .product-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    /* Отступы между продуктами */
+    justify-content: flex-start;
+    /* Выравнивание */
+    border: 1px solid red;
+    /* Для проверки */
+}
+
+.category-multiple .product-container {
+    display: flex;
+    /* Для горизонтального размещения */
+    flex-wrap: wrap;
+    /* Позволяет переносить элементы */
+    gap: 20px;
+    /* Расстояние между продуктами */
+    justify-content: flex-start;
+    /* Выравнивание по левому краю */
+    margin-bottom: 200px;
+}
+
+/* Стили продуктов */
+.product-item {
+    flex: 0 1 calc(33.33% - 20px);
+    /* Три элемента в ряд */
+    box-sizing: border-box;
+    margin-bottom: 20px;
 }
 
 @keyframes spin {

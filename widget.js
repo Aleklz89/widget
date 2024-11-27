@@ -9,7 +9,7 @@ class ProductSearchWidget {
     }
 
     initWidget() {
-        // Add the font dynamically to the document head
+        // Добавление шрифта в документ
         const fontLink = document.createElement('link');
         fontLink.href = 'https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap';
         fontLink.rel = 'stylesheet';
@@ -18,76 +18,63 @@ class ProductSearchWidget {
         const triggerInput = document.getElementById(this.triggerInputId);
 
         if (!triggerInput) {
-            console.error(`Trigger input with ID "${this.triggerInputId}" not found.`);
+            console.error(`Trigger input с ID "${this.triggerInputId}" не найден.`);
             return;
         }
 
-        const widgetContainer = document.createElement('div');
-        widgetContainer.className = 'widget-container';
+        // Основная структура виджета через шаблонные строки
+        const widgetHtml = `
+    <div class="widget-container" style="display: none;">
+        <div class="widget-close-button">&times;</div>
+        <div class="widget-input-wrapper">
+            <div class="widget-search-icon"></div>
+            <input type="text" class="widget-search-input" placeholder="Search products...">
+        </div>
+        <div class="widget-history-container">
+            <div class="widget-history-title">Можливо ви шукаєте</div>
+            <div class="widget-history-list"></div>
+        </div>
+        <div class="main-content-container">
+            <div class="categories-container"></div> <!-- Левый контейнер -->
+            <div class="widget-result-container"></div> <!-- Средний контейнер -->
+            <div class="additional-info-container"></div> <!-- Правый контейнер -->
+        </div>
+    </div>
+`;
 
-        const inputWrapper = document.createElement('div');
-        inputWrapper.className = 'widget-input-wrapper';
+        // Создание и добавление DOM-структуры
+        const widgetContainerWrapper = document.createElement('div');
+        widgetContainerWrapper.innerHTML = widgetHtml.trim();
+        const widgetContainer = widgetContainerWrapper.firstElementChild;
+        document.body.appendChild(widgetContainer);
 
-        const searchInput = document.createElement('input');
-        searchInput.type = 'text';
-        searchInput.className = 'widget-search-input';
-        searchInput.placeholder = 'Search products...';
+        // Сохранение ссылок на элементы для дальнейшего использования
+        const searchInput = widgetContainer.querySelector('.widget-search-input');
+        const closeButton = widgetContainer.querySelector('.widget-close-button');
+        const historyList = widgetContainer.querySelector('.widget-history-list');
+        const categoriesContainer = widgetContainer.querySelector('.categories-container');
+        const resultContainer = widgetContainer.querySelector('.widget-result-container');
 
-        const searchIcon = document.createElement('div');
-        searchIcon.className = 'widget-search-icon';
-
-        const closeButton = document.createElement('div');
-        closeButton.innerHTML = '&times;';
-        closeButton.className = 'widget-close-button';
+        // Обработчик для закрытия виджета
         closeButton.addEventListener('click', () => {
             widgetContainer.style.display = 'none';
         });
 
-        const suggestionsContainer = document.createElement('div');
-        suggestionsContainer.className = 'widget-history-container';
-
-        const historyTitle = document.createElement('div');
-        historyTitle.className = 'widget-history-title';
-        historyTitle.textContent = 'Можливо ви шукаєте';
-
-        const historyList = document.createElement('div');
-        historyList.className = 'widget-history-list';
-
-        suggestionsContainer.appendChild(historyTitle);
-        suggestionsContainer.appendChild(historyList);
-
-        const categoriesContainer = document.createElement('div');
-        categoriesContainer.className = 'categories-container';
-
-        const resultContainer = document.createElement('div');
-        resultContainer.className = 'widget-result-container';
-
-        inputWrapper.appendChild(searchIcon);
-        inputWrapper.appendChild(searchInput);
-        widgetContainer.appendChild(closeButton);
-        widgetContainer.appendChild(inputWrapper);
-        widgetContainer.appendChild(suggestionsContainer);
-        const mainContentContainer = document.createElement('div');
-        mainContentContainer.className = 'main-content-container';
-
-        mainContentContainer.appendChild(categoriesContainer);
-        mainContentContainer.appendChild(resultContainer);
-
-        widgetContainer.appendChild(mainContentContainer);
-        document.body.appendChild(widgetContainer);
-
+        // Обработчик для открытия виджета
         triggerInput.addEventListener('focus', () => {
             widgetContainer.style.display = 'flex';
             searchInput.focus();
         });
 
+        // Обработчик ввода текста в поисковое поле
         searchInput.addEventListener('input', async (e) => {
             const query = e.target.value.trim();
             const lastChar = e.target.value.slice(-1);
 
-            // Обновляем актуальное значение текущего запроса
+            // Сохранение текущего запроса
             this.currentQuery = query;
 
+            // Автокоррекция при вводе пробела
             if (lastChar === ' ') {
                 const lastWord = query.split(' ').slice(-1)[0];
                 if (lastWord) {
@@ -95,20 +82,20 @@ class ProductSearchWidget {
                 }
             }
 
+            // Проверка минимальной длины запроса
             if (query.length < 3) {
-                resultContainer.innerHTML = '<p>Type at least 3 characters...</p>';
+                resultContainer.innerHTML = '<p>Почніть пошук...</p>';
                 categoriesContainer.innerHTML = '';
                 historyList.innerHTML = '';
                 return;
             }
 
-            // Update search history/suggestions
-            this.fetchSuggestions(query, historyList, searchInput);
-
-            this.fetchProducts(query, categoriesContainer, resultContainer);
+            // Обновление истории и результатов поиска
+            await this.fetchSuggestions(query, historyList, searchInput);
+            await this.fetchProducts(query, categoriesContainer, resultContainer);
         });
-
     }
+
 
     async correctQuery(word, searchInput) {
         try {
@@ -204,6 +191,13 @@ class ProductSearchWidget {
     }
 
     async fetchProducts(query, categoriesContainer, resultContainer) {
+        // Устанавливаем лоадер в resultContainer
+        resultContainer.innerHTML = `
+            <div class="loader">
+                <div class="loader-circle"></div>
+            </div>
+        `;
+
         try {
             const response = await fetch(this.apiUrl, {
                 method: 'POST',
@@ -212,19 +206,19 @@ class ProductSearchWidget {
                 },
                 body: JSON.stringify({ word: query }),
             });
-    
+
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-    
+
             const products = await response.json();
-    
+
             // Проверяем, не изменился ли текст
             if (this.currentQuery !== query) {
                 console.log('Input text changed, skipping product update.');
                 return;
             }
-    
+
             if (products.length === 0) {
                 resultContainer.innerHTML = '<p>No products found.</p>';
                 categoriesContainer.innerHTML = '';
@@ -236,6 +230,7 @@ class ProductSearchWidget {
             resultContainer.innerHTML = '<p>Error fetching products.</p>';
         }
     }
+
 
     displayProductsByCategory(products, categoriesContainer, resultContainer) {
         categoriesContainer.innerHTML = '';
@@ -306,58 +301,99 @@ class ProductSearchWidget {
     }
 
     showCategoryProducts(groupedProducts, resultContainer, showCategoryTitles = true, selectedCategory = null) {
+        console.log('Grouped Products:', groupedProducts); // Лог для проверки группировки
+        console.log('Selected Category:', selectedCategory); // Лог для проверки выбранной категории
+
+        // Проверяем, выбрана ли категория "Всі результати"
+        const isAllResults = selectedCategory === null;
+
+        // Устанавливаем количество товаров для отображения
+        const maxItemsToShow = isAllResults ? 4 : 15;
+
+        // Обновляем классы .widget-result-container
+        if (isAllResults) {
+            resultContainer.classList.add('all-results');
+        } else {
+            resultContainer.classList.remove('all-results');
+        }
+
         resultContainer.innerHTML = '';
 
         Object.entries(groupedProducts).forEach(([category, items]) => {
-            const categoryBlock = document.createElement('div');
-            categoryBlock.className = 'category-block';
+            const isSingleCategory = Object.keys(groupedProducts).length === 1 && !selectedCategory;
+            console.log(`Rendering category: ${category}, Items count: ${items.length}, isSingleCategory: ${isSingleCategory}`);
 
-            if (showCategoryTitles || selectedCategory) {
-                const categoryTitle = document.createElement('h3');
-                categoryTitle.textContent = `${category} →`;
-                categoryBlock.appendChild(categoryTitle);
-            }
+            const categoryTitleHtml = (showCategoryTitles || selectedCategory)
+                ? `<h3>${category} →</h3>`
+                : '';
 
-            items.forEach((item, index) => {
-                const productItem = document.createElement('div');
-                productItem.className = 'product-item';
-                productItem.innerHTML = `
-                    <img src="${item.imageUrl}" alt="${item.name}">
-                    <div>
-                        <p class="product-name">${item.name}</p>
-                        <p class="product-price">${item.price.toFixed(2)} ${item.currencyId}</p>
-                        <p class="product-presence">${item.presence}</p>
+            // HTML для первых maxItemsToShow товаров
+            const initialProductItemsHtml = items
+                .slice(0, maxItemsToShow)
+                .map(item => `
+                    <div class="product-item">
+                        <img src="${item.imageUrl}" alt="${item.name}">
+                        <div>
+                            <p class="product-name">${item.name}</p>
+                            <p class="product-price">${item.price.toFixed(2)} ${item.currencyId}</p>
+                            <p class="product-presence">${item.presence}</p>
+                        </div>
                     </div>
-                `;
-                if (selectedCategory || index < 4) {
-                    categoryBlock.appendChild(productItem);
-                } else if (index === 4) {
-                    const moreLink = document.createElement('div');
-                    moreLink.className = 'more-link';
-                    moreLink.textContent = `ще ${items.length - 4} ...`;
-                    moreLink.addEventListener('click', () => {
-                        items.slice(4).forEach((hiddenItem) => {
-                            const hiddenProductItem = document.createElement('div');
-                            hiddenProductItem.className = 'product-item';
-                            hiddenProductItem.innerHTML = `
-                                <img src="${hiddenItem.imageUrl}" alt="${hiddenItem.name}">
+                `)
+                .join('');
+
+            // HTML для кнопки "ще"
+            const moreLinkHtml = items.length > maxItemsToShow
+                ? `<div class="more-link">ще ${items.length - maxItemsToShow} ...</div>`
+                : '';
+
+            // HTML блока категории
+            const categoryBlockHtml = `
+                <div class="category-block ${isSingleCategory ? 'category-single' : 'category-multiple'}">
+                    ${categoryTitleHtml}
+                    <div class="product-container">
+                        ${initialProductItemsHtml}
+                        ${moreLinkHtml}
+                    </div>
+                </div>
+            `;
+
+            const categoryBlock = document.createElement('div');
+            categoryBlock.innerHTML = categoryBlockHtml.trim();
+
+            // Обработка клика по "ще"
+            if (items.length > maxItemsToShow) {
+                const moreLink = categoryBlock.querySelector('.more-link');
+                moreLink.addEventListener('click', () => {
+                    const hiddenItemsHtml = items.slice(maxItemsToShow) // Оставшиеся товары
+                        .map(item => `
+                            <div class="product-item">
+                                <img src="${item.imageUrl}" alt="${item.name}">
                                 <div>
-                                    <p class="product-name">${hiddenItem.name}</p>
-                                    <p class="product-price">${hiddenItem.price.toFixed(2)} ${hiddenItem.currencyId}</p>
-                                    <p class="product-presence">${hiddenItem.presence}</p>
+                                    <p class="product-name">${item.name}</p>
+                                    <p class="product-price">${item.price.toFixed(2)} ${item.currencyId}</p>
+                                    <p class="product-presence">${item.presence}</p>
                                 </div>
-                            `;
-                            categoryBlock.appendChild(hiddenProductItem);
-                        });
-                        moreLink.remove();
-                    });
-                    categoryBlock.appendChild(moreLink);
-                }
-            });
+                            </div>
+                        `)
+                        .join('');
+
+                    // Вставляем оставшиеся товары перед кнопкой "ще"
+                    moreLink.insertAdjacentHTML('beforebegin', hiddenItemsHtml);
+                    moreLink.remove(); // Убираем кнопку "ще"
+                });
+            }
 
             resultContainer.appendChild(categoryBlock);
         });
+
+        console.log('Final result container:', resultContainer.innerHTML);
     }
+
+
+
+
+
 }
 
 document.addEventListener('DOMContentLoaded', () => {
