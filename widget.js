@@ -4,23 +4,74 @@ class ProductSearchWidget {
         this.apiUrl = 'https://search-module-chi.vercel.app/api/search';
         this.suggestionsUrl = 'https://search-module-chi.vercel.app/api/suggestions';
         this.correctionUrl = 'https://search-module-chi.vercel.app/api/correct';
-
+        this.searchHistory = [];
         this.initWidget();
     }
 
-    initWidget() {
+    showHistory() {
+        const historyList = document.querySelector('.widget-history-list');
+        if (historyList) {
+            historyList.classList.add('show');
+        }
+    }
+
+    hideHistory() {
+        const historyList = document.querySelector('.widget-history-list');
+        if (historyList) {
+            historyList.classList.remove('show');
+        }
+    }
+
+    async loadJsCookieLibrary() {
+        if (window.Cookies) return; // Если библиотека уже загружена, ничего не делаем
+
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js';
+            script.type = 'text/javascript';
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error('Failed to load js-cookie library'));
+            document.head.appendChild(script);
+        });
+    }
+
+    async getOrCreateUserId() {
+        if (!window.Cookies) {
+            await this.loadJsCookieLibrary();
+        }
+
+        let userId = Cookies.get('userId');
+        if (!userId) {
+            userId = Math.random().toString(36).substr(2, 9);
+            Cookies.set('userId', userId, { expires: 365 });
+        }
+        this.userId = userId;
+    }
+
+    async initWidget() {
         // Добавление шрифта в документ
         const fontLink = document.createElement('link');
         fontLink.href = 'https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap';
         fontLink.rel = 'stylesheet';
         document.head.appendChild(fontLink);
 
+        // Сохранение ссылок на элементы
         const triggerInput = document.getElementById(this.triggerInputId);
-
         if (!triggerInput) {
             console.error(`Trigger input с ID "${this.triggerInputId}" не найден.`);
             return;
         }
+
+        // Получение или создание userId
+        await this.getOrCreateUserId();
+
+        // Загружаем историю
+        await this.loadSearchHistory(this.userId);
+
+        this.updateSearchHistory();
+
+
+
 
         // Основная структура виджета через шаблонные строки
         const widgetHtml = `
@@ -31,7 +82,6 @@ class ProductSearchWidget {
             <input type="text" class="widget-search-input" placeholder="Search products...">
         </div>
         <div class="widget-history-container">
-            <div class="widget-history-title">Можливо ви шукаєте</div>
             <div class="widget-history-list"></div>
         </div>
         <div class="main-content-container">
@@ -47,6 +97,14 @@ class ProductSearchWidget {
         widgetContainerWrapper.innerHTML = widgetHtml.trim();
         const widgetContainer = widgetContainerWrapper.firstElementChild;
         document.body.appendChild(widgetContainer);
+
+        console.log('Добавляем обработчики для истории'); // Лог для отладки
+
+        // Настраиваем обработчики истории
+        this.addHistoryPopupHandlers();
+
+        // Проверяем историю
+        console.log('Search history:', this.searchHistory);
 
         // Сохранение ссылок на элементы для дальнейшего использования
         const searchInput = widgetContainer.querySelector('.widget-search-input');
@@ -64,12 +122,26 @@ class ProductSearchWidget {
         triggerInput.addEventListener('focus', () => {
             widgetContainer.style.display = 'flex';
             searchInput.focus();
+
+            const query = searchInput.value.trim();
+            if (query === '') {
+                this.showSearchHistory(); // Показываем историю запросов
+            } else {
+                this.hideSearchHistory(); // Скрываем историю, если есть текст
+            }
         });
 
-        // Обработчик ввода текста в поисковое поле
         searchInput.addEventListener('input', async (e) => {
             const query = e.target.value.trim();
             const lastChar = e.target.value.slice(-1);
+
+            // Если поле пустое, показываем историю запросов
+            if (query === '') {
+                this.showSearchHistory();
+                return;
+            } else {
+                this.hideSearchHistory();
+            }
 
             // Сохранение текущего запроса
             this.currentQuery = query;
@@ -90,10 +162,179 @@ class ProductSearchWidget {
                 return;
             }
 
-            // Обновление истории и результатов поиска
-            await this.fetchSuggestions(query, historyList, searchInput);
-            await this.fetchProducts(query, categoriesContainer, resultContainer);
+
+            // Обновление подсказок и результатов поиска
+            try {
+                const [suggestions, products] = await Promise.all([
+                    this.fetchSuggestions(query, historyList, searchInput),
+                    this.fetchProducts(query, categoriesContainer, resultContainer),
+                ]);
+
+                console.log('Suggestions:', suggestions);
+                console.log('Products:', products);
+            } catch (error) {
+                console.error('Error during search input processing:', error);
+                resultContainer.innerHTML = '<p>Виникла помилка під час пошуку.</p>';
+            }
         });
+
+
+    }
+
+    updateSearchHistory() {
+        console.log('Обновляем историю запросов');
+        const historyContainer = document.querySelector('.widget-history-list');
+        historyContainer.style.display = 'block';
+        if (!historyContainer) return;
+
+        // Очищаем контейнер перед обновлением
+        historyContainer.innerHTML = '';
+
+        if (this.searchHistory.length === 0) {
+            historyContainer.innerHTML = '<p>Історія порожня.</p>';
+        } else {
+            this.searchHistory.forEach((query) => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                historyItem.textContent = query;
+
+                // Обработчик клика по элементу истории
+                historyItem.addEventListener('click', () => {
+                    const searchInput = document.querySelector('.widget-search-input');
+                    searchInput.value = query;
+                    searchInput.dispatchEvent(new Event('input'));
+                });
+
+                historyContainer.appendChild(historyItem);
+            });
+        }
+    }
+
+    addHistoryPopupHandlers() {
+        const searchInput = document.querySelector('.widget-search-input');
+        const historyContainer = document.querySelector('.widget-history-container');
+
+        if (!searchInput || !historyContainer) {
+            console.warn('Элементы для работы с историей не найдены.');
+            return;
+        }
+
+        // Показываем историю при фокусе
+        searchInput.addEventListener('focus', () => {
+            console.log('Фокус на инпуте, история запросов:', this.searchHistory);
+            if (this.searchHistory.length > 0) {
+                this.showHistory();
+            }
+        });
+
+        // Закрываем историю при вводе текста
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.trim();
+            if (query.length > 0) {
+                this.hideHistory();
+            } else {
+                this.showHistory();
+            }
+        });
+    }
+
+
+
+    showSearchHistory() {
+        console.log('Показываем окно с историей'); // Отладочный вывод
+        const historyContainer = document.querySelector('.widget-history-container');
+        const historyList = document.querySelector('.widget-history-list');
+        historyList.innerHTML = '';
+
+        if (this.searchHistory.length === 0) {
+            historyList.innerHTML = '<p>Історія порожня.</p>';
+        } else {
+            this.searchHistory.forEach((item) => {
+                const historyElement = document.createElement('div');
+                historyElement.className = 'history-item';
+                historyElement.textContent = item;
+
+                historyElement.addEventListener('click', () => {
+                    const searchInput = document.querySelector('.widget-search-input');
+                    searchInput.value = item;
+                    searchInput.dispatchEvent(new Event('input'));
+                });
+
+                historyList.appendChild(historyElement);
+            });
+        }
+
+        historyContainer.style.display = 'block'; // Отображаем контейнер истории
+    }
+
+    hideSearchHistory() {
+        const historyContainer = document.querySelector('.widget-history-container');
+        historyContainer.style.display = 'none';
+    }
+
+
+    async saveSearchQuery(query) {
+        if (!this.userId || !query) return;
+
+        try {
+            await fetch('https://search-module-chi.vercel.app/api/addSearchQuery', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: this.userId, query }),
+            });
+        } catch (error) {
+            console.error('Error saving search query:', error);
+        }
+    }
+
+    async loadSearchHistory(userId) {
+        if (!userId) {
+            console.error('User ID is missing! Cannot load search history.');
+            return;
+        }
+
+        try {
+            const response = await fetch('https://search-module-chi.vercel.app/api/get-user-query', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId }),
+            });
+
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+            const data = await response.json();
+            this.searchHistory = data.history.map((item) => item.query).slice(-5); // Последние 5 запросов
+            this.updateSearchHistory();
+        } catch (error) {
+            console.error('Error loading search history:', error);
+        }
+    }
+
+    updateSearchHistory() {
+        const historyContainer = document.querySelector('.widget-history-list');
+        if (!historyContainer) return;
+
+        // Очищаем контейнер перед обновлением
+        historyContainer.innerHTML = '';
+
+        if (this.searchHistory.length === 0) {
+            historyContainer.innerHTML = '<p>Історія порожня.</p>';
+        } else {
+            this.searchHistory.forEach((query) => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                historyItem.textContent = query;
+
+                // Обработчик клика по элементу истории
+                historyItem.addEventListener('click', () => {
+                    const searchInput = document.querySelector('.widget-search-input');
+                    searchInput.value = query;
+                    searchInput.dispatchEvent(new Event('input'));
+                });
+
+                historyContainer.appendChild(historyItem);
+            });
+        }
     }
 
 
@@ -191,7 +432,6 @@ class ProductSearchWidget {
     }
 
     async fetchProducts(query, categoriesContainer, resultContainer) {
-        // Устанавливаем лоадер в resultContainer
         resultContainer.innerHTML = `
             <div class="loader">
                 <div class="loader-circle"></div>
@@ -207,29 +447,27 @@ class ProductSearchWidget {
                 body: JSON.stringify({ word: query }),
             });
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
             const products = await response.json();
 
-            // Проверяем, не изменился ли текст
-            if (this.currentQuery !== query) {
-                console.log('Input text changed, skipping product update.');
-                return;
-            }
+            if (this.currentQuery !== query) return; // Проверяем, не изменился ли запрос
 
             if (products.length === 0) {
                 resultContainer.innerHTML = '<p>No products found.</p>';
                 categoriesContainer.innerHTML = '';
             } else {
                 this.displayProductsByCategory(products, categoriesContainer, resultContainer);
+
+                // Сохраняем запрос в историю
+                await this.saveSearchQuery(query);
             }
         } catch (error) {
             console.error('Error fetching products:', error);
             resultContainer.innerHTML = '<p>Error fetching products.</p>';
         }
     }
+
 
 
     displayProductsByCategory(products, categoriesContainer, resultContainer) {
@@ -389,9 +627,6 @@ class ProductSearchWidget {
 
         console.log('Final result container:', resultContainer.innerHTML);
     }
-
-
-
 
 
 }
