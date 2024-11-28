@@ -2,7 +2,7 @@ class ProductSearchWidget {
     constructor(triggerInputId) {
         this.triggerInputId = triggerInputId;
         this.apiUrl = 'https://search-module-chi.vercel.app/api/search';
-        this.suggestionsUrl = 'https://search-module-chi.vercel.app/api/suggestions';
+        this.suggestionsUrl = 'https://search-module-chi.vercel.app/api/search-suggestions';
         this.correctionUrl = 'https://search-module-chi.vercel.app/api/correct';
         this.searchHistory = [];
         this.initWidget();
@@ -42,13 +42,15 @@ class ProductSearchWidget {
 
         let userId = Cookies.get('userId');
         if (!userId) {
-            userId = Math.random().toString(36).substr(2, 9);
+            // Генерация случайного числа с фиксированным количеством цифр
+            userId = Math.floor(Math.random() * 1e9).toString(); // Генерирует число от 0 до 999999999
             Cookies.set('userId', userId, { expires: 365 });
         }
         this.userId = userId;
     }
 
     async initWidget() {
+        console.log('Widget initialization started.');
         // Добавление шрифта в документ
         const fontLink = document.createElement('link');
         fontLink.href = 'https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap';
@@ -61,6 +63,7 @@ class ProductSearchWidget {
             console.error(`Trigger input с ID "${this.triggerInputId}" не найден.`);
             return;
         }
+        console.log('Trigger input найден:', triggerInput);
 
         // Получение или создание userId
         await this.getOrCreateUserId();
@@ -80,14 +83,15 @@ class ProductSearchWidget {
         <div class="widget-input-wrapper">
             <div class="widget-search-icon"></div>
             <input type="text" class="widget-search-input" placeholder="Search products...">
+            <div class="widget-suggestions-list" style="display: none;"></div> <!-- Добавлено -->
         </div>
         <div class="widget-history-container">
             <div class="widget-history-list"></div>
         </div>
         <div class="main-content-container">
-            <div class="categories-container"></div> <!-- Левый контейнер -->
-            <div class="widget-result-container"></div> <!-- Средний контейнер -->
-            <div class="additional-info-container"></div> <!-- Правый контейнер -->
+            <div class="categories-container"></div>
+            <div class="widget-result-container"></div>
+            <div class="additional-info-container"></div>
         </div>
     </div>
 `;
@@ -96,9 +100,13 @@ class ProductSearchWidget {
         const widgetContainerWrapper = document.createElement('div');
         widgetContainerWrapper.innerHTML = widgetHtml.trim();
         const widgetContainer = widgetContainerWrapper.firstElementChild;
+        console.log('Widget container created:', widgetContainer);
         document.body.appendChild(widgetContainer);
+        console.log('Widget container appended to body.');
 
         console.log('Добавляем обработчики для истории'); // Лог для отладки
+
+
 
         // Настраиваем обработчики истории
         this.addHistoryPopupHandlers();
@@ -133,11 +141,12 @@ class ProductSearchWidget {
 
         searchInput.addEventListener('input', async (e) => {
             const query = e.target.value.trim();
-            const lastChar = e.target.value.slice(-1);
+            const suggestionsList = widgetContainer.querySelector('.widget-suggestions-list');
 
             // Если поле пустое, показываем историю запросов
             if (query === '') {
                 this.showSearchHistory();
+                suggestionsList.style.display = 'none'; // Скрываем подсказки
                 return;
             } else {
                 this.hideSearchHistory();
@@ -146,37 +155,39 @@ class ProductSearchWidget {
             // Сохранение текущего запроса
             this.currentQuery = query;
 
-            // Автокоррекция при вводе пробела
-            if (lastChar === ' ') {
-                const lastWord = query.split(' ').slice(-1)[0];
-                if (lastWord) {
-                    await this.correctQuery(lastWord, searchInput);
-                }
-            }
-
-            // Проверка минимальной длины запроса
-            if (query.length < 3) {
-                resultContainer.innerHTML = '<p>Почніть пошук...</p>';
-                categoriesContainer.innerHTML = '';
-                historyList.innerHTML = '';
+            // Проверка минимальной длины запроса для подсказок
+            if (query.length < 1) {
+                suggestionsList.innerHTML = '';
+                suggestionsList.style.display = 'none'; // Скрыть подсказки, если их нет
                 return;
             }
 
-
-            // Обновление подсказок и результатов поиска
+            // Показ подсказок и обновление результатов
             try {
-                const [suggestions, products] = await Promise.all([
-                    this.fetchSuggestions(query, historyList, searchInput),
-                    this.fetchProducts(query, categoriesContainer, resultContainer),
-                ]);
+                // Получаем подсказки и выводим их под инпутом
+                await this.fetchSuggestions(query, suggestionsList, searchInput);
 
-                console.log('Suggestions:', suggestions);
-                console.log('Products:', products);
+                // Обновляем результаты поиска только при длине строки >= 3
+                if (query.length >= 3) {
+                    await this.fetchProducts(query, categoriesContainer, resultContainer);
+                } else {
+                    resultContainer.innerHTML = '<p>Почніть пошук...</p>';
+                    categoriesContainer.innerHTML = '';
+                }
             } catch (error) {
                 console.error('Error during search input processing:', error);
                 resultContainer.innerHTML = '<p>Виникла помилка під час пошуку.</p>';
+                suggestionsList.innerHTML = '<p>Помилка отримання пропозицій</p>';
             }
         });
+
+        // Скрываем подсказки при клике вне инпута или блока
+        document.addEventListener('click', (event) => {
+            if (!suggestionsList.contains(event.target) && event.target !== searchInput) {
+                suggestionsList.style.display = 'none';
+            }
+        });
+
 
 
     }
@@ -293,6 +304,8 @@ class ProductSearchWidget {
             return;
         }
 
+        console.log("Id пользователя: ", userId)
+
         try {
             const response = await fetch('https://search-module-chi.vercel.app/api/get-user-query', {
                 method: 'POST',
@@ -376,60 +389,57 @@ class ProductSearchWidget {
         }
     }
 
-    async fetchSuggestions(query, historyList, searchInput) {
+    async fetchSuggestions(query, suggestionsList, searchInput) {
+        console.log('Fetching suggestions for query:', query); // Лог текущего запроса
         try {
             const response = await fetch(this.suggestionsUrl, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ inputWord: query }),
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query }),
             });
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
-            const suggestionsResponse = await response.json();
+            const suggestions = await response.json();
 
-            // Проверяем, не изменился ли текст
+            // Лог полученных подсказок
+            console.log('Suggestions received from API:', suggestions);
+
+            // Проверяем актуальность запроса
             if (searchInput.value.trim() !== this.currentQuery) {
-                console.log('Input text changed, skipping suggestions update.');
+                console.log('Query changed, skipping suggestions update.'); // Лог изменения запроса
                 return;
             }
 
-            historyList.innerHTML = '';
-
-            const suggestions = suggestionsResponse.suggestions;
+            suggestionsList.innerHTML = ''; // Очищаем предыдущие подсказки
 
             if (Array.isArray(suggestions) && suggestions.length > 0) {
-                for (let i = 0; i < suggestions.length; i += 4) {
-                    const suggestionRow = document.createElement('div');
-                    suggestionRow.className = 'suggestion-row';
+                suggestions.forEach((suggestion) => {
+                    const suggestionItem = document.createElement('div');
+                    suggestionItem.className = 'suggestion-item';
+                    suggestionItem.innerHTML = `<span>${query}</span><strong>${suggestion.query.replace(query, '')}</strong>`;
 
-                    suggestions.slice(i, i + 4).forEach((word) => {
-                        const wordElement = document.createElement('span');
-                        wordElement.textContent = word;
-                        wordElement.className = 'suggestion-word';
-
-                        wordElement.addEventListener('click', () => {
-                            searchInput.value = word;
-                            searchInput.dispatchEvent(new Event('input'));
-                        });
-
-                        suggestionRow.appendChild(wordElement);
+                    suggestionItem.addEventListener('click', () => {
+                        console.log('Suggestion clicked:', suggestion.query); // Лог клика по подсказке
+                        searchInput.value = suggestion.query;
+                        searchInput.dispatchEvent(new Event('input')); // Тригерим обновление поиска
                     });
 
-                    historyList.appendChild(suggestionRow);
-                }
+                    suggestionsList.appendChild(suggestionItem);
+                });
+
+                suggestionsList.style.display = 'block'; // Показываем блок с подсказками
             } else {
-                historyList.innerHTML = '<p>...</p>';
+                console.log('No suggestions found for query:', query); // Лог отсутствия подсказок
+                suggestionsList.style.display = 'none'; // Скрываем, если подсказок нет
             }
         } catch (error) {
             console.error('Error fetching suggestions:', error);
-            historyList.innerHTML = '<p>Error fetching suggestions.</p>';
+            suggestionsList.innerHTML = '<p>Помилка отримання пропозицій</p>';
         }
     }
+
+
 
     async fetchProducts(query, categoriesContainer, resultContainer) {
         resultContainer.innerHTML = `
