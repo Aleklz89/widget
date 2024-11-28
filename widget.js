@@ -117,7 +117,6 @@ class ProductSearchWidget {
         // Сохранение ссылок на элементы для дальнейшего использования
         const searchInput = widgetContainer.querySelector('.widget-search-input');
         const closeButton = widgetContainer.querySelector('.widget-close-button');
-        const historyList = widgetContainer.querySelector('.widget-history-list');
         const categoriesContainer = widgetContainer.querySelector('.categories-container');
         const resultContainer = widgetContainer.querySelector('.widget-result-container');
 
@@ -415,20 +414,31 @@ class ProductSearchWidget {
 
             if (Array.isArray(suggestions) && suggestions.length > 0) {
                 suggestions.forEach((suggestion) => {
+                    // Проверяем, есть ли свойство word и является ли оно строкой
+                    if (!suggestion.word || typeof suggestion.word !== 'string') {
+                        console.warn('Invalid suggestion object, skipping:', suggestion);
+                        return; // Пропускаем некорректный элемент
+                    }
+
                     const suggestionItem = document.createElement('div');
                     suggestionItem.className = 'suggestion-item';
-                    suggestionItem.innerHTML = `<span>${query}</span><strong>${suggestion.query.replace(query, '')}</strong>`;
 
+                    // Разделяем текст подсказки: общая часть (query) и оставшаяся часть
+                    const boldText = suggestion.word.replace(query, '');
+
+                    suggestionItem.innerHTML = `<span>${query}</span><strong>${boldText}</strong>`;
+
+                    // Добавляем обработчик клика по подсказке
                     suggestionItem.addEventListener('click', () => {
-                        console.log('Suggestion clicked:', suggestion.query); // Лог клика по подсказке
-                        searchInput.value = suggestion.query;
+                        console.log('Suggestion clicked:', suggestion.word); // Лог клика по подсказке
+                        searchInput.value = suggestion.word; // Устанавливаем выбранное слово в инпут
                         searchInput.dispatchEvent(new Event('input')); // Тригерим обновление поиска
                     });
 
                     suggestionsList.appendChild(suggestionItem);
                 });
 
-                suggestionsList.style.display = 'block'; // Показываем блок с подсказками
+                suggestionsList.style.display = 'flex'; // Показываем блок с подсказками
             } else {
                 console.log('No suggestions found for query:', query); // Лог отсутствия подсказок
                 suggestionsList.style.display = 'none'; // Скрываем, если подсказок нет
@@ -439,7 +449,20 @@ class ProductSearchWidget {
         }
     }
 
+    async saveWordsToDatabase(query) {
+        if (!query || typeof query !== 'string') return;
 
+        try {
+            await fetch('https://search-module-chi.vercel.app/api/save-words', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: query }), // Отправляем введенную строку
+            });
+            console.log(`Запрос "${query}" успешно отправлен на /api/save-words.`);
+        } catch (error) {
+            console.error('Ошибка при сохранении строки:', error);
+        }
+    }
 
     async fetchProducts(query, categoriesContainer, resultContainer) {
         resultContainer.innerHTML = `
@@ -471,6 +494,9 @@ class ProductSearchWidget {
 
                 // Сохраняем запрос в историю
                 await this.saveSearchQuery(query);
+
+                // Отправляем запрос на /api/save-words
+                await this.saveWordsToDatabase(query);
             }
         } catch (error) {
             console.error('Error fetching products:', error);
