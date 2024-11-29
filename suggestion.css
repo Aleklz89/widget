@@ -1,0 +1,49 @@
+.suggestion-row {
+    display: flex;
+    gap: 10px;
+}
+
+.suggestion-word {
+    font-size: 13px;
+    font-style: italic;
+    color: #333;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.suggestion-word:hover {
+    color: #007bff;
+    text-decoration: underline;
+}
+
+.widget-suggestions-list {
+    position: absolute;
+    border-radius: 4px;
+    z-index: 1000;
+    max-height: 200px;
+    overflow-y: auto;
+    width: 100%;
+    top: 100%;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.suggestion-item {
+    background: #eef7ff;
+    padding: 8px 12px;
+    cursor: pointer;
+    width: 90%;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+    
+}
+
+.suggestion-item:hover {
+    background: #f0f0f0;
+}
+
+.suggestion-item strong {
+    font-weight: bold;
+}

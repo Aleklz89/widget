@@ -51,11 +51,41 @@ class ProductSearchWidget {
 
     async initWidget() {
         console.log('Widget initialization started.');
+
+        // Подключение HTML
+        const response = await fetch('/widget.html'); // Убедитесь, что путь к widget.html корректен
+        const widgetHtml = await response.text();
+
+        const widgetContainerWrapper = document.createElement('div');
+        widgetContainerWrapper.innerHTML = widgetHtml.trim();
+        const widgetContainer = widgetContainerWrapper.firstElementChild;
+        console.log('Widget container created:', widgetContainer);
+        document.body.appendChild(widgetContainer);
+        console.log('Widget container appended to body.');
+
+
         // Добавление шрифта в документ
         const fontLink = document.createElement('link');
         fontLink.href = 'https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap';
         fontLink.rel = 'stylesheet';
         document.head.appendChild(fontLink);
+
+        // Подключение внешних CSS-файлов
+        const stylesheets = [
+            'widget.css',
+            'suggestion.css',
+            'history.css',
+            'category.css',
+            'container.css',
+            'media.css'
+        ];
+
+        stylesheets.forEach((stylesheet) => {
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = `/${stylesheet}`; // Укажите правильный путь к вашим CSS-файлам
+            document.head.appendChild(link);
+        });
 
         // Сохранение ссылок на элементы
         const triggerInput = document.getElementById(this.triggerInputId);
@@ -72,40 +102,6 @@ class ProductSearchWidget {
         await this.loadSearchHistory(this.userId);
 
         this.updateSearchHistory();
-
-
-
-
-        // Основная структура виджета через шаблонные строки
-        const widgetHtml = `
-    <div class="widget-container" style="display: none;">
-        <div class="widget-close-button">&times;</div>
-        <div class="widget-input-wrapper">
-            <div class="widget-search-icon"></div>
-            <input type="text" class="widget-search-input" placeholder="Search products...">
-            <div class="widget-suggestions-list" style="display: none;"></div> <!-- Добавлено -->
-        </div>
-        <div class="widget-history-container">
-            <div class="widget-history-list"></div>
-        </div>
-        <div class="main-content-container">
-            <div class="categories-container"></div>
-            <div class="widget-result-container"></div>
-            <div class="additional-info-container"></div>
-        </div>
-    </div>
-`;
-
-        // Создание и добавление DOM-структуры
-        const widgetContainerWrapper = document.createElement('div');
-        widgetContainerWrapper.innerHTML = widgetHtml.trim();
-        const widgetContainer = widgetContainerWrapper.firstElementChild;
-        console.log('Widget container created:', widgetContainer);
-        document.body.appendChild(widgetContainer);
-        console.log('Widget container appended to body.');
-
-        console.log('Добавляем обработчики для истории'); // Лог для отладки
-
 
 
         // Настраиваем обработчики истории
@@ -465,11 +461,7 @@ class ProductSearchWidget {
     }
 
     async fetchProducts(query, categoriesContainer, resultContainer) {
-        // resultContainer.innerHTML = `
-        //     <div class="loader">
-        //         <div class="loader-circle"></div>
-        //     </div>
-        // `;
+        const suggestionsList = document.querySelector('.widget-suggestions-list'); // Найти окно подсказок
 
         try {
             const response = await fetch(this.apiUrl, {
@@ -491,6 +483,11 @@ class ProductSearchWidget {
                 categoriesContainer.innerHTML = '';
             } else {
                 this.displayProductsByCategory(products, categoriesContainer, resultContainer);
+
+                // Скрыть подсказки
+                if (suggestionsList) {
+                    suggestionsList.style.display = 'none';
+                }
 
                 // Сохраняем запрос в историю
                 await this.saveSearchQuery(query);
@@ -546,11 +543,27 @@ class ProductSearchWidget {
         const categoryNames = [allResultsCategoryName, ...Object.keys(categories)];
 
         categoryNames.forEach((categoryName) => {
+            // Создаем элемент для категории
             const categoryItem = document.createElement('div');
             categoryItem.className = 'category-item';
+
+            // Создаем текст для названия категории
+            const categoryText = document.createElement('span');
+            categoryText.className = 'category-name';
+            categoryText.textContent = categoryName;
+
+            // Создаем блок для количества товаров
+            const categoryCount = document.createElement('div');
+            categoryCount.className = 'category-count';
             const productCount =
                 categoryName === allResultsCategoryName ? products.length : categories[categoryName].length;
-            categoryItem.textContent = `${categoryName} (${productCount})`;
+            categoryCount.textContent = productCount;
+
+            // Добавляем название категории и количество в контейнер
+            categoryItem.appendChild(categoryText);
+            categoryItem.appendChild(categoryCount);
+
+            // Добавляем обработчик клика
             categoryItem.addEventListener('click', () => {
                 const categoryItems = categoriesContainer.getElementsByClassName('category-item');
                 Array.from(categoryItems).forEach((item) => item.classList.remove('active'));
@@ -574,7 +587,7 @@ class ProductSearchWidget {
         this.showCategoryProducts(groupedProducts, resultContainer, true);
     }
 
-    showCategoryProducts(groupedProducts, resultContainer, showCategoryTitles = true, selectedCategory = null) {
+    async showCategoryProducts(groupedProducts, resultContainer, showCategoryTitles = true, selectedCategory = null) {
         console.log('Grouped Products:', groupedProducts); // Лог для проверки группировки
         console.log('Selected Category:', selectedCategory); // Лог для проверки выбранной категории
 
@@ -593,75 +606,89 @@ class ProductSearchWidget {
 
         resultContainer.innerHTML = '';
 
+        // Загружаем HTML-шаблон для товаров
+        const templateResponse = await fetch('/product-item.html'); // Убедитесь, что путь к шаблону верный
+        if (!templateResponse.ok) {
+            throw new Error(`Failed to load product template: ${templateResponse.status}`);
+        }
+        const productTemplate = await templateResponse.text();
+
         Object.entries(groupedProducts).forEach(([category, items]) => {
             const isSingleCategory = Object.keys(groupedProducts).length === 1 && !selectedCategory;
             console.log(`Rendering category: ${category}, Items count: ${items.length}, isSingleCategory: ${isSingleCategory}`);
 
+            // Создаем HTML заголовка категории, если нужно
             const categoryTitleHtml = (showCategoryTitles || selectedCategory)
                 ? `<h3>${category} →</h3>`
                 : '';
 
-            // HTML для первых maxItemsToShow товаров
-            const initialProductItemsHtml = items
-                .slice(0, maxItemsToShow)
-                .map(item => `
-                    <div class="product-item">
-                        <img src="${item.imageUrl}" alt="${item.name}">
-                        <div>
-                            <p class="product-name">${item.name}</p>
-                            <p class="product-price">${item.price.toFixed(2)} ${item.currencyId}</p>
-                            <p class="product-presence">${item.presence}</p>
-                        </div>
-                    </div>
-                `)
-                .join('');
-
-            // HTML для кнопки "ще"
-            const moreLinkHtml = items.length > maxItemsToShow
-                ? `<div class="more-link">ще ${items.length - maxItemsToShow} ...</div>`
-                : '';
-
-            // HTML блока категории
-            const categoryBlockHtml = `
-                <div class="category-block ${isSingleCategory ? 'category-single' : 'category-multiple'}">
-                    ${categoryTitleHtml}
-                    <div class="product-container">
-                        ${initialProductItemsHtml}
-                        ${moreLinkHtml}
-                    </div>
-                </div>
-            `;
-
+            // Создаем блок категории
             const categoryBlock = document.createElement('div');
-            categoryBlock.innerHTML = categoryBlockHtml.trim();
+            categoryBlock.className = `category-block ${isSingleCategory ? 'category-single' : 'category-multiple'}`;
 
-            // Обработка клика по "ще"
-            if (items.length > maxItemsToShow) {
-                const moreLink = categoryBlock.querySelector('.more-link');
-                moreLink.addEventListener('click', () => {
-                    const hiddenItemsHtml = items.slice(maxItemsToShow) // Оставшиеся товары
-                        .map(item => `
-                            <div class="product-item">
-                                <img src="${item.imageUrl}" alt="${item.name}">
-                                <div>
-                                    <p class="product-name">${item.name}</p>
-                                    <p class="product-price">${item.price.toFixed(2)} ${item.currencyId}</p>
-                                    <p class="product-presence">${item.presence}</p>
-                                </div>
-                            </div>
-                        `)
-                        .join('');
-
-                    // Вставляем оставшиеся товары перед кнопкой "ще"
-                    moreLink.insertAdjacentHTML('beforebegin', hiddenItemsHtml);
-                    moreLink.remove(); // Убираем кнопку "ще"
-                });
+            // Добавляем заголовок категории
+            if (categoryTitleHtml) {
+                categoryBlock.innerHTML = categoryTitleHtml;
             }
 
+            const productContainer = document.createElement('div');
+            productContainer.className = 'product-container';
+
+            // Добавляем товары, ограничиваясь maxItemsToShow
+            items.slice(0, maxItemsToShow).forEach((item) => {
+                let productHtml = productTemplate
+                    .replace(/\{\{imageUrl\}\}/g, item.imageUrl)
+                    .replace(/\{\{name\}\}/g, item.name)
+                    .replace(/\{\{price\}\}/g, item.price.toFixed(2))
+                    .replace(/\{\{currencyId\}\}/g, item.currencyId)
+                    .replace(/\{\{presence\}\}/g, item.presence);
+
+                const productElement = document.createElement('div');
+                productElement.innerHTML = productHtml.trim();
+                productContainer.appendChild(productElement.firstElementChild);
+            });
+
+            // Добавляем кнопку "ще", если товаров больше, чем maxItemsToShow
+            if (items.length > maxItemsToShow) {
+                const moreLink = document.createElement('div');
+                moreLink.className = 'more-link';
+                moreLink.textContent = `ще ${items.length - maxItemsToShow} ...`;
+
+                moreLink.addEventListener('click', () => {
+                    const hiddenItemsHtml = items.slice(maxItemsToShow).map((item) => {
+                        let hiddenProductHtml = productTemplate
+                            .replace('{{imageUrl}}', item.imageUrl)
+                            .replace('{{name}}', item.name)
+                            .replace('{{price}}', item.price.toFixed(2))
+                            .replace('{{currencyId}}', item.currencyId)
+                            .replace('{{presence}}', item.presence);
+
+                        const hiddenProductElement = document.createElement('div');
+                        hiddenProductElement.innerHTML = hiddenProductHtml.trim();
+                        return hiddenProductElement.firstElementChild.outerHTML;
+                    }).join('');
+
+                    // Добавляем скрытые товары и убираем кнопку "ще"
+                    moreLink.insertAdjacentHTML('beforebegin', hiddenItemsHtml);
+                    moreLink.remove();
+                });
+
+                productContainer.appendChild(moreLink);
+            }
+
+            categoryBlock.appendChild(productContainer);
             resultContainer.appendChild(categoryBlock);
         });
 
         console.log('Final result container:', resultContainer.innerHTML);
+    }
+
+    async loadTemplate(templatePath) {
+        const response = await fetch(templatePath);
+        if (!response.ok) {
+            throw new Error(`Failed to load template: ${templatePath}`);
+        }
+        return await response.text();
     }
 
 

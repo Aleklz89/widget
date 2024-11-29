@@ -1,0 +1,111 @@
+.product-price {
+    font-size: 13px;
+    margin-top: 3px;
+    margin-bottom: 5px;
+}
+
+/* Стили продуктов */
+.product-item {
+    display: flex;
+    /* Три элемента в ряд */
+    box-sizing: border-box;
+    margin-bottom: 20px;
+}
+
+.product-item img {
+    width: 80px;
+    height: auto; /* Высота изменяется автоматически, чтобы сохранить пропорции */
+    object-fit: contain; /* Гарантирует, что изображение будет полностью отображаться, сохраняя пропорции */
+}
+
+.product-details {
+    margin-left: 10px;
+}
+
+
+.category-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    cursor: pointer;
+    border-left: 4px solid transparent;
+    transition: all 0.3s ease;
+    background-color: #fff;
+}
+
+.category-item:hover,
+.category-item.active {
+    background-color: #eef7ff;
+    border-left: 4px solid #007bff;
+}
+
+
+
+.category-block {
+    margin-bottom: 20px;
+    /* Добавляем пространство между блоками */
+    padding: 10px 0;
+    /* Дополнительный отступ сверху и снизу */
+}
+
+.category-block h3 {
+    font-size: 16px;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.category-single .product-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    /* Отступы между продуктами */
+    justify-content: flex-start;
+    /* Выравнивание */
+    border: 1px solid red;
+    /* Для проверки */
+}
+
+.category-multiple .product-container {
+    display: flex;
+    /* Для горизонтального размещения */
+    flex-wrap: wrap;
+    /* Позволяет переносить элементы */
+    gap: 20px;
+    /* Расстояние между продуктами */
+    justify-content: flex-start;
+    /* Выравнивание по левому краю */
+    margin-bottom: 200px;
+}
+
+.category-item span {
+    font-size: 14px;
+    /* Для текста */
+}
+
+.category-item.active span {
+    font-size: 14px;
+    /* Для числа справа */
+    color: inherit;
+    /* Используем цвет категории */
+}
+
+.category-name {
+    font-size: 14px;
+    color: #333;
+}
+
+.category-count {
+    background-color: #007bff;
+    color: #fff;
+    font-size: 14px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    text-align: center;
+    min-width: 30px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
