@@ -257,7 +257,7 @@ class ProductSearchWidget {
         historyList.innerHTML = '';
 
         if (this.searchHistory.length === 0) {
-            historyList.innerHTML = '<p>Історія порожня.</p>';
+            historyList.innerHTML = '<p></p>';
         } else {
             this.searchHistory.forEach((item) => {
                 const historyElement = document.createElement('div');
