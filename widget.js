@@ -465,11 +465,11 @@ class ProductSearchWidget {
     }
 
     async fetchProducts(query, categoriesContainer, resultContainer) {
-        resultContainer.innerHTML = `
-            <div class="loader">
-                <div class="loader-circle"></div>
-            </div>
-        `;
+        // resultContainer.innerHTML = `
+        //     <div class="loader">
+        //         <div class="loader-circle"></div>
+        //     </div>
+        // `;
 
         try {
             const response = await fetch(this.apiUrl, {
