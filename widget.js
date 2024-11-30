@@ -83,7 +83,7 @@ class ProductSearchWidget {
         stylesheets.forEach((stylesheet) => {
             const link = document.createElement('link');
             link.rel = 'stylesheet';
-            link.href = `/styles/${stylesheet}`; // Укажите правильный путь к вашим CSS-файлам
+            link.href = `/widget/styles/${stylesheet}`; // Укажите правильный путь к вашим CSS-файлам
             document.head.appendChild(link);
         });
 
@@ -606,7 +606,7 @@ class ProductSearchWidget {
         resultContainer.innerHTML = '';
     
         // Загружаем HTML-шаблон для товаров
-        const templateResponse = await fetch('/product-item.html'); // Проверьте путь
+        const templateResponse = await fetch('/widget/product-item.html'); // Проверьте путь
         if (!templateResponse.ok) {
             throw new Error(`Failed to load product template: ${templateResponse.status}`);
         }
