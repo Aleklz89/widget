@@ -83,7 +83,7 @@ class ProductSearchWidget {
         stylesheets.forEach((stylesheet) => {
             const link = document.createElement('link');
             link.rel = 'stylesheet';
-            link.href = `/${stylesheet}`; // Укажите правильный путь к вашим CSS-файлам
+            link.href = `/styles/${stylesheet}`; // Укажите правильный путь к вашим CSS-файлам
             document.head.appendChild(link);
         });
 
@@ -588,100 +588,91 @@ class ProductSearchWidget {
     }
 
     async showCategoryProducts(groupedProducts, resultContainer, showCategoryTitles = true, selectedCategory = null) {
-        console.log('Grouped Products:', groupedProducts); // Лог для проверки группировки
-        console.log('Selected Category:', selectedCategory); // Лог для проверки выбранной категории
-
-        // Проверяем, выбрана ли категория "Всі результати"
+        console.log('Grouped Products:', groupedProducts);
+        console.log('Selected Category:', selectedCategory);
+    
         const isAllResults = selectedCategory === null;
-
+    
         // Устанавливаем количество товаров для отображения
-        const maxItemsToShow = isAllResults ? 4 : 15;
-
+        const maxItemsToShow = isAllResults ? 4 : Number.MAX_SAFE_INTEGER;
+    
         // Обновляем классы .widget-result-container
         if (isAllResults) {
             resultContainer.classList.add('all-results');
         } else {
             resultContainer.classList.remove('all-results');
         }
-
+    
         resultContainer.innerHTML = '';
-
+    
         // Загружаем HTML-шаблон для товаров
-        const templateResponse = await fetch('/product-item.html'); // Убедитесь, что путь к шаблону верный
+        const templateResponse = await fetch('/product-item.html'); // Проверьте путь
         if (!templateResponse.ok) {
             throw new Error(`Failed to load product template: ${templateResponse.status}`);
         }
         const productTemplate = await templateResponse.text();
-
+    
         Object.entries(groupedProducts).forEach(([category, items]) => {
             const isSingleCategory = Object.keys(groupedProducts).length === 1 && !selectedCategory;
-            console.log(`Rendering category: ${category}, Items count: ${items.length}, isSingleCategory: ${isSingleCategory}`);
-
-            // Создаем HTML заголовка категории, если нужно
+    
             const categoryTitleHtml = (showCategoryTitles || selectedCategory)
-                ? `<h3>${category} →</h3>`
+                ? `<h3><a href="#" class="category-link">${category} →</a></h3>`
                 : '';
-
-            // Создаем блок категории
+    
             const categoryBlock = document.createElement('div');
             categoryBlock.className = `category-block ${isSingleCategory ? 'category-single' : 'category-multiple'}`;
-
-            // Добавляем заголовок категории
             if (categoryTitleHtml) {
                 categoryBlock.innerHTML = categoryTitleHtml;
             }
-
+    
             const productContainer = document.createElement('div');
             productContainer.className = 'product-container';
-
-            // Добавляем товары, ограничиваясь maxItemsToShow
+    
+            // Добавляем товары
             items.slice(0, maxItemsToShow).forEach((item) => {
                 let productHtml = productTemplate
-                    .replace(/\{\{imageUrl\}\}/g, item.imageUrl)
-                    .replace(/\{\{name\}\}/g, item.name)
-                    .replace(/\{\{price\}\}/g, item.price.toFixed(2))
-                    .replace(/\{\{currencyId\}\}/g, item.currencyId)
-                    .replace(/\{\{presence\}\}/g, item.presence);
-
+                    .replace(/\{\{imageUrl\}\}/g, item.imageUrl || '')
+                    .replace(/\{\{name\}\}/g, item.name || '')
+                    .replace(/\{\{price\}\}/g, item.price ? item.price.toFixed(2) : '0.00')
+                    .replace(/\{\{currencyId\}\}/g, item.currencyId || '')
+                    .replace(/\{\{presence\}\}/g, item.presence || '');
+    
                 const productElement = document.createElement('div');
                 productElement.innerHTML = productHtml.trim();
-                productContainer.appendChild(productElement.firstElementChild);
+    
+                // Оборачиваем блок товара в ссылку или делаем его кликабельным
+                const productWrapper = document.createElement('a');
+                productWrapper.href = item.url; // Назначаем URL товара
+                productWrapper.target = '_blank'; // Открытие в новой вкладке (опционально)
+                productWrapper.className = 'product-link';
+    
+                productWrapper.appendChild(productElement.firstElementChild);
+    
+                productContainer.appendChild(productWrapper);
             });
-
-            // Добавляем кнопку "ще", если товаров больше, чем maxItemsToShow
-            if (items.length > maxItemsToShow) {
+    
+            // Кнопка "ще", только во "Всі результати"
+            if (isAllResults && items.length > maxItemsToShow) {
                 const moreLink = document.createElement('div');
                 moreLink.className = 'more-link';
                 moreLink.textContent = `ще ${items.length - maxItemsToShow} ...`;
-
+    
                 moreLink.addEventListener('click', () => {
-                    const hiddenItemsHtml = items.slice(maxItemsToShow).map((item) => {
-                        let hiddenProductHtml = productTemplate
-                            .replace('{{imageUrl}}', item.imageUrl)
-                            .replace('{{name}}', item.name)
-                            .replace('{{price}}', item.price.toFixed(2))
-                            .replace('{{currencyId}}', item.currencyId)
-                            .replace('{{presence}}', item.presence);
-
-                        const hiddenProductElement = document.createElement('div');
-                        hiddenProductElement.innerHTML = hiddenProductHtml.trim();
-                        return hiddenProductElement.firstElementChild.outerHTML;
-                    }).join('');
-
-                    // Добавляем скрытые товары и убираем кнопку "ще"
-                    moreLink.insertAdjacentHTML('beforebegin', hiddenItemsHtml);
-                    moreLink.remove();
+                    this.showCategoryProducts({ [category]: items }, resultContainer, true, category);
+                    this.activateCategory(category);
                 });
-
+    
                 productContainer.appendChild(moreLink);
             }
-
+    
             categoryBlock.appendChild(productContainer);
             resultContainer.appendChild(categoryBlock);
         });
-
+    
         console.log('Final result container:', resultContainer.innerHTML);
     }
+    
+
 
     async loadTemplate(templatePath) {
         const response = await fetch(templatePath);
@@ -689,6 +680,19 @@ class ProductSearchWidget {
             throw new Error(`Failed to load template: ${templatePath}`);
         }
         return await response.text();
+    }
+
+    activateCategory(categoryName) {
+        const categoriesContainer = document.querySelector('.categories-container');
+        const categoryItems = categoriesContainer.getElementsByClassName('category-item');
+
+        Array.from(categoryItems).forEach((item) => {
+            if (item.querySelector('.category-name').textContent === categoryName) {
+                item.classList.add('active');
+            } else {
+                item.classList.remove('active');
+            }
+        });
     }
 
 

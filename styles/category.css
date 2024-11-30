@@ -14,12 +14,26 @@
 
 .product-item img {
     width: 80px;
-    height: auto; /* Высота изменяется автоматически, чтобы сохранить пропорции */
-    object-fit: contain; /* Гарантирует, что изображение будет полностью отображаться, сохраняя пропорции */
+    height: auto;
+    /* Высота изменяется автоматически, чтобы сохранить пропорции */
+    object-fit: contain;
+    /* Гарантирует, что изображение будет полностью отображаться, сохраняя пропорции */
+}
+
+/* Затемняем блок, если товара нет в наличии */
+.product-item.out-of-stock {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* Красим текст наличия товара в красный цвет */
+.product-item.out-of-stock .product-presence {
+    color: red;
 }
 
 .product-details {
     margin-left: 10px;
+    width: 250px;
 }
 
 
@@ -50,9 +64,10 @@
 }
 
 .category-block h3 {
-    font-size: 16px;
+    font-size: 18px;
     margin-bottom: 10px;
     color: #333;
+    font-weight: 500;
 }
 
 .category-single .product-container {
@@ -76,7 +91,10 @@
     justify-content: flex-start;
     /* Выравнивание по левому краю */
     margin-bottom: 200px;
+    max-height: 450px;
+    height: auto;
 }
+
 
 .category-item span {
     font-size: 14px;
@@ -108,4 +126,35 @@
     align-items: center;
     justify-content: center;
     text-align: center;
+}
+
+.category-link {
+    text-decoration: none;
+    color: black;
+}
+
+.category-link:hover {
+    color: rgb(114, 114, 114);
+}
+
+@media(max-width: 400px) {
+    .category-multiple .product-container {
+        display: flex;
+        /* Для горизонтального размещения */
+        flex-wrap: wrap;
+        /* Позволяет переносить элементы */
+        gap: 20px;
+        /* Расстояние между продуктами */
+        justify-content: flex-start;
+        /* Выравнивание по левому краю */
+        margin-bottom: 200px;
+        max-height: 450px;
+        height: auto;
+        width: 300px;
+    }
+
+    .product-details {
+        width: 200px;
+    }
+
 }

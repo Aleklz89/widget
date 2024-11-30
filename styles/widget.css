@@ -29,7 +29,7 @@
     font-size: 18px;
     border: none;
     outline: none;
-    background-color: #f9f9ff;
+    background-color: #EEF7FF;
     color: #333;
     transition: background-color 0.3s ease;
     box-sizing: border-box;
@@ -168,5 +168,21 @@
 
     100% {
         transform: rotate(360deg);
+    }
+}
+
+
+@media(max-width: 1400px) {
+    .widget-result-container.all-results {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media(max-width: 1000px) {
+    .widget-result-container.all-results {
+        display: grid;
+        grid-template-columns: repeat(1, 1fr);
+        margin: 0;
     }
 }

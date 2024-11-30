@@ -1,0 +1,200 @@
+/* Иконка для каждого элемента истории */
+.history-item::before {
+    content: "↻";
+    /* Символ или иконка */
+    margin-right: 10px;
+    color: #999;
+    font-size: 14px;
+}
+
+
+.history-icon {
+    margin-right: 10px;
+    color: #999;
+    font-size: 14px;
+}
+
+.history-item p {
+    margin: 0;
+    font-size: 14px;
+    color: #333;
+    flex-grow: 1;
+    /* Занимает оставшееся пространство */
+    text-overflow: ellipsis;
+    /* Обрезка текста */
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+
+
+.widget-history-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.widget-history-list::-webkit-scrollbar-thumb {
+    background: #b0b0b0;
+    border-radius: 4px;
+}
+
+
+.widget-history-list {
+    position: absolute;
+    top: 7%;
+    /* Отображение сразу под полем ввода */
+    left: 0;
+    width: 100%;
+    max-height: 200px;
+    overflow-y: auto;
+    /* Скролл, если история превышает высоту */
+    background: transparent;
+    border-radius: 5px;
+    z-index: 1000;
+    display: none;
+    /* По умолчанию скрыто */
+    opacity: 0;
+    transform: scale(0.95);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.widget-history-list.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    /* Показывать элемент */
+    opacity: 1;
+    transform: scale(1);
+}
+
+.history-item {
+    width: 90%;
+    padding: 8px 12px;
+    /* Разделитель между элементами */
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    background-color: #eef7ff;
+
+}
+
+.history-item:hover {
+    background: #f0f0f0;
+}
+
+.history-icon {
+    margin-right: 8px;
+    color: gray;
+    font-size: 16px;
+}
+
+@media(max-width: 1400px) {
+    .widget-history-list.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        /* Показывать элемент */
+        opacity: 1;
+        transform: scale(1);
+        margin-top: -20px;
+    }
+}
+
+
+@media(max-width: 1300px) {
+    .widget-history-list.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        /* Показывать элемент */
+        opacity: 1;
+        transform: scale(1);
+        margin-top: -10px;
+    }
+}
+
+@media(max-width: 1100px) {
+    .widget-history-list.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        /* Показывать элемент */
+        opacity: 1;
+        transform: scale(1);
+        margin-top: -15px;
+    }
+}
+
+
+
+@media(max-width: 1000px) {
+    .widget-history-list.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        /* Показывать элемент */
+        opacity: 1;
+        transform: scale(1);
+        margin-top: 15px;
+    }
+}
+
+
+
+@media(max-width: 900px) {
+    .widget-history-list.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        /* Показывать элемент */
+        opacity: 1;
+        transform: scale(1);
+        margin-top: 10px;
+    }
+}
+
+@media(max-width: 800px) {
+    .widget-history-list.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        /* Показывать элемент */
+        opacity: 1;
+        transform: scale(1);
+        margin-top: 10px;
+    }
+}
+
+@media(max-width: 600px) {
+    .widget-history-list.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        /* Показывать элемент */
+        opacity: 1;
+        transform: scale(1);
+        margin-top: 0px;
+    }
+}
+
+@media(max-width: 500px) {
+    .widget-history-list.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        /* Показывать элемент */
+        opacity: 1;
+        transform: scale(1);
+        margin-top: -10px;
+    }
+}

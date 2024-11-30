@@ -32,7 +32,17 @@
     /* Отступы между товарами */
     align-items: flex-start;
     /* Выравнивание по верхнему краю */
+    border-top: 0.5px solid rgb(219, 217, 217);
 }
+.product-link {
+    text-decoration: none;
+    color: inherit;
+}
+
+.product-link:hover {
+    text-decoration: none;
+}
+
 
 .more-link {
     width: 100%;

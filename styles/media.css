@@ -1,5 +1,43 @@
+@media (max-width: 1000px) {
 
-@media (max-width: 400px) {
+    .categories-container {
+        width: 40%;
+        /* Categories take 20% width */
+        max-height: 100%;
+        /* Ensure it spans the full height */
+        overflow-y: auto;
+        /* Add scrolling for long content */
+        background-color: #f9f9f9;
+        /* Optional background */
+        padding: 10px;
+        /* Optional padding */
+        box-sizing: border-box;
+        padding-bottom: 100px;
+    }
+    
+}
+
+@media (max-width: 900px) {
+
+    .categories-container {
+        width: 60%;
+        /* Categories take 20% width */
+        max-height: 100%;
+        /* Ensure it spans the full height */
+        overflow-y: auto;
+        /* Add scrolling for long content */
+        background-color: #f9f9f9;
+        /* Optional background */
+        padding: 10px;
+        /* Optional padding */
+        box-sizing: border-box;
+        padding-bottom: 100px;
+    }
+    
+}
+
+
+@media (max-width: 500px) {
     .main-content-container {
         display: flex;
         flex-direction: column;
