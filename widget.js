@@ -53,7 +53,7 @@ class ProductSearchWidget {
         console.log('Widget initialization started.');
 
         // Подключение HTML
-        const response = await fetch('/widget.html'); // Убедитесь, что путь к widget.html корректен
+        const response = await fetch('/widget/widget.html'); // Убедитесь, что путь к widget.html корректен
         const widgetHtml = await response.text();
 
         const widgetContainerWrapper = document.createElement('div');
