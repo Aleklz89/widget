@@ -1,9 +1,9 @@
 class ProductSearchWidget {
     constructor(triggerInputId) {
         this.triggerInputId = triggerInputId;
-        this.apiUrl = 'https://search-module-chi.vercel.app/api/search';
-        this.suggestionsUrl = 'https://search-module-chi.vercel.app/api/search-suggestions';
-        this.correctionUrl = 'https://search-module-chi.vercel.app/api/correct';
+        this.apiUrl = 'http://localhost:3000/api/search';
+        this.suggestionsUrl = 'http://localhost:3000/api/search-suggestions';
+        this.correctionUrl = 'http://localhost:3000/api/correct';
         this.searchHistory = [];
         this.initWidget();
     }
@@ -53,7 +53,7 @@ class ProductSearchWidget {
         console.log('Widget initialization started.');
 
         // Подключение HTML
-        const response = await fetch('/widget/widget.html'); // Убедитесь, что путь к widget.html корректен
+        const response = await fetch('widget.html'); // Убедитесь, что путь к widget.html корректен
         const widgetHtml = await response.text();
 
         const widgetContainerWrapper = document.createElement('div');
@@ -83,7 +83,7 @@ class ProductSearchWidget {
         stylesheets.forEach((stylesheet) => {
             const link = document.createElement('link');
             link.rel = 'stylesheet';
-            link.href = `/widget/styles/${stylesheet}`; // Укажите правильный путь к вашим CSS-файлам
+            link.href = `/styles/${stylesheet}`; // Укажите правильный путь к вашим CSS-файлам
             document.head.appendChild(link);
         });
 
@@ -588,13 +588,16 @@ class ProductSearchWidget {
     }
 
     async showCategoryProducts(groupedProducts, resultContainer, showCategoryTitles = true, selectedCategory = null) {
+        console.log('=== Start of showCategoryProducts ===');
         console.log('Grouped Products:', groupedProducts);
         console.log('Selected Category:', selectedCategory);
     
         const isAllResults = selectedCategory === null;
+        console.log('Is All Results:', isAllResults);
     
         // Устанавливаем количество товаров для отображения
         const maxItemsToShow = isAllResults ? 4 : Number.MAX_SAFE_INTEGER;
+        console.log('Max Items to Show:', maxItemsToShow);
     
         // Обновляем классы .widget-result-container
         if (isAllResults) {
@@ -606,14 +609,21 @@ class ProductSearchWidget {
         resultContainer.innerHTML = '';
     
         // Загружаем HTML-шаблон для товаров
-        const templateResponse = await fetch('/widget/product-item.html'); // Проверьте путь
+        console.time('Loading Product Template');
+        const templateResponse = await fetch('product-item.html'); // Проверьте путь
         if (!templateResponse.ok) {
             throw new Error(`Failed to load product template: ${templateResponse.status}`);
         }
         const productTemplate = await templateResponse.text();
+        console.timeEnd('Loading Product Template');
+        console.log('Product Template Loaded:', productTemplate);
     
         Object.entries(groupedProducts).forEach(([category, items]) => {
+            console.log(`Processing category: ${category}`);
+            console.log(`Items in category:`, items);
+    
             const isSingleCategory = Object.keys(groupedProducts).length === 1 && !selectedCategory;
+            console.log('Is Single Category:', isSingleCategory);
     
             const categoryTitleHtml = (showCategoryTitles || selectedCategory)
                 ? `<h3><a href="#" class="category-link">${category} →</a></h3>`
@@ -630,24 +640,30 @@ class ProductSearchWidget {
     
             // Добавляем товары
             items.slice(0, maxItemsToShow).forEach((item) => {
+                console.log('Processing item:', item);
+    
+                const price = parseFloat(item.price) || 0;
+                const formattedPrice = price.toFixed(2);
+    
                 let productHtml = productTemplate
                     .replace(/\{\{imageUrl\}\}/g, item.imageUrl || '')
-                    .replace(/\{\{name\}\}/g, item.name || '')
-                    .replace(/\{\{price\}\}/g, item.price ? item.price.toFixed(2) : '0.00')
+                    .replace(/\{\{name\}\}/g, item.name || 'No Name')
+                    .replace(/\{\{price\}\}/g, formattedPrice)
                     .replace(/\{\{currencyId\}\}/g, item.currencyId || '')
-                    .replace(/\{\{presence\}\}/g, item.presence || '');
+                    .replace(/\{\{presence\}\}/g, item.presence || 'Unavailable');
+                
+                console.log('Generated Product HTML:', productHtml);
     
                 const productElement = document.createElement('div');
                 productElement.innerHTML = productHtml.trim();
     
                 // Оборачиваем блок товара в ссылку или делаем его кликабельным
                 const productWrapper = document.createElement('a');
-                productWrapper.href = item.url; // Назначаем URL товара
+                productWrapper.href = item.url || '#'; // Назначаем URL товара
                 productWrapper.target = '_blank'; // Открытие в новой вкладке (опционально)
                 productWrapper.className = 'product-link';
     
                 productWrapper.appendChild(productElement.firstElementChild);
-    
                 productContainer.appendChild(productWrapper);
             });
     
@@ -658,6 +674,7 @@ class ProductSearchWidget {
                 moreLink.textContent = `ще ${items.length - maxItemsToShow} ...`;
     
                 moreLink.addEventListener('click', () => {
+                    console.log(`More link clicked for category: ${category}`);
                     this.showCategoryProducts({ [category]: items }, resultContainer, true, category);
                     this.activateCategory(category);
                 });
@@ -670,7 +687,9 @@ class ProductSearchWidget {
         });
     
         console.log('Final result container:', resultContainer.innerHTML);
+        console.log('=== End of showCategoryProducts ===');
     }
+    
     
 
 
