@@ -1,9 +1,9 @@
 class ProductSearchWidget {
     constructor(triggerInputId) {
         this.triggerInputId = triggerInputId;
-        this.apiUrl = 'https://aleklz89.github.io/widget/api/search';
-        this.suggestionsUrl = 'https://aleklz89.github.io/widget/api/search-suggestions';
-        this.correctionUrl = 'https://aleklz89.github.io/widget/api/correct';
+        this.apiUrl = 'https://search-module-chi.vercel.app/api/search';
+        this.suggestionsUrl = 'https://search-module-chi.vercel.app/api/search-suggestions';
+        this.correctionUrl = 'https://search-module-chi.vercel.app/api/correct';
         this.searchHistory = [];
         this.initWidget();
     }
