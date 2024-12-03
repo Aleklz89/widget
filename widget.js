@@ -1,9 +1,9 @@
 class ProductSearchWidget {
     constructor(triggerInputId) {
         this.triggerInputId = triggerInputId;
-        this.apiUrl = 'http://localhost:3000/api/search';
-        this.suggestionsUrl = 'http://localhost:3000/api/search-suggestions';
-        this.correctionUrl = 'http://localhost:3000/api/correct';
+        this.apiUrl = 'https://aleklz89.github.io/widget/api/search';
+        this.suggestionsUrl = 'https://aleklz89.github.io/widget/api/search-suggestions';
+        this.correctionUrl = 'https://aleklz89.github.io/widget/api/correct';
         this.searchHistory = [];
         this.initWidget();
     }
@@ -83,7 +83,7 @@ class ProductSearchWidget {
         stylesheets.forEach((stylesheet) => {
             const link = document.createElement('link');
             link.rel = 'stylesheet';
-            link.href = `/styles/${stylesheet}`; // Укажите правильный путь к вашим CSS-файлам
+            link.href = `${stylesheet}`; // Укажите правильный путь к вашим CSS-файлам
             document.head.appendChild(link);
         });
 
