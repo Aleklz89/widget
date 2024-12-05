@@ -1,12 +1,16 @@
 class ProductSearchWidget {
     constructor(triggerInputId) {
         this.triggerInputId = triggerInputId;
-        this.apiUrl = 'https://search-module-chi.vercel.app/api/search';
+        this.apiUrl = 'http://localhost:3000/api/search';
         this.suggestionsUrl = 'https://search-module-chi.vercel.app/api/search-suggestions';
         this.correctionUrl = 'https://search-module-chi.vercel.app/api/correct';
         this.searchHistory = [];
+        this.abortController = null; // Инициализация abortController как свойства класса
+        this.currentQuery = null; // Отслеживание текущего запроса
         this.initWidget();
     }
+
+
 
     showHistory() {
         const historyList = document.querySelector('.widget-history-list');
@@ -63,7 +67,6 @@ class ProductSearchWidget {
         document.body.appendChild(widgetContainer);
         console.log('Widget container appended to body.');
 
-
         // Добавление шрифта в документ
         const fontLink = document.createElement('link');
         fontLink.href = 'https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap';
@@ -100,9 +103,7 @@ class ProductSearchWidget {
 
         // Загружаем историю
         await this.loadSearchHistory(this.userId);
-
         this.updateSearchHistory();
-
 
         // Настраиваем обработчики истории
         this.addHistoryPopupHandlers();
@@ -134,6 +135,9 @@ class ProductSearchWidget {
             }
         });
 
+        // Используем AbortController для управления запросами
+        let abortController = null;
+
         searchInput.addEventListener('input', async (e) => {
             const query = e.target.value.trim();
             const suggestionsList = widgetContainer.querySelector('.widget-suggestions-list');
@@ -157,22 +161,34 @@ class ProductSearchWidget {
                 return;
             }
 
-            // Показ подсказок и обновление результатов
+            // Отменяем предыдущий запрос, если он существует
+            if (abortController) {
+                console.log('⏹️ Отмена предыдущего запроса.');
+                abortController.abort();
+            }
+
+            // Создаем новый AbortController
+            abortController = new AbortController();
+
             try {
-                // Получаем подсказки и выводим их под инпутом
-                await this.fetchSuggestions(query, suggestionsList, searchInput);
+                // Показ подсказок и обновление результатов
+                await this.fetchSuggestions(query, suggestionsList, searchInput, abortController);
 
                 // Обновляем результаты поиска только при длине строки >= 3
                 if (query.length >= 3) {
-                    await this.fetchProducts(query, categoriesContainer, resultContainer);
+                    await this.fetchProducts(query, categoriesContainer, resultContainer, abortController);
                 } else {
                     resultContainer.innerHTML = '<p>Почніть пошук...</p>';
                     categoriesContainer.innerHTML = '';
                 }
             } catch (error) {
-                console.error('Error during search input processing:', error);
-                resultContainer.innerHTML = '<p>Виникла помилка під час пошуку.</p>';
-                suggestionsList.innerHTML = '<p>Помилка отримання пропозицій</p>';
+                if (error.name === 'AbortError') {
+                    console.log('⏹️ Запрос был отменён.');
+                } else {
+                    console.error('Error during search input processing:', error);
+                    resultContainer.innerHTML = '<p>Виникла помилка під час пошуку.</p>';
+                    suggestionsList.innerHTML = '<p>Помилка отримання пропозицій</p>';
+                }
             }
         });
 
@@ -182,9 +198,6 @@ class ProductSearchWidget {
                 suggestionsList.style.display = 'none';
             }
         });
-
-
-
     }
 
     updateSearchHistory() {
@@ -460,8 +473,18 @@ class ProductSearchWidget {
         }
     }
 
+
     async fetchProducts(query, categoriesContainer, resultContainer) {
-        const suggestionsList = document.querySelector('.widget-suggestions-list'); // Найти окно подсказок
+        console.log(`🔍 Запрос на поиск: ${query}`);
+
+        // Отменяем предыдущий запрос, если он существует
+        if (this.abortController) {
+            console.log('⏹️ Отмена предыдущего запроса');
+            this.abortController.abort();
+        }
+
+        // Создаём новый AbortController
+        this.abortController = new AbortController();
 
         try {
             const response = await fetch(this.apiUrl, {
@@ -470,36 +493,38 @@ class ProductSearchWidget {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ word: query }),
+                signal: this.abortController.signal, // Привязываем сигнал к запросу
             });
 
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
 
             const products = await response.json();
+            console.log(`✅ Успешно получены продукты для запроса: "${query}"`, products);
 
-            if (this.currentQuery !== query) return; // Проверяем, не изменился ли запрос
+            // Проверяем, не изменился ли запрос
+            if (this.currentQuery !== query) {
+                console.log('🚫 Запрос устарел, игнорируем результаты.');
+                return;
+            }
 
             if (products.length === 0) {
                 resultContainer.innerHTML = '<p>No products found.</p>';
                 categoriesContainer.innerHTML = '';
             } else {
                 this.displayProductsByCategory(products, categoriesContainer, resultContainer);
-
-                // Скрыть подсказки
-                if (suggestionsList) {
-                    suggestionsList.style.display = 'none';
-                }
-
-                // Сохраняем запрос в историю
-                await this.saveSearchQuery(query);
-
-                // Отправляем запрос на /api/save-words
-                await this.saveWordsToDatabase(query);
             }
         } catch (error) {
-            console.error('Error fetching products:', error);
-            resultContainer.innerHTML = '<p>Error fetching products.</p>';
+            if (error.name === 'AbortError') {
+                console.log('⏹️ Запрос был отменён.');
+            } else {
+                console.error('❌ Ошибка при получении продуктов:', error);
+                resultContainer.innerHTML = '<p>Error fetching products.</p>';
+            }
         }
     }
+
 
 
 
@@ -591,23 +616,23 @@ class ProductSearchWidget {
         console.log('=== Start of showCategoryProducts ===');
         console.log('Grouped Products:', groupedProducts);
         console.log('Selected Category:', selectedCategory);
-    
+
         const isAllResults = selectedCategory === null;
         console.log('Is All Results:', isAllResults);
-    
+
         // Устанавливаем количество товаров для отображения
         const maxItemsToShow = isAllResults ? 4 : Number.MAX_SAFE_INTEGER;
         console.log('Max Items to Show:', maxItemsToShow);
-    
+
         // Обновляем классы .widget-result-container
         if (isAllResults) {
             resultContainer.classList.add('all-results');
         } else {
             resultContainer.classList.remove('all-results');
         }
-    
+
         resultContainer.innerHTML = '';
-    
+
         // Загружаем HTML-шаблон для товаров
         console.time('Loading Product Template');
         const templateResponse = await fetch('product-item.html'); // Проверьте путь
@@ -617,80 +642,80 @@ class ProductSearchWidget {
         const productTemplate = await templateResponse.text();
         console.timeEnd('Loading Product Template');
         console.log('Product Template Loaded:', productTemplate);
-    
+
         Object.entries(groupedProducts).forEach(([category, items]) => {
             console.log(`Processing category: ${category}`);
             console.log(`Items in category:`, items);
-    
+
             const isSingleCategory = Object.keys(groupedProducts).length === 1 && !selectedCategory;
             console.log('Is Single Category:', isSingleCategory);
-    
+
             const categoryTitleHtml = (showCategoryTitles || selectedCategory)
                 ? `<h3><a href="#" class="category-link">${category} →</a></h3>`
                 : '';
-    
+
             const categoryBlock = document.createElement('div');
             categoryBlock.className = `category-block ${isSingleCategory ? 'category-single' : 'category-multiple'}`;
             if (categoryTitleHtml) {
                 categoryBlock.innerHTML = categoryTitleHtml;
             }
-    
+
             const productContainer = document.createElement('div');
             productContainer.className = 'product-container';
-    
+
             // Добавляем товары
             items.slice(0, maxItemsToShow).forEach((item) => {
                 console.log('Processing item:', item);
-    
+
                 const price = parseFloat(item.price) || 0;
                 const formattedPrice = price.toFixed(2);
-    
+
                 let productHtml = productTemplate
-                    .replace(/\{\{imageUrl\}\}/g, item.imageUrl || '')
+                    .replace(/\{\{image\}\}/g, item.image || '')
                     .replace(/\{\{name\}\}/g, item.name || 'No Name')
-                    .replace(/\{\{price\}\}/g, formattedPrice)
-                    .replace(/\{\{currencyId\}\}/g, item.currencyId || '')
-                    .replace(/\{\{presence\}\}/g, item.presence || 'Unavailable');
-                
+                    .replace(/\{\{price\}\}/g, item.newPrice || 'Unavailable')
+                    .replace(/\{\{currencyId\}\}/g, item.currencyId || 'USD')
+                    .replace(/\{\{presence\}\}/g, item.availability ? 'В наявності' : 'Немає в наявності');
+
                 console.log('Generated Product HTML:', productHtml);
-    
+
                 const productElement = document.createElement('div');
                 productElement.innerHTML = productHtml.trim();
-    
+
                 // Оборачиваем блок товара в ссылку или делаем его кликабельным
                 const productWrapper = document.createElement('a');
                 productWrapper.href = item.url || '#'; // Назначаем URL товара
                 productWrapper.target = '_blank'; // Открытие в новой вкладке (опционально)
                 productWrapper.className = 'product-link';
-    
+
                 productWrapper.appendChild(productElement.firstElementChild);
                 productContainer.appendChild(productWrapper);
             });
-    
+
             // Кнопка "ще", только во "Всі результати"
             if (isAllResults && items.length > maxItemsToShow) {
                 const moreLink = document.createElement('div');
                 moreLink.className = 'more-link';
                 moreLink.textContent = `ще ${items.length - maxItemsToShow} ...`;
-    
+
                 moreLink.addEventListener('click', () => {
                     console.log(`More link clicked for category: ${category}`);
                     this.showCategoryProducts({ [category]: items }, resultContainer, true, category);
                     this.activateCategory(category);
                 });
-    
+
                 productContainer.appendChild(moreLink);
             }
-    
+
             categoryBlock.appendChild(productContainer);
             resultContainer.appendChild(categoryBlock);
         });
-    
+
         console.log('Final result container:', resultContainer.innerHTML);
         console.log('=== End of showCategoryProducts ===');
     }
-    
-    
+
+
 
 
     async loadTemplate(templatePath) {
