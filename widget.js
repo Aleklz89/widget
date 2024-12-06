@@ -1,12 +1,13 @@
 class ProductSearchWidget {
     constructor(triggerInputId) {
         this.triggerInputId = triggerInputId;
-        this.apiUrl = 'https://search-module-chi.vercel.app/api/search';
+        this.apiUrl = 'http://localhost:3000/api/search';
         this.suggestionsUrl = 'https://search-module-chi.vercel.app/api/search-suggestions';
         this.correctionUrl = 'https://search-module-chi.vercel.app/api/correct';
         this.searchHistory = [];
-        this.abortController = null; // Инициализация abortController как свойства класса
-        this.currentQuery = null; // Отслеживание текущего запроса
+        this.abortController = null;
+        this.currentQuery = null;
+        this.requestId = 0; // Добавляем счётчик запросов
         this.initWidget();
     }
 
@@ -65,7 +66,11 @@ class ProductSearchWidget {
         const widgetContainer = widgetContainerWrapper.firstElementChild;
         console.log('Widget container created:', widgetContainer);
         document.body.appendChild(widgetContainer);
+        this.widgetContainer = widgetContainer;
         console.log('Widget container appended to body.');
+
+        // Сохраняем контейнер в свойство класса
+        this.widgetContainer = widgetContainer;
 
         // Добавление шрифта в документ
         const fontLink = document.createElement('link');
@@ -116,6 +121,7 @@ class ProductSearchWidget {
         const closeButton = widgetContainer.querySelector('.widget-close-button');
         const categoriesContainer = widgetContainer.querySelector('.categories-container');
         const resultContainer = widgetContainer.querySelector('.widget-result-container');
+        const suggestionsList = widgetContainer.querySelector('.widget-suggestions-list'); // Ссылка на список подсказок
 
         // Обработчик для закрытия виджета
         closeButton.addEventListener('click', () => {
@@ -135,48 +141,44 @@ class ProductSearchWidget {
             }
         });
 
-        // Используем AbortController для управления запросами
-        let abortController = null;
 
         searchInput.addEventListener('input', async (e) => {
             const query = e.target.value.trim();
-            const suggestionsList = widgetContainer.querySelector('.widget-suggestions-list');
 
-            // Если поле пустое, показываем историю запросов
+            // Генерируем токен запроса (уникальный идентификатор)
+            const requestToken = Symbol('requestToken');
+
+            // Сохраняем этот токен как последний активный
+            this.currentRequestToken = requestToken;
+
             if (query === '') {
                 this.showSearchHistory();
-                suggestionsList.style.display = 'none'; // Скрываем подсказки
+                suggestionsList.style.display = 'none';
                 return;
             } else {
                 this.hideSearchHistory();
             }
 
-            // Сохранение текущего запроса
             this.currentQuery = query;
 
-            // Проверка минимальной длины запроса для подсказок
             if (query.length < 1) {
                 suggestionsList.innerHTML = '';
-                suggestionsList.style.display = 'none'; // Скрыть подсказки, если их нет
+                suggestionsList.style.display = 'none';
                 return;
             }
 
-            // Отменяем предыдущий запрос, если он существует
-            if (abortController) {
-                console.log('⏹️ Отмена предыдущего запроса.');
-                abortController.abort();
+            // Прекращаем предыдущие запросы
+            if (this.abortController) {
+                this.abortController.abort();
             }
-
-            // Создаем новый AbortController
-            abortController = new AbortController();
+            this.abortController = new AbortController();
+            const controller = this.abortController;
 
             try {
-                // Показ подсказок и обновление результатов
-                await this.fetchSuggestions(query, suggestionsList, searchInput, abortController);
+                await this.fetchSuggestions(query, suggestionsList, searchInput, requestToken, controller);
 
-                // Обновляем результаты поиска только при длине строки >= 3
                 if (query.length >= 3) {
-                    await this.fetchProducts(query, categoriesContainer, resultContainer, abortController);
+                    await this.fetchProducts(query, categoriesContainer, resultContainer, requestToken, controller);
                 } else {
                     resultContainer.innerHTML = '<p>Почніть пошук...</p>';
                     categoriesContainer.innerHTML = '';
@@ -194,11 +196,12 @@ class ProductSearchWidget {
 
         // Скрываем подсказки при клике вне инпута или блока
         document.addEventListener('click', (event) => {
-            if (!suggestionsList.contains(event.target) && event.target !== searchInput) {
+            if (suggestionsList && !suggestionsList.contains(event.target) && event.target !== searchInput) {
                 suggestionsList.style.display = 'none';
             }
         });
     }
+
 
     updateSearchHistory() {
         console.log('Обновляем историю запросов');
@@ -397,66 +400,107 @@ class ProductSearchWidget {
         }
     }
 
-    async fetchSuggestions(query, suggestionsList, searchInput) {
-        console.log('Fetching suggestions for query:', query); // Лог текущего запроса
-        try {
-            const response = await fetch(this.suggestionsUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query }),
-            });
+    async fetchSuggestions(query, suggestionsList, searchInput, requestToken, controller) {
+        console.log('Fetching suggestions for query:', query);
+        const response = await fetch(this.suggestionsUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query }),
+            signal: controller.signal
+        });
 
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
-            const suggestions = await response.json();
+        const suggestions = await response.json();
+        console.log('Suggestions received:', suggestions);
 
-            // Лог полученных подсказок
-            console.log('Suggestions received from API:', suggestions);
+        // Проверяем, что этот токен соответствует последнему активному
+        if (requestToken !== this.currentRequestToken) {
+            console.log('Suggestions response outdated, ignoring.');
+            return;
+        }
 
-            // Проверяем актуальность запроса
-            if (searchInput.value.trim() !== this.currentQuery) {
-                console.log('Query changed, skipping suggestions update.'); // Лог изменения запроса
-                return;
-            }
+        if (searchInput.value.trim() !== this.currentQuery) {
+            console.log('Query changed, skipping suggestions update.');
+            return;
+        }
 
-            suggestionsList.innerHTML = ''; // Очищаем предыдущие подсказки
+        suggestionsList.innerHTML = '';
+        if (Array.isArray(suggestions) && suggestions.length > 0) {
+            suggestions.forEach((suggestion) => {
+                if (!suggestion.word || typeof suggestion.word !== 'string') return;
 
-            if (Array.isArray(suggestions) && suggestions.length > 0) {
-                suggestions.forEach((suggestion) => {
-                    // Проверяем, есть ли свойство word и является ли оно строкой
-                    if (!suggestion.word || typeof suggestion.word !== 'string') {
-                        console.warn('Invalid suggestion object, skipping:', suggestion);
-                        return; // Пропускаем некорректный элемент
-                    }
+                const suggestionItem = document.createElement('div');
+                suggestionItem.className = 'suggestion-item';
+                const boldText = suggestion.word.replace(query, '');
+                suggestionItem.innerHTML = `<span>${query}</span><strong>${boldText}</strong>`;
 
-                    const suggestionItem = document.createElement('div');
-                    suggestionItem.className = 'suggestion-item';
-
-                    // Разделяем текст подсказки: общая часть (query) и оставшаяся часть
-                    const boldText = suggestion.word.replace(query, '');
-
-                    suggestionItem.innerHTML = `<span>${query}</span><strong>${boldText}</strong>`;
-
-                    // Добавляем обработчик клика по подсказке
-                    suggestionItem.addEventListener('click', () => {
-                        console.log('Suggestion clicked:', suggestion.word); // Лог клика по подсказке
-                        searchInput.value = suggestion.word; // Устанавливаем выбранное слово в инпут
-                        searchInput.dispatchEvent(new Event('input')); // Тригерим обновление поиска
-                    });
-
-                    suggestionsList.appendChild(suggestionItem);
+                suggestionItem.addEventListener('click', () => {
+                    console.log('Suggestion clicked:', suggestion.word);
+                    searchInput.value = suggestion.word;
+                    searchInput.dispatchEvent(new Event('input'));
                 });
 
-                suggestionsList.style.display = 'flex'; // Показываем блок с подсказками
-            } else {
-                console.log('No suggestions found for query:', query); // Лог отсутствия подсказок
-                suggestionsList.style.display = 'none'; // Скрываем, если подсказок нет
-            }
-        } catch (error) {
-            console.error('Error fetching suggestions:', error);
-            suggestionsList.innerHTML = '<p>Помилка отримання пропозицій</p>';
+                suggestionsList.appendChild(suggestionItem);
+            });
+            suggestionsList.style.display = 'flex';
+        } else {
+            suggestionsList.style.display = 'none';
         }
     }
+
+    async fetchProducts(query, categoriesContainer, resultContainer, requestToken, controller) {
+        console.log(`[DEBUG] fetchProducts called with query="${query}"`);
+
+        const response = await fetch(this.apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ word: query }),
+            signal: controller.signal
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const products = await response.json();
+        console.log(`[DEBUG] Products response for query="${query}":`, products);
+
+        // Проверяем токен
+        if (requestToken !== this.currentRequestToken) {
+            console.log('[DEBUG] Products response outdated, ignoring.');
+            return;
+        }
+
+        if (this.currentQuery !== query) {
+            console.log('[DEBUG] currentQuery changed, ignoring results.');
+            return;
+        }
+
+        if (!Array.isArray(products)) {
+            console.log('[DEBUG] Products is not an array:', products);
+            return;
+        }
+
+        if (products.length === 0) {
+            console.log('[DEBUG] No products found');
+            resultContainer.innerHTML = '<p>No products found.</p>';
+            categoriesContainer.innerHTML = '';
+        } else {
+            console.log(`[DEBUG] Displaying ${products.length} products`);
+            this.displayProductsByCategory(products, categoriesContainer, resultContainer);
+        }
+
+        if (this.widgetContainer) {
+            const suggestionsList = this.widgetContainer.querySelector('.widget-suggestions-list');
+            if (suggestionsList) {
+                suggestionsList.innerHTML = '';
+                suggestionsList.style.display = 'none';
+                suggestionsList.classList.remove('show');
+            }
+        }
+    }
+
 
     async saveWordsToDatabase(query) {
         if (!query || typeof query !== 'string') return;
@@ -474,63 +518,16 @@ class ProductSearchWidget {
     }
 
 
-    async fetchProducts(query, categoriesContainer, resultContainer) {
-        console.log(`🔍 Запрос на поиск: ${query}`);
-
-        // Отменяем предыдущий запрос, если он существует
-        if (this.abortController) {
-            console.log('⏹️ Отмена предыдущего запроса');
-            this.abortController.abort();
-        }
-
-        // Создаём новый AbortController
-        this.abortController = new AbortController();
-
-        try {
-            const response = await fetch(this.apiUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ word: query }),
-                signal: this.abortController.signal, // Привязываем сигнал к запросу
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const products = await response.json();
-            console.log(`✅ Успешно получены продукты для запроса: "${query}"`, products);
-
-            // Проверяем, не изменился ли запрос
-            if (this.currentQuery !== query) {
-                console.log('🚫 Запрос устарел, игнорируем результаты.');
-                return;
-            }
-
-            if (products.length === 0) {
-                resultContainer.innerHTML = '<p>No products found.</p>';
-                categoriesContainer.innerHTML = '';
-            } else {
-                this.displayProductsByCategory(products, categoriesContainer, resultContainer);
-            }
-        } catch (error) {
-            if (error.name === 'AbortError') {
-                console.log('⏹️ Запрос был отменён.');
-            } else {
-                console.error('❌ Ошибка при получении продуктов:', error);
-                resultContainer.innerHTML = '<p>Error fetching products.</p>';
-            }
-        }
-    }
-
-
-
-
     displayProductsByCategory(products, categoriesContainer, resultContainer) {
+        console.log('[DEBUG] Entered displayProductsByCategory with products:', products);
         categoriesContainer.innerHTML = '';
         resultContainer.innerHTML = '';
+
+        if (!Array.isArray(products) || products.length === 0) {
+            console.log('[DEBUG] No products to display.');
+            resultContainer.innerHTML = '<p>No products found.</p>';
+            return;
+        }
 
         const categories = {};
         const categoryCounts = {};
@@ -610,6 +607,7 @@ class ProductSearchWidget {
         });
 
         this.showCategoryProducts(groupedProducts, resultContainer, true);
+        console.log('[DEBUG] Finished displayProductsByCategory rendering.');
     }
 
     async showCategoryProducts(groupedProducts, resultContainer, showCategoryTitles = true, selectedCategory = null) {
@@ -743,6 +741,7 @@ class ProductSearchWidget {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('[DEBUG] DOMContentLoaded event fired');
     const triggerInputId = 'searchInput';
     new ProductSearchWidget(triggerInputId);
 });
