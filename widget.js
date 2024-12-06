@@ -104,17 +104,16 @@ class ProductSearchWidget {
         console.log('Trigger input найден:', triggerInput);
 
         // Получение или создание userId
-        await this.getOrCreateUserId();
+        this.setupEventHandlers(this.widgetContainer, triggerInput);
 
-        // Загружаем историю
-        await this.loadSearchHistory(this.userId);
-        this.updateSearchHistory();
-
-        // Настраиваем обработчики истории
-        this.addHistoryPopupHandlers();
-
-        // Проверяем историю
-        console.log('Search history:', this.searchHistory);
+        // Асинхронно загружаем userId и историю, не блокируя открытие
+        this.getOrCreateUserId().then(() => {
+            this.loadSearchHistory(this.userId).then(() => {
+                this.updateSearchHistory();
+                this.addHistoryPopupHandlers();
+                console.log('Search history:', this.searchHistory);
+            });
+        });
 
         // Сохранение ссылок на элементы для дальнейшего использования
         const searchInput = widgetContainer.querySelector('.widget-search-input');
@@ -168,6 +167,86 @@ class ProductSearchWidget {
             }
 
             // Прекращаем предыдущие запросы
+            if (this.abortController) {
+                this.abortController.abort();
+            }
+            this.abortController = new AbortController();
+            const controller = this.abortController;
+
+            try {
+                await this.fetchSuggestions(query, suggestionsList, searchInput, requestToken, controller);
+
+                if (query.length >= 3) {
+                    await this.fetchProducts(query, categoriesContainer, resultContainer, requestToken, controller);
+                } else {
+                    resultContainer.innerHTML = '<p>Почніть пошук...</p>';
+                    categoriesContainer.innerHTML = '';
+                }
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    console.log('⏹️ Запрос был отменён.');
+                } else {
+                    console.error('Error during search input processing:', error);
+                    resultContainer.innerHTML = '<p>Виникла помилка під час пошуку.</p>';
+                    suggestionsList.innerHTML = '<p>Помилка отримання пропозицій</p>';
+                }
+            }
+        });
+
+        // Скрываем подсказки при клике вне инпута или блока
+        document.addEventListener('click', (event) => {
+            if (suggestionsList && !suggestionsList.contains(event.target) && event.target !== searchInput) {
+                suggestionsList.style.display = 'none';
+            }
+        });
+    }
+
+    setupEventHandlers(widgetContainer, triggerInput) {
+        const searchInput = widgetContainer.querySelector('.widget-search-input');
+        const closeButton = widgetContainer.querySelector('.widget-close-button');
+        const categoriesContainer = widgetContainer.querySelector('.categories-container');
+        const resultContainer = widgetContainer.querySelector('.widget-result-container');
+        const suggestionsList = widgetContainer.querySelector('.widget-suggestions-list');
+
+        // Обработчик для закрытия виджета
+        closeButton.addEventListener('click', () => {
+            widgetContainer.style.display = 'none';
+        });
+
+        // Обработчик для открытия виджета
+        triggerInput.addEventListener('focus', () => {
+            widgetContainer.style.display = 'flex';
+            searchInput.focus();
+
+            const query = searchInput.value.trim();
+            if (query === '') {
+                this.showSearchHistory(); // Показываем историю запросов
+            } else {
+                this.hideSearchHistory(); // Скрываем историю, если есть текст
+            }
+        });
+
+        searchInput.addEventListener('input', async (e) => {
+            const query = e.target.value.trim();
+            const requestToken = Symbol('requestToken');
+            this.currentRequestToken = requestToken;
+
+            if (query === '') {
+                this.showSearchHistory();
+                suggestionsList.style.display = 'none';
+                return;
+            } else {
+                this.hideSearchHistory();
+            }
+
+            this.currentQuery = query;
+
+            if (query.length < 1) {
+                suggestionsList.innerHTML = '';
+                suggestionsList.style.display = 'none';
+                return;
+            }
+
             if (this.abortController) {
                 this.abortController.abort();
             }
