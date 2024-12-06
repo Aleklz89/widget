@@ -748,7 +748,7 @@ class ProductSearchWidget {
                 const formattedPrice = price.toFixed(2);
 
                 let productHtml = productTemplate
-                    .replace(/\{\{image\}\}/g, item.image || '')
+                    .replace(/\{\{imageUrl\}\}/g, item.image || '')
                     .replace(/\{\{name\}\}/g, item.name || 'No Name')
                     .replace(/\{\{price\}\}/g, item.newPrice || 'Unavailable')
                     .replace(/\{\{currencyId\}\}/g, item.currencyId || 'USD')
