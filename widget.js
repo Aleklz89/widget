@@ -826,12 +826,25 @@ class ProductSearchWidget {
 document.addEventListener('DOMContentLoaded', () => {
     console.log('[DEBUG] DOMContentLoaded event fired');
 
-    // Отправляем пробный запрос для прогрева
-    fetch('https://search-module-chi.vercel.app/api/search', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ word: 'ошейник' }) // Можно отправить пустой или минимальный запрос
-    }).catch(console.error);
+    // Отправляем два пробных запроса параллельно для прогрева
+    const requests = [
+        fetch('https://search-module-chi.vercel.app/api/search', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ word: 'ошейник' }) // первый пробный запрос
+        }),
+        fetch('https://search-module-chi.vercel.app/api/search', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ word: 'повідець' }) // второй пробный запрос
+        })
+    ];
+
+    Promise.all(requests)
+        .then(() => {
+            console.log('Пробные запросы отправлены и завершены.');
+        })
+        .catch(console.error);
 
     const triggerInputId = 'searchInput';
     new ProductSearchWidget(triggerInputId);
