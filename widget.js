@@ -174,15 +174,19 @@ class ProductSearchWidget {
             const controller = this.abortController;
 
             try {
-                await this.fetchSuggestions(query, suggestionsList, searchInput, requestToken, controller);
-
                 if (query.length >= 3) {
-                    await this.fetchProducts(query, categoriesContainer, resultContainer, requestToken, controller);
+                    // Запускаем подсказки и поиск продуктов параллельно
+                    const suggestionsPromise = this.fetchSuggestions(query, suggestionsList, searchInput, requestToken, controller);
+                    const productsPromise = this.fetchProducts(query, categoriesContainer, resultContainer, requestToken, controller);
+                    await Promise.all([suggestionsPromise, productsPromise]);
                 } else {
+                    // Если меньше 3 символов, просто ищем подсказки
+                    await this.fetchSuggestions(query, suggestionsList, searchInput, requestToken, controller);
                     resultContainer.innerHTML = '<p>Почніть пошук...</p>';
                     categoriesContainer.innerHTML = '';
                 }
             } catch (error) {
+                // Обработка ошибок без изменений
                 if (error.name === 'AbortError') {
                     console.log('⏹️ Запрос был отменён.');
                 } else {
