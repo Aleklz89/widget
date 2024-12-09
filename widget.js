@@ -58,7 +58,7 @@ class ProductSearchWidget {
         console.log('Widget initialization started.');
 
         // Подключение HTML
-        const response = await fetch('widget.html'); // Убедитесь, что путь к widget.html корректен
+        const response = await fetch('https://aleklz89.github.io/widget/widget.html'); // Убедитесь, что путь к widget.html корректен
         const widgetHtml = await response.text();
 
         const widgetContainerWrapper = document.createElement('div');
@@ -91,7 +91,7 @@ class ProductSearchWidget {
         stylesheets.forEach((stylesheet) => {
             const link = document.createElement('link');
             link.rel = 'stylesheet';
-            link.href = `${stylesheet}`; // Укажите правильный путь к вашим CSS-файлам
+            link.href = `https://aleklz89.github.io/widget/${stylesheet}`; // Укажите правильный путь к вашим CSS-файлам
             document.head.appendChild(link);
         });
 
@@ -716,7 +716,7 @@ class ProductSearchWidget {
 
         // Загружаем HTML-шаблон для товаров
         console.time('Loading Product Template');
-        const templateResponse = await fetch('product-item.html'); // Проверьте путь
+        const templateResponse = await fetch('https://aleklz89.github.io/widget/product-item.html'); // Проверьте путь
         if (!templateResponse.ok) {
             throw new Error(`Failed to load product template: ${templateResponse.status}`);
         }
