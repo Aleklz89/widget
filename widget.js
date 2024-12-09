@@ -58,7 +58,7 @@ class ProductSearchWidget {
         console.log('Widget initialization started.');
 
         // Подключение HTML
-        const response = await fetch('https://aleklz89.github.io/widget/widget.html'); // Убедитесь, что путь к widget.html корректен
+        const response = await fetch('https://aleklz89.github.io/widget/widget.html'); // Убедитесь, что путь корректен
         const widgetHtml = await response.text();
 
         const widgetContainerWrapper = document.createElement('div');
@@ -69,16 +69,13 @@ class ProductSearchWidget {
         this.widgetContainer = widgetContainer;
         console.log('Widget container appended to body.');
 
-        // Сохраняем контейнер в свойство класса
-        this.widgetContainer = widgetContainer;
-
-        // Добавление шрифта в документ
+        // Добавление шрифта
         const fontLink = document.createElement('link');
         fontLink.href = 'https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap';
         fontLink.rel = 'stylesheet';
         document.head.appendChild(fontLink);
 
-        // Подключение внешних CSS-файлов
+        // Подключение CSS
         const stylesheets = [
             'widget.css',
             'suggestion.css',
@@ -91,11 +88,11 @@ class ProductSearchWidget {
         stylesheets.forEach((stylesheet) => {
             const link = document.createElement('link');
             link.rel = 'stylesheet';
-            link.href = `https://aleklz89.github.io/widget/${stylesheet}`; // Укажите правильный путь к вашим CSS-файлам
+            link.href = `https://aleklz89.github.io/widget/${stylesheet}`;
             document.head.appendChild(link);
         });
 
-        // Сохранение ссылок на элементы
+        // Получаем ссылку на triggerInput
         const triggerInput = document.getElementById(this.triggerInputId);
         if (!triggerInput) {
             console.error(`Trigger input с ID "${this.triggerInputId}" не найден.`);
@@ -103,105 +100,16 @@ class ProductSearchWidget {
         }
         console.log('Trigger input найден:', triggerInput);
 
-        // Получение или создание userId
+        // Настраиваем обработчики
         this.setupEventHandlers(this.widgetContainer, triggerInput);
 
-        // Асинхронно загружаем userId и историю, не блокируя открытие
+        // Асинхронно получаем userId и историю
         this.getOrCreateUserId().then(() => {
             this.loadSearchHistory(this.userId).then(() => {
                 this.updateSearchHistory();
                 this.addHistoryPopupHandlers();
                 console.log('Search history:', this.searchHistory);
             });
-        });
-
-        // Сохранение ссылок на элементы для дальнейшего использования
-        const searchInput = widgetContainer.querySelector('.widget-search-input');
-        const closeButton = widgetContainer.querySelector('.widget-close-button');
-        const categoriesContainer = widgetContainer.querySelector('.categories-container');
-        const resultContainer = widgetContainer.querySelector('.widget-result-container');
-        const suggestionsList = widgetContainer.querySelector('.widget-suggestions-list'); // Ссылка на список подсказок
-
-        // Обработчик для закрытия виджета
-        closeButton.addEventListener('click', () => {
-            widgetContainer.style.display = 'none';
-        });
-
-        // Обработчик для открытия виджета
-        triggerInput.addEventListener('focus', () => {
-            widgetContainer.style.display = 'flex';
-            searchInput.focus();
-
-            const query = searchInput.value.trim();
-            if (query === '') {
-                this.showSearchHistory(); // Показываем историю запросов
-            } else {
-                this.hideSearchHistory(); // Скрываем историю, если есть текст
-            }
-        });
-
-
-        searchInput.addEventListener('input', async (e) => {
-            const query = e.target.value.trim();
-
-            // Генерируем токен запроса (уникальный идентификатор)
-            const requestToken = Symbol('requestToken');
-
-            // Сохраняем этот токен как последний активный
-            this.currentRequestToken = requestToken;
-
-            if (query === '') {
-                this.showSearchHistory();
-                suggestionsList.style.display = 'none';
-                return;
-            } else {
-                this.hideSearchHistory();
-            }
-
-            this.currentQuery = query;
-
-            if (query.length < 1) {
-                suggestionsList.innerHTML = '';
-                suggestionsList.style.display = 'none';
-                return;
-            }
-
-            // Прекращаем предыдущие запросы
-            if (this.abortController) {
-                this.abortController.abort();
-            }
-            this.abortController = new AbortController();
-            const controller = this.abortController;
-
-            try {
-                if (query.length >= 3) {
-                    // Запускаем подсказки и поиск продуктов параллельно
-                    const suggestionsPromise = this.fetchSuggestions(query, suggestionsList, searchInput, requestToken, controller);
-                    const productsPromise = this.fetchProducts(query, categoriesContainer, resultContainer, requestToken, controller);
-                    await Promise.all([suggestionsPromise, productsPromise]);
-                } else {
-                    // Если меньше 3 символов, просто ищем подсказки
-                    await this.fetchSuggestions(query, suggestionsList, searchInput, requestToken, controller);
-                    resultContainer.innerHTML = '<p>Почніть пошук...</p>';
-                    categoriesContainer.innerHTML = '';
-                }
-            } catch (error) {
-                // Обработка ошибок без изменений
-                if (error.name === 'AbortError') {
-                    console.log('⏹️ Запрос был отменён.');
-                } else {
-                    console.error('Error during search input processing:', error);
-                    resultContainer.innerHTML = '<p>Виникла помилка під час пошуку.</p>';
-                    suggestionsList.innerHTML = '<p>Помилка отримання пропозицій</p>';
-                }
-            }
-        });
-
-        // Скрываем подсказки при клике вне инпута или блока
-        document.addEventListener('click', (event) => {
-            if (suggestionsList && !suggestionsList.contains(event.target) && event.target !== searchInput) {
-                suggestionsList.style.display = 'none';
-            }
         });
     }
 
