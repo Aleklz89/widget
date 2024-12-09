@@ -92,16 +92,17 @@ class ProductSearchWidget {
             document.head.appendChild(link);
         });
 
-        // Получаем ссылку на triggerInput
-        const triggerInput = document.getElementById(this.triggerInputId);
-        if (!triggerInput) {
-            console.error(`Trigger input с ID "${this.triggerInputId}" не найден.`);
+        const triggerInputs = document.querySelectorAll(`#${this.triggerInputId}`);
+
+        if (triggerInputs.length === 0) {
+            console.error(`Ни одного элемента с ID "${this.triggerInputId}" не найдено.`);
             return;
         }
-        console.log('Trigger input найден:', triggerInput);
 
-        // Настраиваем обработчики
-        this.setupEventHandlers(this.widgetContainer, triggerInput);
+        triggerInputs.forEach((triggerInput) => {
+            // Привязываем обработчики для каждого найденного элемента
+            this.setupEventHandlers(this.widgetContainer, triggerInput);
+        });
 
         // Асинхронно получаем userId и историю
         this.getOrCreateUserId().then(() => {
