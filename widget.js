@@ -1,9 +1,9 @@
 class ProductSearchWidget {
     constructor(triggerInputId) {
         this.triggerInputId = triggerInputId;
-        this.apiUrl = 'https://search-module-chi.vercel.app/api/search';
-        this.suggestionsUrl = 'https://search-module-chi.vercel.app/api/search-suggestions';
-        this.correctionUrl = 'https://search-module-chi.vercel.app/api/correct';
+        this.apiUrl = 'http://195.201.166.223:3000/api/search';
+        this.suggestionsUrl = 'http://195.201.166.223:3000/api/search-suggestions';
+        this.correctionUrl = 'http://195.201.166.223:3000/api/correct';
         this.searchHistory = [];
         this.abortController = null;
         this.currentQuery = null;
@@ -291,7 +291,7 @@ class ProductSearchWidget {
         if (!this.userId || !query) return;
 
         try {
-            await fetch('https://search-module-chi.vercel.app/api/addSearchQuery', {
+            await fetch('http://195.201.166.223:3000/api/addSearchQuery', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId: this.userId, query }),
@@ -310,7 +310,7 @@ class ProductSearchWidget {
         console.log("Id пользователя: ", userId)
 
         try {
-            const response = await fetch('https://search-module-chi.vercel.app/api/get-user-query', {
+            const response = await fetch('http://195.201.166.223:3000/api/get-user-query', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId }),
@@ -498,7 +498,7 @@ class ProductSearchWidget {
         if (!query || typeof query !== 'string') return;
 
         try {
-            await fetch('https://search-module-chi.vercel.app/api/save-words', {
+            await fetch('http://195.201.166.223:3000/api/save-words', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text: query }), // Отправляем введенную строку
