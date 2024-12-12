@@ -1,9 +1,9 @@
 class ProductSearchWidget {
     constructor(triggerInputId) {
         this.triggerInputId = triggerInputId;
-        this.apiUrl = 'http://smartsearch.spefix.com:3000/api/search';
-        this.suggestionsUrl = 'http://smartsearch.spefix.com:3000/api/search-suggestions';
-        this.correctionUrl = 'http://smartsearch.spefix.com:3000/api/correct';
+        this.apiUrl = 'https://smartsearch.spefix.com/api/search';
+        this.suggestionsUrl = 'https://smartsearch.spefix.com/api/search-suggestions';
+        this.correctionUrl = 'https://smartsearch.spefix.com/api/correct';
         this.searchHistory = [];
         this.abortController = null;
         this.currentQuery = null;
@@ -291,7 +291,7 @@ class ProductSearchWidget {
         if (!this.userId || !query) return;
 
         try {
-            await fetch('http://smartsearch.spefix.com:3000/api/addSearchQuery', {
+            await fetch('https://smartsearch.spefix.com/api/addSearchQuery', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId: this.userId, query }),
@@ -310,7 +310,7 @@ class ProductSearchWidget {
         console.log("Id пользователя: ", userId)
 
         try {
-            const response = await fetch('http://smartsearch.spefix.com:3000/api/get-user-query', {
+            const response = await fetch('https://smartsearch.spefix.com/api/get-user-query', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId }),
@@ -498,7 +498,7 @@ class ProductSearchWidget {
         if (!query || typeof query !== 'string') return;
 
         try {
-            await fetch('http://smartsearch.spefix.com:3000/api/save-words', {
+            await fetch('https://smartsearch.spefix.com/api/save-words', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text: query }), // Отправляем введенную строку
