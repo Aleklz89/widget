@@ -8,7 +8,7 @@ class ProductSearchWidget {
         this.abortController = null;
         this.currentQuery = null;
         this.requestId = 0;
-        this.siteDomain = window.location.hostname; // Получаем домен текущего сайта
+        this.siteDomain = window.location.pathname; // Получаем домен текущего сайта
         this.initWidget();
     }
 
