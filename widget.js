@@ -1,13 +1,14 @@
 class ProductSearchWidget {
     constructor(triggerInputId) {
         this.triggerInputId = triggerInputId;
-        this.apiUrl = 'https://smartsearch.spefix.com/api/search';
+        this.apiUrl = 'http://localhost:3000/api/search';
         this.suggestionsUrl = 'https://smartsearch.spefix.com/api/search-suggestions';
         this.correctionUrl = 'https://smartsearch.spefix.com/api/correct';
         this.searchHistory = [];
         this.abortController = null;
         this.currentQuery = null;
-        this.requestId = 0; // Добавляем счётчик запросов
+        this.requestId = 0;
+        this.siteDomain = window.location.hostname; // Получаем домен текущего сайта
         this.initWidget();
     }
 
@@ -397,7 +398,10 @@ class ProductSearchWidget {
         const response = await fetch(this.suggestionsUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query }),
+            body: JSON.stringify({
+                query,
+                domain: this.siteDomain // Добавляем домен
+            }),
             signal: controller.signal
         });
 
@@ -447,7 +451,10 @@ class ProductSearchWidget {
         const response = await fetch(this.apiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ word: query }),
+            body: JSON.stringify({
+                word: query,
+                domain: this.siteDomain // Добавляем домен
+            }),
             signal: controller.signal
         });
 
