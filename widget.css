@@ -66,16 +66,16 @@
 }
 
 .widget-close-button {
-    position: absolute;
-    top: 5px;
-    right: 20px;
-    font-size: 36px;
-    font-weight: bold;
-    color: #777;
-    cursor: pointer;
-    user-select: none;
-    z-index: 2;
-    transition: color 0.3s ease;
+    position: absolute !important; 
+    top: 3px !important;
+    right: 10px !important;
+    font-size: 36px !important;
+    font-weight: bold !important;
+    color: #777 !important;
+    cursor: pointer !important;
+    user-select: none !important;
+    z-index: 2 !important;
+    transition: color 0.3s ease !important;
 }
 
 .widget-close-button:hover {

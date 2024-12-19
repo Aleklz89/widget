@@ -1,7 +1,7 @@
 class ProductSearchWidget {
     constructor(triggerInputId) {
         this.triggerInputId = triggerInputId;
-        this.apiUrl = 'https://smartsearch.spefix.com/api/search';
+        this.apiUrl = 'http://localhost:3000/api/search';
         this.suggestionsUrl = 'https://smartsearch.spefix.com/api/search-suggestions';
         this.correctionUrl = 'https://smartsearch.spefix.com/api/correct';
         this.searchHistory = [];
@@ -89,7 +89,8 @@ class ProductSearchWidget {
         stylesheets.forEach((stylesheet) => {
             const link = document.createElement('link');
             link.rel = 'stylesheet';
-            link.href = `https://aleklz89.github.io/widget/${stylesheet}`;
+            link.href = `${stylesheet}`;
+            // link.href = `https://aleklz89.github.io/widget/${stylesheet}`;
             document.head.appendChild(link);
         });
 
