@@ -47,3 +47,24 @@
 .suggestion-item strong {
     font-weight: bold;
 }
+
+
+/* Делает текст "Немає в наявності" красным */
+.product-link.out-of-stock .product-presence {
+    color: red;
+}
+
+/* Добавляет белую полупрозрачную пелену на товар */
+.product-link.out-of-stock {
+    position: relative;
+}
+
+.product-link.out-of-stock::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.5); /* Полупрозрачная белая пелена */
+}
