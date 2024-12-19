@@ -89,8 +89,8 @@ class ProductSearchWidget {
         stylesheets.forEach((stylesheet) => {
             const link = document.createElement('link');
             link.rel = 'stylesheet';
-            link.href = `${stylesheet}`;
-            // link.href = `https://aleklz89.github.io/widget/${stylesheet}`;
+            // link.href = `${stylesheet}`;
+            link.href = `https://aleklz89.github.io/widget/${stylesheet}`;
             document.head.appendChild(link);
         });
 
@@ -448,40 +448,45 @@ class ProductSearchWidget {
 
     async fetchProducts(query, categoriesContainer, resultContainer, requestToken, controller) {
         console.log(`[DEBUG] fetchProducts called with query="${query}"`);
-
+    
+        // Определяем язык браузера пользователя
+        const userLanguage = navigator.language || 'en';
+    
         const response = await fetch(this.apiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            // Передаем язык как второй параметр в теле запроса
             body: JSON.stringify({
                 word: query,
-                domain: this.siteDomain // Добавляем домен
+                domain: this.siteDomain,
+                language: userLanguage // добавили язык
             }),
             signal: controller.signal
         });
-
+    
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-
+    
         const products = await response.json();
         console.log(`[DEBUG] Products response for query="${query}":`, products);
-
+    
         // Проверяем токен
         if (requestToken !== this.currentRequestToken) {
             console.log('[DEBUG] Products response outdated, ignoring.');
             return;
         }
-
+    
         if (this.currentQuery !== query) {
             console.log('[DEBUG] currentQuery changed, ignoring results.');
             return;
         }
-
+    
         if (!Array.isArray(products)) {
             console.log('[DEBUG] Products is not an array:', products);
             return;
         }
-
+    
         if (products.length === 0) {
             console.log('[DEBUG] No products found');
             resultContainer.innerHTML = '<p>No products found.</p>';
@@ -490,7 +495,7 @@ class ProductSearchWidget {
             console.log(`[DEBUG] Displaying ${products.length} products`);
             this.displayProductsByCategory(products, categoriesContainer, resultContainer);
         }
-
+    
         if (this.widgetContainer) {
             const suggestionsList = this.widgetContainer.querySelector('.widget-suggestions-list');
             if (suggestionsList) {
@@ -500,6 +505,7 @@ class ProductSearchWidget {
             }
         }
     }
+    
 
 
     async saveWordsToDatabase(query) {
