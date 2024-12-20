@@ -173,6 +173,9 @@ class ProductSearchWidget {
 
                 if (query.length >= 3) {
                     await this.fetchProducts(query, categoriesContainer, resultContainer, requestToken, controller);
+
+                    // Вызываем сохранение слов после получения результатов:
+                    await this.saveWordsToDatabase(query);
                 } else {
                     resultContainer.innerHTML = '<p>Почніть пошук...</p>';
                     categoriesContainer.innerHTML = '';
@@ -448,10 +451,10 @@ class ProductSearchWidget {
 
     async fetchProducts(query, categoriesContainer, resultContainer, requestToken, controller) {
         console.log(`[DEBUG] fetchProducts called with query="${query}"`);
-    
+
         // Определяем язык браузера пользователя
         const userLanguage = navigator.language || 'en';
-    
+
         const response = await fetch(this.apiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -463,30 +466,30 @@ class ProductSearchWidget {
             }),
             signal: controller.signal
         });
-    
+
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-    
+
         const products = await response.json();
         console.log(`[DEBUG] Products response for query="${query}":`, products);
-    
+
         // Проверяем токен
         if (requestToken !== this.currentRequestToken) {
             console.log('[DEBUG] Products response outdated, ignoring.');
             return;
         }
-    
+
         if (this.currentQuery !== query) {
             console.log('[DEBUG] currentQuery changed, ignoring results.');
             return;
         }
-    
+
         if (!Array.isArray(products)) {
             console.log('[DEBUG] Products is not an array:', products);
             return;
         }
-    
+
         if (products.length === 0) {
             console.log('[DEBUG] No products found');
             resultContainer.innerHTML = '<p>No products found.</p>';
@@ -495,7 +498,7 @@ class ProductSearchWidget {
             console.log(`[DEBUG] Displaying ${products.length} products`);
             this.displayProductsByCategory(products, categoriesContainer, resultContainer);
         }
-    
+
         if (this.widgetContainer) {
             const suggestionsList = this.widgetContainer.querySelector('.widget-suggestions-list');
             if (suggestionsList) {
@@ -505,7 +508,7 @@ class ProductSearchWidget {
             }
         }
     }
-    
+
 
 
     async saveWordsToDatabase(query) {
@@ -620,21 +623,21 @@ class ProductSearchWidget {
         console.log('=== Start of showCategoryProducts ===');
         console.log('Grouped Products:', groupedProducts);
         console.log('Selected Category:', selectedCategory);
-    
+
         const isAllResults = selectedCategory === null;
         console.log('Is All Results:', isAllResults);
-    
+
         const maxItemsToShow = isAllResults ? 4 : Number.MAX_SAFE_INTEGER;
         console.log('Max Items to Show:', maxItemsToShow);
-    
+
         if (isAllResults) {
             resultContainer.classList.add('all-results');
         } else {
             resultContainer.classList.remove('all-results');
         }
-    
+
         resultContainer.innerHTML = '';
-    
+
         console.time('Loading Product Template');
         const templateResponse = await fetch('https://aleklz89.github.io/widget/product-item.html');
         if (!templateResponse.ok) {
@@ -643,53 +646,53 @@ class ProductSearchWidget {
         const productTemplate = await templateResponse.text();
         console.timeEnd('Loading Product Template');
         console.log('[DEBUG] Product Template Loaded:', productTemplate);
-    
+
         Object.entries(groupedProducts).forEach(([category, items]) => {
             console.log(`[DEBUG] Processing category: ${category}`);
             console.log(`[DEBUG] Items in category:`, items);
-    
+
             const isSingleCategory = Object.keys(groupedProducts).length === 1 && !selectedCategory;
             console.log('[DEBUG] Is Single Category:', isSingleCategory);
-    
+
             const categoryTitleHtml = (showCategoryTitles || selectedCategory)
                 ? `<h3><a href="#" class="category-link">${category} →</a></h3>`
                 : '';
-    
+
             const categoryBlock = document.createElement('div');
             categoryBlock.className = `category-block ${isSingleCategory ? 'category-single' : 'category-multiple'}`;
             if (categoryTitleHtml) {
                 categoryBlock.innerHTML = categoryTitleHtml;
             }
-    
+
             const productContainer = document.createElement('div');
             productContainer.className = 'product-container';
-    
+
             items.slice(0, maxItemsToShow).forEach((item, index) => {
                 console.log(`[DEBUG] Processing item #${index}:`, item);
-    
+
                 const price = parseFloat(item.price) || 0;
                 const formattedPrice = price.toFixed(2);
-    
+
                 const availabilityText = item.availability ? 'В наявності' : 'Немає в наявності';
                 console.log(`[DEBUG] Item #${index} availability:`, item.availability, `(${availabilityText})`);
-    
+
                 let productHtml = productTemplate
                     .replace(/\{\{imageUrl\}\}/g, item.image || '')
                     .replace(/\{\{name\}\}/g, item.name || 'No Name')
                     .replace(/\{\{price\}\}/g, item.newPrice || 'Unavailable')
                     .replace(/\{\{currencyId\}\}/g, item.currencyId || 'USD')
                     .replace(/\{\{presence\}\}/g, availabilityText);
-    
+
                 console.log(`[DEBUG] Generated Product HTML for item #${index}:`, productHtml);
-    
+
                 const productElement = document.createElement('div');
                 productElement.innerHTML = productHtml.trim();
-    
+
                 const productWrapper = document.createElement('a');
                 productWrapper.href = item.url || '#';
                 productWrapper.target = '_blank';
                 productWrapper.className = 'product-link';
-    
+
                 // Проверка наличия и добавление класса
                 if (!item.availability) {
                     console.log(`[DEBUG] Item #${index} is out of stock, adding "out-of-stock" class.`);
@@ -697,30 +700,30 @@ class ProductSearchWidget {
                 } else {
                     console.log(`[DEBUG] Item #${index} is in stock, no "out-of-stock" class added.`);
                 }
-    
+
                 productWrapper.appendChild(productElement.firstElementChild);
                 productContainer.appendChild(productWrapper);
             });
-    
+
             // Кнопка "ще"
             if (isAllResults && items.length > maxItemsToShow) {
                 const moreLink = document.createElement('div');
                 moreLink.className = 'more-link';
                 moreLink.textContent = `ще ${items.length - maxItemsToShow} ...`;
-    
+
                 moreLink.addEventListener('click', () => {
                     console.log(`[DEBUG] More link clicked for category: ${category}`);
                     this.showCategoryProducts({ [category]: items }, resultContainer, true, category);
                     this.activateCategory(category);
                 });
-    
+
                 productContainer.appendChild(moreLink);
             }
-    
+
             categoryBlock.appendChild(productContainer);
             resultContainer.appendChild(categoryBlock);
         });
-    
+
         console.log('[DEBUG] Final result container HTML:', resultContainer.innerHTML);
         console.log('=== End of showCategoryProducts ===');
     }
