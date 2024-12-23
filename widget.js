@@ -7,7 +7,7 @@ class ProductSearchWidget {
         this.apiUrl = 'http://localhost:3000/api/search';
         this.suggestionsUrl = 'https://smartsearch.spefix.com/api/suggestions';
         this.correctionUrl = 'https://smartsearch.spefix.com/api/correct';
-        this.languageRoute = 'http://localhost:3000/api/language';  // <-- Вот здесь указываем наш роут
+        this.languageRoute = 'https://smartsearch.spefix.com/api/language';
 
         // Состояние
         this.searchHistory = [];
@@ -17,24 +17,10 @@ class ProductSearchWidget {
         this.allProducts = [];
         this.activeFilters = {};
 
-        // Сколько товаров показывать на вкладке «Всі результати»
+        // Сколько товаров показывать на вкладке «Всі результати» в каждой категории
         this.maxItemsOnAllResults = 4;
 
-        // Тексты по умолчанию (например, русские)
-        this.translations = {
-            searchPlaceholder: 'Поиск...',
-            allResults: 'Всі результати',
-            filters: 'Фільтри',
-            categories: 'Категорії',
-            noProductsFound: 'No products found.',
-            inStock: 'В наявності',
-            outOfStock: 'Немає в наявності',
-            startSearch: 'Почніть пошук...',
-            more: 'Ще'
-        };
-
-        // Альтернативные переводы (примерно)
-        // В реальном коде, возможно, всё сложнее (JSON, etc.)
+        // Тексты на нужном языке (упрощённый пример)
         this.translationsMap = {
             ru: {
                 searchPlaceholder: 'Поиск...',
@@ -52,7 +38,7 @@ class ProductSearchWidget {
                 allResults: 'Всі результати',
                 filters: 'Фільтри',
                 categories: 'Категорії',
-                noProductsFound: 'Товарів не знайдено.',
+                noProductsFound: 'Товарів не знайдено',
                 inStock: 'В наявності',
                 outOfStock: 'Немає в наявності',
                 startSearch: 'Почніть пошук...',
@@ -71,13 +57,13 @@ class ProductSearchWidget {
             },
             pl: {
                 searchPlaceholder: 'Szukaj...',
-                allResults: 'Wyniki ogólne',
+                allResults: 'Wszystkie wyniki',
                 filters: 'Filtry',
                 categories: 'Kategorie',
-                noProductsFound: 'Brak produktów.',
-                inStock: 'W magazynie',
-                outOfStock: 'Brak w magazynie',
-                startSearch: 'Zacznij szukać...',
+                noProductsFound: 'Nie znaleziono produktów.',
+                inStock: 'Dostępne',
+                outOfStock: 'Niedostępne',
+                startSearch: 'Rozpocznij wyszukiwanie...',
                 more: 'Więcej'
             },
             de: {
@@ -87,90 +73,51 @@ class ProductSearchWidget {
                 categories: 'Kategorien',
                 noProductsFound: 'Keine Produkte gefunden.',
                 inStock: 'Auf Lager',
-                outOfStock: 'Nicht auf Lager',
-                startSearch: 'Fangen Sie an zu suchen...',
+                outOfStock: 'Nicht vorrätig',
+                startSearch: 'Beginnen Sie mit der Suche...',
                 more: 'Mehr'
             }
         };
 
-        // Запускаем
         this.initWidget();
     }
 
-    // -----------------------------------------------------------
-    // 1) Определяем язык с сервера
-    // -----------------------------------------------------------
-    async fetchInterfaceLanguage(domainPath) {
-        try {
-            // Делаем POST-запрос на this.languageRoute
-            const resp = await fetch(this.languageRoute, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ domain: domainPath }),
-            });
-
-            if (!resp.ok) {
-                console.warn('[WARN] Language route not OK. Using default...');
-                return null;
-            }
-
-            const data = await resp.json();
-            console.log('[LOG:fetchInterfaceLanguage] data=', data); // { success: true, language: 'xx' }
-            if (!data.success) {
-                console.warn('[WARN] Language route success=false, using default...');
-                return null;
-            }
-
-            // Возвращаем "language", если есть
-            return data.language || null;
-
-        } catch (err) {
-            console.error('[ERROR] Could not fetch language route:', err);
-            return null;
-        }
+    showHistory() {
+        const historyList = document.querySelector('.widget-history-list');
+        if (historyList) historyList.classList.add('show');
     }
-    
-    // Применяем переводы
-    applyTranslations(langCode) {
-        if (this.translationsMap[langCode]) {
-            console.log(`[LOG:applyTranslations] Using lang="${langCode}" from translationsMap`);
-            this.translations = this.translationsMap[langCode];
-        } else {
-            console.log(`[LOG:applyTranslations] No translations found for "${langCode}", using default..`);
-        }
+    hideHistory() {
+        const historyList = document.querySelector('.widget-history-list');
+        if (historyList) historyList.classList.remove('show');
     }
 
-    // -----------------------------------------------------------
-    // ИНИЦИАЛИЗАЦИЯ ВИДЖЕТА
-    // -----------------------------------------------------------
     async initWidget() {
         console.log('[LOG:initWidget] Start.');
 
-        // 1) Узнаём язык с сервера
+        // 1a) Сначала узнаём язык (используя siteDomain или любой path):
         const userLang = await this.fetchInterfaceLanguage(this.siteDomain);
         if (userLang) {
             this.applyTranslations(userLang);
         }
 
-        // 2) Загружаем HTML
+        // 1) Загружаем HTML
+        //   const resp = await fetch('https://aleklz89.github.io/widget/widget.html');
         const resp = await fetch('widget.html');
         const widgetHtml = await resp.text();
 
-        // 3) Создаём DOM-элемент
+        // 2) Создаём DOM-элемент
         const tmpDiv = document.createElement('div');
         tmpDiv.innerHTML = widgetHtml.trim();
         this.widgetContainer = tmpDiv.firstElementChild;
         document.body.appendChild(this.widgetContainer);
 
-        // 4) Подключаем шрифты
+        // 3) Подключаем шрифты
         const fontLink = document.createElement('link');
         fontLink.rel = 'stylesheet';
         fontLink.href = 'https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap';
         document.head.appendChild(fontLink);
 
-        // 5) Стили
+        // 4) Стили
         const sheets = [
             'widget.css',
             'suggestion.css',
@@ -182,90 +129,93 @@ class ProductSearchWidget {
         sheets.forEach((stylesheet) => {
             const link = document.createElement('link');
             link.rel = 'stylesheet';
+            // link.href = `https://aleklz89.github.io/widget/${stylesheet}`;
             link.href = `${stylesheet}`;
             document.head.appendChild(link);
         });
 
-        // Доп. стили
+        // Дополнительные стили для аккордеона и т.д.
         const styleTag = document.createElement('style');
         styleTag.textContent = `
-          .left-column {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-          }
-          .filter-container {
-            background: #f9f9f9;
-            border: 1px solid #ddd;
-            margin-bottom: 10px;
-            height: 50%;
-            overflow-y: auto;
-            transition: height 0.3s ease;
-          }
-          .filter-container.collapsed {
-            height: 40px;
-          }
-          .filter-toggle-btn {
-            background: #eee;
-            border: none;
-            width: 100%;
-            text-align: left;
-            padding: 8px;
-            cursor: pointer;
-            font-weight: bold;
-          }
-          .filter-content {
-            padding: 10px;
-          }
-          .filter-param-block {
-            margin-bottom: 12px;
-          }
-          .filter-checkbox-label {
-            display: block;
-            margin-bottom: 5px;
-          }
-
-          /* Аккордеон категорий */
-          .category-accordion {
-            background: #f9f9f9;
-            border: 1px solid #ddd;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            transition: height 0.3s ease;
-          }
-          .category-accordion.collapsed {
-            height: 40px;
-          }
-          .category-accordion-header {
-            background: #eee;
-            padding: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            border-bottom: 1px solid #ddd;
-            font-size: 13px;
-          }
-          .category-accordion-content {
-            overflow-y: auto;
-            flex: 1;
-          }
-
-          .product-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-          }
-          .more-link {
-            margin: 10px 0;
-            color: #007bff;
-            cursor: pointer;
-            font-weight: bold;
-          }
-        `;
+        .left-column {
+          display: flex;
+          flex-direction: column;
+          height: 100%;
+        }
+        /* Панель фильтров */
+        .filter-container {
+          background: #f9f9f9;
+          border: 1px solid #ddd;
+          margin-bottom: 10px;
+          height: 50%;
+          overflow-y: auto;
+          transition: height 0.3s ease;
+        }
+        .filter-container.collapsed {
+          height: 40px; 
+        }
+        .filter-toggle-btn {
+          background: #eee;
+          border: none;
+          width: 100%;
+          text-align: left;
+          padding: 8px;
+          cursor: pointer;
+          font-weight: bold;
+        }
+        .filter-content {
+          padding: 10px;
+        }
+        .filter-param-block {
+          margin-bottom: 12px;
+        }
+        .filter-checkbox-label {
+          display: block;
+          margin-bottom: 5px;
+        }
+  
+        /* Аккордеон категорий */
+        .category-accordion {
+          background: #f9f9f9;
+          border: 1px solid #ddd;
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          transition: height 0.3s ease;
+        }
+        .category-accordion.collapsed {
+          height: 40px;
+        }
+        .category-accordion-header {
+          background: #eee;
+          padding: 8px;
+          font-weight: bold;
+          cursor: pointer;
+          border-bottom: 1px solid #ddd;
+          font-size: 13px;
+        }
+        .category-accordion-content {
+          overflow-y: auto;
+          flex: 1;
+        }
+  
+        /* Ограничение на вывод */
+        .product-container {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+        }
+        .more-link {
+          margin: 10px 0;
+          color: #007bff;
+          cursor: pointer;
+          font-weight: bold;
+        }
+      `;
         document.head.appendChild(styleTag);
 
-        // 6) Ищем триггеры
+        // 5) Ищем триггеры
         const triggers = document.querySelectorAll(`#${this.triggerInputId}`);
         if (!triggers.length) {
             console.error('[LOG:initWidget] No triggers found');
@@ -273,13 +223,13 @@ class ProductSearchWidget {
         }
         triggers.forEach((inp) => this.setupEventHandlers(this.widgetContainer, inp));
 
-        // 7) userId + история
+        // 6) userId  история
         await this.getOrCreateUserId();
         await this.loadSearchHistory(this.userId);
         this.updateSearchHistory();
         this.addHistoryPopupHandlers();
 
-        // 8) Панели фильтров и категорий
+        // 7) Создаем панель фильтров  панель категорий
         this.createFilterAccordion();
         this.createCategoryAccordion();
     }
@@ -310,13 +260,16 @@ class ProductSearchWidget {
         const leftCol = this.widgetContainer.querySelector('.left-column');
         if (leftCol) {
             leftCol.insertBefore(filterContainer, leftCol.querySelector('.categories-container'));
+            console.log('[LOG:createFilterAccordion] Filter panel inserted above .categories-container');
         } else {
+            console.warn('[LOG:createFilterAccordion] .left-column not found.');
             this.widgetContainer.insertBefore(filterContainer, this.widgetContainer.firstChild);
         }
     }
 
     createCategoryAccordion() {
         console.log('[LOG:createCategoryAccordion] Creating category accordion block...');
+
         const leftCol = this.widgetContainer.querySelector('.left-column');
         const catsContainer = this.widgetContainer.querySelector('.categories-container');
         if (!leftCol || !catsContainer) {
@@ -346,6 +299,7 @@ class ProductSearchWidget {
         catAccordion.appendChild(catHeader);
         catAccordion.appendChild(catContent);
 
+        // Вставляем после filter-container
         const filterCont = leftCol.querySelector('.filter-container');
         if (filterCont) {
             leftCol.insertBefore(catAccordion, filterCont.nextSibling);
@@ -358,7 +312,10 @@ class ProductSearchWidget {
         console.log('[LOG:buildFilterMenu] Building filter checkboxes...');
         const filterContainer = this.widgetContainer.querySelector('.filter-container');
         const filterContent = filterContainer?.querySelector('.filter-content');
-        if (!filterContainer || !filterContent) return;
+        if (!filterContainer || !filterContent) {
+            console.warn('[LOG:buildFilterMenu] filterContainer or filterContent not found!');
+            return;
+        }
 
         filterContent.innerHTML = '';
 
@@ -442,7 +399,6 @@ class ProductSearchWidget {
     setupEventHandlers(widgetContainer, triggerInput) {
         console.log('[LOG:setupEventHandlers]', triggerInput);
         const sInput = widgetContainer.querySelector('.widget-search-input');
-        sInput.placeholder = this.translations.searchPlaceholder; // <-- placeholder на языке
         const cButton = widgetContainer.querySelector('.widget-close-button');
         const catsCont = widgetContainer.querySelector('.categories-container');
         const resCont = widgetContainer.querySelector('.widget-result-container');
@@ -708,6 +664,7 @@ class ProductSearchWidget {
             return;
         }
 
+        // 1) Группируем товары по категориям
         const catMap = {};
         products.forEach((p) => {
             if (!p.categories) return;
@@ -717,36 +674,35 @@ class ProductSearchWidget {
             });
         });
 
-        // Логика подсчёта очков
+        // 2) Подсчитываем «очки» (score) для каждой категории
         const categoryScores = {};
         Object.entries(catMap).forEach(([catName, items]) => {
-            // Сортируем: inStock->outOfStock
-            const inS = items.filter((x) => x.availability);
-            const outS = items.filter((x) => !x.availability);
-            const sorted = [...inS, ...outS];
-            // первые 4
-            const subset = sorted.slice(0, this.maxItemsOnAllResults);
-            // считаем score
+            const inStock = items.filter((x) => x.availability);
+            const outStock = items.filter((x) => !x.availability);
+            const sortedItems = [...inStock, ...outStock];
+            const subset = sortedItems.slice(0, this.maxItemsOnAllResults);
+
             let score = 0;
-            subset.forEach((x) => {
-                if (x.availability) {
-                    score += 1;
-                } else {
-                    score -= 1;
-                }
+            subset.forEach((prd) => {
+                if (prd.availability) score += 1;
+                else score -= 1;
             });
             categoryScores[catName] = score;
-            console.log(`[DEBUG-catScore] cat="${catName}", score=${score}, subsetLength=${subset.length}`);
+            console.log(`[DEBUG-catScore] Category="${catName}", subset.length=${subset.length}, score=${score}`);
         });
 
-        // Сортируем по score (убывание)
+        // 3) Собираем список категорий
         const catNames = Object.keys(catMap);
+
+        // 4) Сортируем catNames по убыванию score
         catNames.sort((a, b) => (categoryScores[b] || 0) - (categoryScores[a] || 0));
 
-        const allResults = this.translations.allResults || 'Всі результати';
-        const finalCats = [allResults, ...catNames];
+        // 5) Вставляем «Всі результати» (или "Все результаты") в начало
+        const allResultsName = this.translations.allResults || 'Всі результати';
+        const finalCats = [allResultsName, ...catNames];
+        console.log('[DEBUG-catScore] Итоговый порядок категорий:', finalCats);
 
-        // Рендер
+        // 6) Рендер категорий в порядке finalCats
         finalCats.forEach((catName) => {
             const cItem = document.createElement('div');
             cItem.className = 'category-item';
@@ -757,7 +713,7 @@ class ProductSearchWidget {
 
             const cCount = document.createElement('div');
             cCount.className = 'category-count';
-            if (catName === allResults) {
+            if (catName === allResultsName) {
                 cCount.textContent = products.length;
             } else {
                 cCount.textContent = catMap[catName].length;
@@ -771,8 +727,7 @@ class ProductSearchWidget {
                     .forEach((el) => el.classList.remove('active'));
                 cItem.classList.add('active');
 
-                if (catName === allResults) {
-                    // все
+                if (catName === allResultsName) {
                     this.showCategoryProducts(catMap, finalCats, resultContainer, true, null);
                 } else {
                     const singleObj = { [catName]: catMap[catName] };
@@ -780,33 +735,43 @@ class ProductSearchWidget {
                 }
             });
 
-            if (catName === allResults) {
+            if (catName === allResultsName) {
                 cItem.classList.add('active');
             }
             categoriesContainer.appendChild(cItem);
         });
 
-        // Показываем «Всі результати» (или "All results")
+        // 7) Сразу показываем «Всі результати» 
         this.showCategoryProducts(catMap, finalCats, resultContainer, true, null);
     }
 
-    async showCategoryProducts(groupedProducts, finalCategoryNames, resultContainer, showTitles = true, selectedCat = null) {
+
+    async showCategoryProducts(
+        groupedProducts,
+        finalCategoryNames,  // это уже отсортированный список
+        resultContainer,
+        showTitles = true,
+        selectedCat = null
+    ) {
         console.log('[LOG:showCategoryProducts] selectedCat=', selectedCat);
         const isAllResults = (selectedCat === null);
 
         resultContainer.innerHTML = '';
+
+        // Грузим шаблон
         const tResp = await fetch('https://aleklz89.github.io/widget/product-item.html');
-        if (!tResp.ok) {
-            throw new Error(`Failed to load product template: ${tResp.status}`);
-        }
+        if (!tResp.ok) throw new Error(`Failed to load product template: ${tResp.status}`);
         const productTemplate = await tResp.text();
 
+        // Если мы в режиме «Всі результати»:
         if (isAllResults) {
-            // Собираем {catName, items, score}, но у нас уже частично есть. 
-            // Однако здесь можно ещё раз отсортировать или просто выводить
-            // по порядку, "Всі результати" -> catNames (уже сорт. выше)
+            // ⚠️ Вместо Object.entries(...) используем finalCategoryNames (уже отсортированные).
+            // Скипаем сам "Всі результати" (т.е. finalCategoryNames[0]) и идём со 2-го элемента
+            // (или фильтруем его).
             for (const catName of finalCategoryNames) {
-                if (catName === this.translations.allResults) continue; // не рендерим сам заголовок
+                // Пропускаем "Всі результати"
+                if (catName === this.translations.allResults) continue;
+
                 const items = groupedProducts[catName] || [];
                 this.renderSingleCategoryBlock(
                     catName,
@@ -819,7 +784,7 @@ class ProductSearchWidget {
                 );
             }
         } else {
-            // Только одну категорию, без лимита
+            // Если кликаем по конкретной категории — рендерим только её (без лимита)
             for (const catName of finalCategoryNames) {
                 const arr = groupedProducts[catName] || [];
                 this.renderSingleCategoryBlock(
@@ -851,15 +816,15 @@ class ProductSearchWidget {
         const productContainer = document.createElement('div');
         productContainer.className = 'product-container';
 
-        // inStock→outOfStock
+        // Разделяем inStock / outOfStock
         const inS = items.filter((p) => p.availability);
         const outS = items.filter((p) => !p.availability);
         const sorted = [...inS, ...outS];
 
-        // Берём subset
+        // Обрезаем по limitCount
         const subset = sorted.slice(0, limitCount);
 
-        // Рендерим
+        // Рисуем subset
         subset.forEach((prod) => {
             const presence = prod.availability ? this.translations.inStock : this.translations.outOfStock;
             let pHtml = productTemplate
@@ -883,15 +848,18 @@ class ProductSearchWidget {
             productContainer.appendChild(linkWrap);
         });
 
-        // "Ще ..." если limitCount < items.length
+        // Если есть ещё товары сверх limitCount, показываем "Ще ..."
         if (items.length > limitCount && !selectedCat) {
             const moreDiv = document.createElement('div');
             moreDiv.className = 'more-link';
             moreDiv.textContent = `${this.translations.more} ${items.length - limitCount} ...`;
             moreDiv.addEventListener('click', () => {
                 console.log('[LOG:renderSingleCategoryBlock] More clicked. catName=', catName);
-                const singleObj = { [catName]: sorted };
+                // Показать всю категорию
+                const singleObj = { [catName]: sorted }; // все товары
                 this.showCategoryProducts(singleObj, [catName], resultContainer, true, catName);
+
+                // Подсветить категорию
                 this.activateCategory(catName);
             });
             productContainer.appendChild(moreDiv);
@@ -911,6 +879,41 @@ class ProductSearchWidget {
                 ci.classList.remove('active');
             }
         });
+    }
+
+    async fetchInterfaceLanguage(domainPath) {
+        try {
+            const resp = await fetch(this.languageRoute, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ domain: domainPath }),
+            });
+            if (!resp.ok) {
+                console.warn('[WARN] Language route not OK => use default...');
+                return null;
+            }
+            const data = await resp.json();
+            if (!data.success) {
+                console.warn('[WARN] Language route success=false => default...');
+                return null;
+            }
+            console.log('[DEBUG] language from route:', data.language);
+            return data.language || null;
+        } catch (err) {
+            console.error('[ERROR] fetchInterfaceLanguage:', err);
+            return null;
+        }
+    }
+
+    applyTranslations(langCode) {
+        if (this.translationsMap[langCode]) {
+            console.log('[DEBUG] Found translations for', langCode);
+            this.translations = this.translationsMap[langCode];
+        } else {
+            console.log('[DEBUG] No translations for', langCode, '=> keep default.');
+        }
     }
 
     async saveSearchQuery(query) {
