@@ -20,6 +20,7 @@
 
     box-sizing: border-box;
     padding-bottom: 100px;
+    text-align: center;
 
 }
 
@@ -63,15 +64,9 @@
     text-decoration: underline;
 }
 
-.left-column {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    min-width: 400px;
-}
+
 
 .filter-container {
-    height: 50%;
     overflow-y: auto;
 
 }
@@ -94,6 +89,3 @@
 }
 
 
-.left-column {
-    display: none;
-}

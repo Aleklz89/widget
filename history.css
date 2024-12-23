@@ -1,7 +1,6 @@
-
 .history-item::before {
     content: "↻";
-  
+
     margin-right: 10px;
     color: #999;
     font-size: 14px;
@@ -19,7 +18,7 @@
     font-size: 14px;
     color: #333;
     flex-grow: 1;
-  
+
     text-overflow: ellipsis;
 
     overflow: hidden;
@@ -41,7 +40,7 @@
 .widget-history-list {
     position: absolute;
     top: 7%;
- 
+
     left: 0;
     width: 100%;
     max-height: 200px;
@@ -51,7 +50,7 @@
     border-radius: 5px;
     z-index: 1000;
     display: none;
- 
+
     opacity: 0;
     transform: scale(0.95);
     transition: opacity 0.3s ease, transform 0.3s ease;
@@ -95,7 +94,7 @@
         align-items: center;
         justify-content: center;
         flex-direction: column;
-      
+
         opacity: 1;
         transform: scale(1);
         margin-top: -20px;
@@ -109,7 +108,7 @@
         align-items: center;
         justify-content: center;
         flex-direction: column;
-     
+
         opacity: 1;
         transform: scale(1);
         margin-top: -10px;
@@ -122,7 +121,7 @@
         align-items: center;
         justify-content: center;
         flex-direction: column;
-     
+
         opacity: 1;
         transform: scale(1);
         margin-top: -15px;
@@ -152,7 +151,7 @@
         align-items: center;
         justify-content: center;
         flex-direction: column;
-     
+
         opacity: 1;
         transform: scale(1);
         margin-top: 10px;
@@ -178,7 +177,7 @@
         align-items: center;
         justify-content: center;
         flex-direction: column;
-      
+
         opacity: 1;
         transform: scale(1);
         margin-top: 0px;
@@ -191,7 +190,7 @@
         align-items: center;
         justify-content: center;
         flex-direction: column;
-      
+
         opacity: 1;
         transform: scale(1);
         margin-top: -10px;
@@ -200,8 +199,21 @@
     .left-column {
         display: flex;
         flex-direction: column;
-        height: 20%;
+        height: 100%;
         min-width: 400px;
     }
-    
+
+    .left-column {
+        display: none;
+    }
+
+    .left-column {
+        /* display: flex;
+        flex-direction: column; */
+        height: auto;
+        min-width: 0px;
+        max-height: 300px;
+    }
+
+
 }

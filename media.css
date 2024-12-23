@@ -1,7 +1,41 @@
+.category-accordion {
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    display: none;
+    /* Можно и block, если не нужен флекс */
+    flex-direction: column;
+    /* Если хотите, но не обязательно */
+    /* Удаляем height, пусть контейнер растягивается по содержимому */
+    width: 300px;
+
+}
+
+.category-accordion-content {
+    display: block;
+    /* по умолчанию */
+}
+
+.category-accordion.collapsed .category-accordion-content {
+    display: none;
+    /* свернуто — содержимое исчезает из потока */
+}
+
+.category-accordion-header {
+    background: #eee;
+    padding: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 13px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Чтобы внутри оставался скролл у контента */
 .category-accordion-content {
     overflow-y: auto;
     flex: 1;
-    height: auto;
 }
 
 @media (max-width: 1000px) {
@@ -43,7 +77,7 @@
 }
 
 
-@media (max-width: 500px) {
+@media (max-width: 1100px) {
     .main-content-container {
         display: flex;
         flex-direction: column;
@@ -56,7 +90,6 @@
 
     .categories-container {
         width: 100%;
-        height: auto;
         /* Categories take 20% width */
         max-height: 100%;
         /* Ensure it spans the full height */
@@ -85,18 +118,38 @@
         box-sizing: border-box;
     }
 
-    .left-column {
-        /* display: flex;
-        flex-direction: column; */
-        height: 35%;
-        min-width: 0px;
-    }
+
 
     .category-accordion-content {
         overflow-y: auto;
         flex: 1;
-        max-height: 100px;
     }
 
+    .filter-container {
+        display: none;
+        width: 100%;
+    }
+
+    .category-accordion-header {
+        width: 100%;
+    }
+
+    .category-accordion {
+        background: #f9f9f9;
+        border: 1px solid #ddd;
+        display: none;
+        /* Можно и block, если не нужен флекс */
+        flex-direction: column;
+        /* Если хотите, но не обязательно */
+        /* Удаляем height, пусть контейнер растягивается по содержимому */
+        width: 100%;
+    }
+    .left-column {
+        flex-direction: column;
+    }
+
+    .filter-container {
+        max-height: 200px;
+    }
 
 }

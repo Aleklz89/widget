@@ -101,8 +101,8 @@ class ProductSearchWidget {
         }
 
         // 1) Загружаем HTML
-          const resp = await fetch('https://aleklz89.github.io/widget/widget.html');
-        // const resp = await fetch('widget.html');
+        // const resp = await fetch('https://aleklz89.github.io/widget/widget.html');
+        const resp = await fetch('widget.html');
         const widgetHtml = await resp.text();
 
         // 2) Создаём DOM-элемент
@@ -140,24 +140,10 @@ class ProductSearchWidget {
         /* Панель фильтров */
         .filter-container {
           background: #f9f9f9;
-          border: 1px solid #ddd;
-          margin-bottom: 10px;
-          height: 50%;
           overflow-y: auto;
           transition: height 0.3s ease;
         }
-        .filter-container.collapsed {
-          height: 40px; 
-        }
-        .filter-toggle-btn {
-          background: #eee;
-          border: none;
-          width: 100%;
-          text-align: left;
-          padding: 8px;
-          cursor: pointer;
-          font-weight: bold;
-        }
+    
         .filter-content {
           padding: 10px;
         }
@@ -167,28 +153,6 @@ class ProductSearchWidget {
         .filter-checkbox-label {
           display: block;
           margin-bottom: 5px;
-        }
-  
-        /* Аккордеон категорий */
-        .category-accordion {
-          background: #f9f9f9;
-          border: 1px solid #ddd;
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          overflow: hidden;
-          transition: height 0.3s ease;
-        }
-        .category-accordion.collapsed {
-          height: auto;
-        }
-        .category-accordion-header {
-          background: #eee;
-          padding: 8px;
-          font-weight: bold;
-          cursor: pointer;
-          border-bottom: 1px solid #ddd;
-          font-size: 13px;
         }
         
   
@@ -224,19 +188,60 @@ class ProductSearchWidget {
         // 7) Создаем панель фильтров  панель категорий
         this.createFilterAccordion();
         this.createCategoryAccordion();
+
+        this.adjustDefaultPanels();
+    }
+
+    adjustDefaultPanels() {
+        console.log('[LOG:adjustDefaultPanels] Start.');
+
+        // Смотрим, какая сейчас ширина окна
+        const currentWidth = window.innerWidth;
+        console.log('[LOG:adjustDefaultPanels] window.innerWidth=', currentWidth);
+
+        // Находим элементы
+        const filterContainer = this.widgetContainer.querySelector('.filter-container');
+        const catAccordion = this.widgetContainer.querySelector('.category-accordion');
+
+        // Логируем найденные элементы
+        console.log('[LOG:adjustDefaultPanels] filterContainer=', filterContainer);
+        console.log('[LOG:adjustDefaultPanels] catAccordion=', catAccordion);
+
+        if (!filterContainer || !catAccordion) {
+            console.warn('[LOG:adjustDefaultPanels] filterContainer or catAccordion not found => return');
+            return;
+        }
+
+        // Если экран шире 1100px => хотим, чтобы они были "свернуты"
+        if (currentWidth < 1100) {
+            console.log('[LOG:adjustDefaultPanels] => collapsing filters & categories (because width > 1100).');
+            filterContainer.classList.add('collapsed');
+            catAccordion.classList.add('collapsed');
+        } else {
+            console.log('[LOG:adjustDefaultPanels] => uncollapsing filters & categories (width <= 1100).');
+            filterContainer.classList.remove('collapsed');
+            catAccordion.classList.remove('collapsed');
+        }
     }
 
     createFilterAccordion() {
         console.log('[LOG:createFilterAccordion] Inserting filter panel');
         const filterContainer = document.createElement('div');
+        // По умолчанию мы добавляем класс 'collapsed', но потом adjustDefaultPanels() может его «снять»
         filterContainer.className = 'filter-container collapsed';
 
         const toggleBtn = document.createElement('button');
         toggleBtn.className = 'filter-toggle-btn';
         toggleBtn.textContent = `${this.translations.filters} ▼`;
+
         toggleBtn.addEventListener('click', () => {
+            console.log('[LOG:createFilterAccordion] filter-toggle-btn clicked');
             filterContainer.classList.toggle('collapsed');
-            if (filterContainer.classList.contains('collapsed')) {
+
+            const isCollapsedNow = filterContainer.classList.contains('collapsed');
+            console.log('[LOG:createFilterAccordion] isCollapsedNow=', isCollapsedNow);
+
+            if (isCollapsedNow) {
                 toggleBtn.textContent = `${this.translations.filters} ▼`;
             } else {
                 toggleBtn.textContent = `${this.translations.filters} ▲`;
@@ -250,11 +255,16 @@ class ProductSearchWidget {
         filterContainer.appendChild(filterContent);
 
         const leftCol = this.widgetContainer.querySelector('.left-column');
+        console.log('[LOG:createFilterAccordion] leftCol=', leftCol);
+
         if (leftCol) {
-            leftCol.insertBefore(filterContainer, leftCol.querySelector('.categories-container'));
+            const categoriesContainer = leftCol.querySelector('.categories-container');
+            console.log('[LOG:createFilterAccordion] categoriesContainer=', categoriesContainer);
+
+            leftCol.insertBefore(filterContainer, categoriesContainer);
             console.log('[LOG:createFilterAccordion] Filter panel inserted above .categories-container');
         } else {
-            console.warn('[LOG:createFilterAccordion] .left-column not found.');
+            console.warn('[LOG:createFilterAccordion] .left-column not found => insertBefore(widgetContainer.firstChild)');
             this.widgetContainer.insertBefore(filterContainer, this.widgetContainer.firstChild);
         }
     }
@@ -269,21 +279,28 @@ class ProductSearchWidget {
             return;
         }
 
+        // Создаем аккордеон
         const catAccordion = document.createElement('div');
         catAccordion.className = 'category-accordion collapsed';
+        // По умолчанию ставим класс 'collapsed', чтобы при старте он был свернут
+        // Если хотите, чтобы при загрузке было раскрыто — уберите слово collapsed
 
+        // Шапка
         const catHeader = document.createElement('div');
         catHeader.className = 'category-accordion-header';
-        catHeader.textContent = this.translations.categories;
+        catHeader.textContent = `${this.translations.categories} ▼`; // начальное значение
+
+        // Добавляем обработчик клика по шапке
         catHeader.addEventListener('click', () => {
             catAccordion.classList.toggle('collapsed');
             if (catAccordion.classList.contains('collapsed')) {
-                catHeader.textContent = this.translations.categories;
+                catHeader.textContent = `${this.translations.categories} ▼`;
             } else {
-                catHeader.textContent = this.translations.categories;
+                catHeader.textContent = `${this.translations.categories} ▲`;
             }
         });
 
+        // Контейнер для списка категорий
         const catContent = document.createElement('div');
         catContent.className = 'category-accordion-content';
 
@@ -291,7 +308,7 @@ class ProductSearchWidget {
         catAccordion.appendChild(catHeader);
         catAccordion.appendChild(catContent);
 
-        // Вставляем после filter-container
+        // Вставляем его в левую колонку, сразу после filter-container
         const filterCont = leftCol.querySelector('.filter-container');
         if (filterCont) {
             leftCol.insertBefore(catAccordion, filterCont.nextSibling);
@@ -667,13 +684,29 @@ class ProductSearchWidget {
 
     displayProductsByCategory(products, categoriesContainer, resultContainer) {
         console.log('[LOG:displayProductsByCategory] products.length=', products.length);
+
+        // 1) Находим .filter-container и .category-accordion (или .categories-container)
+        const filterContainer = this.widgetContainer.querySelector('.filter-container');
+        const catAccordion = this.widgetContainer.querySelector('.category-accordion');
+
+        // 2) Очищаем содержимое
         categoriesContainer.innerHTML = '';
         resultContainer.innerHTML = '';
 
+        // 3) Если товаров нет — скрываем фильтр/категории, показываем «нет товаров» и выходим
         if (!products.length) {
+            if (filterContainer) filterContainer.style.display = 'none';
+            if (catAccordion) catAccordion.style.display = 'none';
+
             resultContainer.innerHTML = `<p>${this.translations.noProductsFound}</p>`;
             return;
+        } else {
+            // 4) Есть товары: показываем фильтры и категории (flex вместо block)
+            if (filterContainer) filterContainer.style.display = 'flex';
+            if (catAccordion) catAccordion.style.display = 'flex';
         }
+
+        // --- Дальше ваша уже существующая логика ---
 
         // 1) Группируем товары по категориям
         const catMap = {};
@@ -713,7 +746,7 @@ class ProductSearchWidget {
         const finalCats = [allResultsName, ...catNames];
         console.log('[DEBUG-catScore] Итоговый порядок категорий:', finalCats);
 
-        // 6) Рендер категорий в порядке finalCats
+        // 6) Рендер категорий
         finalCats.forEach((catName) => {
             const cItem = document.createElement('div');
             cItem.className = 'category-item';
@@ -755,6 +788,7 @@ class ProductSearchWidget {
         // 7) Сразу показываем «Всі результати» 
         this.showCategoryProducts(catMap, finalCats, resultContainer, true, null);
     }
+
 
 
     async showCategoryProducts(

@@ -145,18 +145,27 @@
 .filter-container {
     background: #f9f9f9;
     border: 1px solid #ddd;
-    margin: 0 0 10px 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease;
-    width: 100%;
+    display: none;
+    flex-direction: column;
+
+    /* Не указываем фиксированную высоту */
+    /* height: auto или вовсе убираем */
+
+    /* Можно оставить overflow-y: auto, если нужно прокручивать контент, 
+       но тогда высота должна быть где-то задана родительскому контейнеру. 
+       Если хотите, чтобы содержимое просто «текло» дальше — уберите overflow. */
+    width: 300px;
 }
 
+/* Прячем ТОЛЬКО содержимое, но сам заголовок остаётся */
 .filter-container.collapsed .filter-content {
     display: none;
+    /* скрываем через display, тогда пустого места не будет */
 }
 
 .filter-toggle-btn {
     background: #eee;
+    
     border: none;
     width: 100%;
     text-align: left;
