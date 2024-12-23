@@ -66,7 +66,7 @@ class ProductSearchWidget {
             document.head.appendChild(link);
         });
 
-        // *** Дополнительные стили для аккордеонов и верстки ***
+   
         const styleTag = document.createElement('style');
         styleTag.textContent = `
             /* Общий контейнер левой колонки высотой 100% */
@@ -140,7 +140,7 @@ class ProductSearchWidget {
         `;
         document.head.appendChild(styleTag);
 
-        // 5) Ищем триггеры
+ 
         const triggers = document.querySelectorAll(`#${this.triggerInputId}`);
         if (!triggers.length) {
             console.error('[LOG:initWidget] No triggers found');
@@ -148,28 +148,27 @@ class ProductSearchWidget {
         }
         triggers.forEach((inp) => this.setupEventHandlers(this.widgetContainer, inp));
 
-        // 6) userId + история
+       
         await this.getOrCreateUserId();
         await this.loadSearchHistory(this.userId);
         this.updateSearchHistory();
         this.addHistoryPopupHandlers();
 
-        // 7) Создаём панель фильтров
+  
         this.createFilterAccordion();
 
-        // 8) /* NEW CODE */ Создаем аккордеон "Категории"
+   
         this.createCategoryAccordion();
     }
 
-    // --------------------- Создаём панель фильтров ---------------------
     createFilterAccordion() {
         console.log('[LOG:createFilterAccordion] Inserting filter panel');
 
-        // Создаём контейнер
+      
         const filterContainer = document.createElement('div');
         filterContainer.className = 'filter-container collapsed';
 
-        // Кнопка
+     
         const toggleBtn = document.createElement('button');
         toggleBtn.className = 'filter-toggle-btn';
         toggleBtn.textContent = 'Фильтры ▼';
@@ -188,7 +187,7 @@ class ProductSearchWidget {
         filterContainer.appendChild(toggleBtn);
         filterContainer.appendChild(filterContent);
 
-        // Находим левую колонку
+
         const leftCol = this.widgetContainer.querySelector('.left-column');
         if (leftCol) {
             leftCol.insertBefore(filterContainer, leftCol.querySelector('.categories-container'));
@@ -199,11 +198,11 @@ class ProductSearchWidget {
         }
     }
 
-    // --------------------- /* NEW CODE */ Создаём панель для категорий ---------------------
+
     createCategoryAccordion() {
         console.log('[LOG:createCategoryAccordion] Creating category accordion block...');
 
-        // Найдём текущую .categories-container
+   
         const leftCol = this.widgetContainer.querySelector('.left-column');
         const catsContainer = this.widgetContainer.querySelector('.categories-container');
         if (!leftCol || !catsContainer) {
@@ -211,11 +210,11 @@ class ProductSearchWidget {
             return;
         }
 
-        // Создадим «обёртку» для категорий
+  
         const catAccordion = document.createElement('div');
         catAccordion.className = 'category-accordion collapsed';  // Свернуто по умолчанию
 
-        // Заголовок "Категории"
+ 
         const catHeader = document.createElement('div');
         catHeader.className = 'category-accordion-header';
         catHeader.textContent = 'Категории';
@@ -228,20 +227,18 @@ class ProductSearchWidget {
             }
         });
 
-        // Контент для категорий
+       
         const catContent = document.createElement('div');
         catContent.className = 'category-accordion-content';
 
-        // Помещаем внутри catContent уже существующий .categories-container
+   
         catContent.appendChild(catsContainer);
 
-        // Собираем
+
         catAccordion.appendChild(catHeader);
         catAccordion.appendChild(catContent);
 
-        // Вставим catAccordion в leftCol, вместо catsContainer
-        // (Но на самом деле мы просто переместили .categories-container внутрь catContent)
-        // Для порядка можно поместить catAccordion после filterContainer
+
         const filterCont = leftCol.querySelector('.filter-container');
         if (filterCont) {
             leftCol.insertBefore(catAccordion, filterCont.nextSibling);
@@ -250,7 +247,7 @@ class ProductSearchWidget {
         }
     }
 
-    // --------------------- buildFilterMenu ---------------------
+
     buildFilterMenu() {
         console.log('[LOG:buildFilterMenu] Building filter checkboxes...');
         const filterContainer = this.widgetContainer.querySelector('.filter-container');
@@ -262,7 +259,7 @@ class ProductSearchWidget {
 
         filterContent.innerHTML = '';
 
-        // Собираем все параметры из товаров
+ 
         const filterData = {};
         this.allProducts.forEach((prod) => {
             if (!Array.isArray(prod.params)) return;
@@ -274,7 +271,7 @@ class ProductSearchWidget {
             });
         });
 
-        // Генерим чекбоксы
+   
         Object.keys(filterData).forEach((paramName) => {
             const paramBlock = document.createElement('div');
             paramBlock.className = 'filter-param-block';
@@ -307,10 +304,10 @@ class ProductSearchWidget {
                     }
                     console.log('[LOG:buildFilterMenu] activeFilters=', this.activeFilters);
 
-                    // Применяем
+                
                     const filtered = this.applyActiveFilters(this.allProducts);
 
-                    // Перерисовываем
+               
                     const cats = this.widgetContainer.querySelector('.categories-container');
                     const res  = this.widgetContainer.querySelector('.widget-result-container');
                     this.displayProductsByCategory(filtered, cats, res);
@@ -328,7 +325,7 @@ class ProductSearchWidget {
         });
     }
 
-    // --------------------- applyActiveFilters ---------------------
+
     applyActiveFilters(products) {
         console.log('[LOG:applyActiveFilters] activeFilters=', this.activeFilters);
         const keys = Object.keys(this.activeFilters);
@@ -345,7 +342,7 @@ class ProductSearchWidget {
         });
     }
 
-    // --------------------- setupEventHandlers ---------------------
+
     setupEventHandlers(widgetContainer, triggerInput) {
         console.log('[LOG:setupEventHandlers]', triggerInput);
         const sInput  = widgetContainer.querySelector('.widget-search-input');
@@ -422,7 +419,7 @@ class ProductSearchWidget {
         });
     }
 
-    // --------------------- История поиска ---------------------
+
     async getOrCreateUserId() {
         if (!window.Cookies) await this.loadJsCookieLibrary();
         let userId = Cookies.get('userId');
@@ -508,7 +505,7 @@ class ProductSearchWidget {
         if (c) c.style.display = 'none';
     }
 
-    // --------------------- fetchSuggestions ---------------------
+  
     async fetchSuggestions(query, suggestionsList, searchInput, requestToken, controller) {
         console.log('[LOG:fetchSuggestions] query=', query);
         const r = await fetch(this.suggestionsUrl, {
@@ -546,7 +543,7 @@ class ProductSearchWidget {
         suggestionsList.style.display = 'flex';
     }
 
-    // --------------------- correctQuery ---------------------
+
     async correctQuery(word, searchInput) {
         console.log('[LOG:correctQuery] word=', word);
         try {
@@ -573,7 +570,7 @@ class ProductSearchWidget {
         }
     }
 
-    // --------------------- fetchProducts ---------------------
+
     async fetchProducts(query, categoriesContainer, resultContainer, requestToken, controller) {
         console.log('[LOG:fetchProducts] query=', query);
         const lang = navigator.language || 'en';
@@ -600,19 +597,19 @@ class ProductSearchWidget {
             resultContainer.innerHTML = '<p>No products found.</p>';
             categoriesContainer.innerHTML = '';
         } else {
-            // (1) обновляем меню фильтров
+
             this.buildFilterMenu();
-            // (2) применяем фильтры
+    
             const filtered = this.applyActiveFilters(products);
-            // (3) рендер
+    
             this.displayProductsByCategory(filtered, categoriesContainer, resultContainer);
-            // (4) сохраняем запрос
+        
             await this.saveSearchQuery(query);
             await this.saveWordsToDatabase(query);
         }
     }
 
-    // --------------------- displayProductsByCategory ---------------------
+ 
     displayProductsByCategory(products, categoriesContainer, resultContainer) {
         console.log('[LOG:displayProductsByCategory] products.length=', products.length);
         categoriesContainer.innerHTML = '';
@@ -623,7 +620,7 @@ class ProductSearchWidget {
             return;
         }
 
-        // Простая группировка
+
         const catMap = {};
         products.forEach((p) => {
             p.categories.forEach((c) => {
@@ -672,7 +669,7 @@ class ProductSearchWidget {
             categoriesContainer.appendChild(cItem);
         });
 
-        // Изначально показываем всё
+  
         this.showCategoryProducts(catMap, finalCats, resultContainer, true, null);
     }
 
@@ -716,7 +713,7 @@ class ProductSearchWidget {
         const productContainer = document.createElement('div');
         productContainer.className = 'product-container';
 
-        // inStock->outOfStock
+   
         const inS = items.filter((p) => p.availability);
         const outS = items.filter((p) => !p.availability);
         const sorted = [...inS, ...outS];
@@ -748,7 +745,7 @@ class ProductSearchWidget {
         resultContainer.appendChild(catBlock);
     }
 
-    // --------------------- Сохранение запросов ---------------------
+
     async saveSearchQuery(query) {
         if (!this.userId || !query) return;
         try {
@@ -778,7 +775,7 @@ class ProductSearchWidget {
     }
 }
 
-// Запуск
+
 document.addEventListener('DOMContentLoaded', () => {
     console.log('[DEBUG] DOMContentLoaded');
     new ProductSearchWidget('searchInput');
