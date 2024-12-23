@@ -1,23 +1,23 @@
 .main-content-container {
     display: flex;
-    /* Make categories and results appear side by side */
+   
     height: 100%;
-    /* Fill the height of the widget */
+  
     width: 100%;
-    /* Fill the width of the widget */
+  
 }
 
 .categories-container {
     width: 100%;
-    /* Categories take 20% width */
+ 
     max-height: 100%;
-    /* Ensure it spans the full height */
+ 
     overflow-y: auto;
-    /* Add scrolling for long content */
+ 
     background-color: #f9f9f9;
-    /* Optional background */
+ 
     padding: 10px;
-    /* Optional padding */
+  
     box-sizing: border-box;
     padding-bottom: 100px;
 }
@@ -26,11 +26,11 @@
 .product-container {
     display: flex;
     flex-wrap: wrap;
-    /* Позволяет товарам переноситься на новую строку */
+
     gap: 20px;
-    /* Отступы между товарами */
+ 
     align-items: flex-start;
-    /* Выравнивание по верхнему краю */
+   
     border-top: 0.5px solid rgb(219, 217, 217);
 }
 
@@ -46,15 +46,15 @@
 
 .more-link {
     width: 100%;
-    /* Занимает всю ширину строки */
+
     font-size: 14px;
     color: #007bff;
     cursor: pointer;
     text-align: left;
-    /* Центрирует текст */
+  
     margin-top: 10px;
     display: block;
-    /* Принудительно делает элемент блочным */
+
 }
 
 .more-link:hover {
@@ -75,7 +75,7 @@
 
 .categories-container {
     flex: 1;
-    /* Или height: 50%; */
+ 
     overflow-y: auto;
 
 }
