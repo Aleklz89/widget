@@ -4,7 +4,7 @@ class ProductSearchWidget {
         this.triggerInputId = triggerInputId;
 
         // Эндпоинты
-        this.apiUrl = 'https://smartsearch.spefix.com/api/search';
+        this.apiUrl = 'http://localhost:3000/api/search';
         this.suggestionsUrl = 'https://smartsearch.spefix.com/api/suggestions';
         this.correctionUrl = 'https://smartsearch.spefix.com/api/correct';
         this.languageRoute = 'https://smartsearch.spefix.com/api/language';
@@ -759,7 +759,8 @@ class ProductSearchWidget {
         resultContainer.innerHTML = '';
 
         // Грузим шаблон
-        const tResp = await fetch('https://aleklz89.github.io/widget/product-item.html');
+        // const tResp = await fetch('https://aleklz89.github.io/widget/product-item.html');
+        const tResp = await fetch('product-item.html');
         if (!tResp.ok) throw new Error(`Failed to load product template: ${tResp.status}`);
         const productTemplate = await tResp.text();
 
@@ -800,8 +801,17 @@ class ProductSearchWidget {
         }
     }
 
-    renderSingleCategoryBlock(catName, items, productTemplate, resultContainer, showTitles, selectedCat, limitCount) {
+    renderSingleCategoryBlock(
+        catName,
+        items,
+        productTemplate,
+        resultContainer,
+        showTitles,
+        selectedCat,
+        limitCount
+    ) {
         console.log('[LOG:renderSingleCategoryBlock] catName=', catName, 'items.length=', items.length);
+
         const isSingle = !!selectedCat;
         const categoryTitleHtml = (showTitles || selectedCat)
             ? `<h3><a href="#" class="category-link">${catName} →</a></h3>`
@@ -816,7 +826,7 @@ class ProductSearchWidget {
         const productContainer = document.createElement('div');
         productContainer.className = 'product-container';
 
-        // Разделяем inStock / outOfStock
+        // Разделяем inStock / outOfStock для более наглядного вывода
         const inS = items.filter((p) => p.availability);
         const outS = items.filter((p) => !p.availability);
         const sorted = [...inS, ...outS];
@@ -826,13 +836,39 @@ class ProductSearchWidget {
 
         // Рисуем subset
         subset.forEach((prod) => {
-            const presence = prod.availability ? this.translations.inStock : this.translations.outOfStock;
+            const presence = prod.availability
+                ? this.translations.inStock
+                : this.translations.outOfStock;
+
+            // Подготовим значения для старой цены
+            let oldPriceValue = prod.oldPrice || '';
+            // По умолчанию скрываем блок со старой ценой (display:none)
+            let oldPriceStyle = 'display: none;';
+
+            // Показываем, только если oldPrice > 0, и она != newPrice
+            if (
+                prod.oldPrice &&
+                prod.oldPrice > 0 &&
+                prod.oldPrice !== prod.newPrice
+            ) {
+                oldPriceStyle = 'color: grey; font-size: 14px; text-decoration: line-through;';
+            }
+
+            // Заменяем {{oldPrice}} и инлайн-стиль
             let pHtml = productTemplate
                 .replace(/\{\{imageUrl\}\}/g, prod.image || '')
                 .replace(/\{\{name\}\}/g, prod.name || 'No Name')
                 .replace(/\{\{price\}\}/g, prod.newPrice || 'Unavailable')
                 .replace(/\{\{currencyId\}\}/g, prod.currencyId || 'USD')
-                .replace(/\{\{presence\}\}/g, presence);
+                .replace(/\{\{presence\}\}/g, presence)
+                // Важно: меняем {{oldPrice}} 
+                .replace(/\{\{oldPrice\}\}/g, oldPriceValue)
+                // И подменяем style="display: none;"
+                // на style="(либо скрыт, либо зачеркнут)"
+                .replace(
+                    'style="display: none;"',
+                    `style="${oldPriceStyle}"`
+                );
 
             const el = document.createElement('div');
             el.innerHTML = pHtml.trim();
@@ -841,9 +877,11 @@ class ProductSearchWidget {
             linkWrap.href = prod.url || '#';
             linkWrap.target = '_blank';
             linkWrap.className = 'product-link';
+
             if (!prod.availability) {
                 linkWrap.classList.add('out-of-stock');
             }
+
             linkWrap.appendChild(el.firstElementChild);
             productContainer.appendChild(linkWrap);
         });
@@ -856,7 +894,7 @@ class ProductSearchWidget {
             moreDiv.addEventListener('click', () => {
                 console.log('[LOG:renderSingleCategoryBlock] More clicked. catName=', catName);
                 // Показать всю категорию
-                const singleObj = { [catName]: sorted }; // все товары
+                const singleObj = { [catName]: sorted };
                 this.showCategoryProducts(singleObj, [catName], resultContainer, true, catName);
 
                 // Подсветить категорию

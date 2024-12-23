@@ -2,6 +2,11 @@
     <img src="{{imageUrl}}" alt="{{name}}" class="product-image">
     <div class="product-details">
         <p class="product-name">{{name}}</p>
+        <!-- Старую цену выводим, если есть -->
+        <p class="product-old-price" style="color: grey; font-size: 12px; text-decoration: line-through;">
+            {{oldPrice}} {{currencyId}}
+        </p>
+        
         <p class="product-price">{{price}} {{currencyId}}</p>
         <p class="product-presence">{{presence}}</p>
     </div>
