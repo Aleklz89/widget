@@ -100,7 +100,7 @@ class ProductSearchWidget {
     // -----------------------------------------------------------
     // 1) Определяем язык с сервера
     // -----------------------------------------------------------
-    async fetchInterfaceLanguage(domainPath = '/') {
+    async fetchInterfaceLanguage(domainPath) {
         try {
             // Делаем POST-запрос на this.languageRoute
             const resp = await fetch(this.languageRoute, {
@@ -149,7 +149,7 @@ class ProductSearchWidget {
         console.log('[LOG:initWidget] Start.');
 
         // 1) Узнаём язык с сервера
-        const userLang = await this.fetchInterfaceLanguage();
+        const userLang = await this.fetchInterfaceLanguage(this.siteDomain);
         if (userLang) {
             this.applyTranslations(userLang);
         }
