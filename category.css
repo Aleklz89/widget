@@ -136,6 +136,42 @@
     color: rgb(114, 114, 114);
 }
 
+.filter-container {
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    margin: 0 0 10px 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    width: 300px;
+}
+
+.filter-container.collapsed .filter-content {
+    display: none;
+}
+
+.filter-toggle-btn {
+    background: #eee;
+    border: none;
+    width: 100%;
+    text-align: left;
+    padding: 8px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.filter-content {
+    padding: 10px;
+}
+
+.filter-param-block {
+    margin-bottom: 12px;
+}
+
+.filter-checkbox-label {
+    display: block;
+    margin-bottom: 6px;
+}
+
 @media(max-width: 400px) {
     .category-multiple .product-container {
         display: flex;

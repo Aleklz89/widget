@@ -1,4 +1,3 @@
-
 .main-content-container {
     display: flex;
     /* Make categories and results appear side by side */
@@ -9,7 +8,7 @@
 }
 
 .categories-container {
-    width: 30%;
+    width: 100%;
     /* Categories take 20% width */
     max-height: 100%;
     /* Ensure it spans the full height */
@@ -34,6 +33,7 @@
     /* Выравнивание по верхнему краю */
     border-top: 0.5px solid rgb(219, 217, 217);
 }
+
 .product-link {
     text-decoration: none;
     color: inherit;
@@ -59,4 +59,23 @@
 
 .more-link:hover {
     text-decoration: underline;
+}
+
+.left-column {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.filter-container {
+    height: 50%;
+    overflow-y: auto;
+
+}
+
+.categories-container {
+    flex: 1;
+    /* Или height: 50%; */
+    overflow-y: auto;
+
 }
