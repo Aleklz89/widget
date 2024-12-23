@@ -68,3 +68,14 @@
     bottom: 0;
     background: rgba(255, 255, 255, 0.5); 
 }
+
+.product-old-price {
+    color: grey;
+    font-size: 13px;
+    text-decoration: line-through;
+}
+.old-price {
+    color: grey;
+    font-size: 13px;
+    text-decoration: line-through;
+  }

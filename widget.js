@@ -4,7 +4,7 @@ class ProductSearchWidget {
         this.triggerInputId = triggerInputId;
 
         // Эндпоинты
-        this.apiUrl = 'http://localhost:3000/api/search';
+        this.apiUrl = 'https://smartsearch.spefix.com/api/search';
         this.suggestionsUrl = 'https://smartsearch.spefix.com/api/suggestions';
         this.correctionUrl = 'https://smartsearch.spefix.com/api/correct';
         this.languageRoute = 'https://smartsearch.spefix.com/api/language';
@@ -759,8 +759,8 @@ class ProductSearchWidget {
         resultContainer.innerHTML = '';
 
         // Грузим шаблон
-        // const tResp = await fetch('https://aleklz89.github.io/widget/product-item.html');
-        const tResp = await fetch('product-item.html');
+        const tResp = await fetch('https://aleklz89.github.io/widget/product-item.html');
+        // const tResp = await fetch('product-item.html');
         if (!tResp.ok) throw new Error(`Failed to load product template: ${tResp.status}`);
         const productTemplate = await tResp.text();
 
@@ -801,6 +801,8 @@ class ProductSearchWidget {
         }
     }
 
+
+
     renderSingleCategoryBlock(
         catName,
         items,
@@ -826,7 +828,10 @@ class ProductSearchWidget {
         const productContainer = document.createElement('div');
         productContainer.className = 'product-container';
 
-        // Разделяем inStock / outOfStock для более наглядного вывода
+        // Возможные цвета для лейбла
+        const possibleColors = ['#E91E63', '#2196F3', '#4CAF50', '#9C27B0', '#FF5722', '#FF9800'];
+
+        // Сортируем товары: сначала inStock → потом outOfStock
         const inS = items.filter((p) => p.availability);
         const outS = items.filter((p) => !p.availability);
         const sorted = [...inS, ...outS];
@@ -834,70 +839,99 @@ class ProductSearchWidget {
         // Обрезаем по limitCount
         const subset = sorted.slice(0, limitCount);
 
-        // Рисуем subset
-        subset.forEach((prod) => {
-            const presence = prod.availability
+        // Если не заведена карта цветов лейблов – создаём
+        if (!this.labelColorMap) {
+            this.labelColorMap = {};
+        }
+
+        subset.forEach((prod, idx) => {
+            console.log('[DEBUG] product item idx=', idx, ' data=', prod);
+
+            // Лейбл
+            let labelHtml = '';
+            if (prod.label) {
+                // Проверяем цвет для данного текста
+                if (!this.labelColorMap[prod.label]) {
+                    const randColor = possibleColors[Math.floor(Math.random() * possibleColors.length)];
+                    this.labelColorMap[prod.label] = randColor;
+                }
+                const labelColor = this.labelColorMap[prod.label];
+                labelHtml = `
+          <div class="product-label"
+               style="
+                 background-color: ${labelColor};
+                 color: #fff;
+                 display: inline-block;
+                 padding: 3px 6px;
+                 border-radius: 4px;
+                 font-size: 12px;
+                 margin-bottom: 5px;">
+            ${escapeHtml(prod.label)}
+          </div>`;
+            }
+
+            // Старая цена
+            let oldPriceValue = prod.oldPrice || '';
+            // По умолчанию скрыто
+            let oldPriceStyle = 'display: none;';
+            if (prod.oldPrice && prod.oldPrice > 0 && prod.oldPrice !== prod.newPrice) {
+                // Зададим стиль зачёркнутой цены
+                oldPriceStyle = 'color: grey; font-size: 13px; text-decoration: line-through;';
+            }
+            console.log('[DEBUG] oldPriceValue=', oldPriceValue, ' oldPriceStyle=', oldPriceStyle);
+
+            // Текст наличия
+            const presenceText = prod.availability
                 ? this.translations.inStock
                 : this.translations.outOfStock;
 
-            // Подготовим значения для старой цены
-            let oldPriceValue = prod.oldPrice || '';
-            // По умолчанию скрываем блок со старой ценой (display:none)
-            let oldPriceStyle = 'display: none;';
+            // Покажем шаблон до замен
+            console.log('[DEBUG] BEFORE replacements:\n', productTemplate);
 
-            // Показываем, только если oldPrice > 0, и она != newPrice
-            if (
-                prod.oldPrice &&
-                prod.oldPrice > 0 &&
-                prod.oldPrice !== prod.newPrice
-            ) {
-                oldPriceStyle = 'color: grey; font-size: 14px; text-decoration: line-through;';
-            }
+            // Делаем подстановки — обращайте внимание, 
+            // какие именно плейсхолдеры есть в productTemplate ({{imageUrl}}, {{name}}, и т.д.)
+            let pHtml = productTemplate;
+            pHtml = safeReplace(pHtml, 'labelBlock', labelHtml);
+            pHtml = safeReplace(pHtml, 'name', escapeHtml(prod.name ?? 'No Name'));
+            pHtml = safeReplace(pHtml, 'price', String(prod.newPrice ?? '???'));
+            pHtml = safeReplace(pHtml, 'currencyId', escapeHtml(prod.currencyId ?? '???'));
+            pHtml = safeReplace(pHtml, 'presence', escapeHtml(presenceText));
+            pHtml = safeReplace(pHtml, 'oldPrice', String(oldPriceValue));
+            pHtml = safeReplace(pHtml, 'oldPriceStyle', oldPriceStyle);
+            // ВАЖНО: не забудьте подставить картинку, если есть плейсхолдер {{imageUrl}}
+            pHtml = safeReplace(pHtml, 'imageUrl', escapeHtml(prod.imageUrl ?? ''));
 
-            // Заменяем {{oldPrice}} и инлайн-стиль
-            let pHtml = productTemplate
-                .replace(/\{\{imageUrl\}\}/g, prod.image || '')
-                .replace(/\{\{name\}\}/g, prod.name || 'No Name')
-                .replace(/\{\{price\}\}/g, prod.newPrice || 'Unavailable')
-                .replace(/\{\{currencyId\}\}/g, prod.currencyId || 'USD')
-                .replace(/\{\{presence\}\}/g, presence)
-                // Важно: меняем {{oldPrice}} 
-                .replace(/\{\{oldPrice\}\}/g, oldPriceValue)
-                // И подменяем style="display: none;"
-                // на style="(либо скрыт, либо зачеркнут)"
-                .replace(
-                    'style="display: none;"',
-                    `style="${oldPriceStyle}"`
-                );
+            console.log('[DEBUG] AFTER replacements:\n', pHtml);
 
-            const el = document.createElement('div');
-            el.innerHTML = pHtml.trim();
+            // Создаем DOM-элемент
+            const wrapperEl = document.createElement('div');
+            wrapperEl.innerHTML = pHtml.trim();
 
+            // Ссылка
             const linkWrap = document.createElement('a');
             linkWrap.href = prod.url || '#';
             linkWrap.target = '_blank';
             linkWrap.className = 'product-link';
 
+            // Если нет в наличии
             if (!prod.availability) {
                 linkWrap.classList.add('out-of-stock');
             }
 
-            linkWrap.appendChild(el.firstElementChild);
+            // Добавляем
+            linkWrap.appendChild(wrapperEl.firstElementChild);
             productContainer.appendChild(linkWrap);
         });
 
-        // Если есть ещё товары сверх limitCount, показываем "Ще ..."
-        if (items.length > limitCount && !selectedCat) {
+        // Ещё...
+        if (items.length > limitCount && !isSingle) {
             const moreDiv = document.createElement('div');
             moreDiv.className = 'more-link';
             moreDiv.textContent = `${this.translations.more} ${items.length - limitCount} ...`;
             moreDiv.addEventListener('click', () => {
                 console.log('[LOG:renderSingleCategoryBlock] More clicked. catName=', catName);
-                // Показать всю категорию
                 const singleObj = { [catName]: sorted };
                 this.showCategoryProducts(singleObj, [catName], resultContainer, true, catName);
-
-                // Подсветить категорию
                 this.activateCategory(catName);
             });
             productContainer.appendChild(moreDiv);
@@ -905,19 +939,13 @@ class ProductSearchWidget {
 
         catBlock.appendChild(productContainer);
         resultContainer.appendChild(catBlock);
+        console.log('[DEBUG] Appended catBlock for', catName, 'with', subset.length, 'items');
     }
 
-    activateCategory(catName) {
-        const catItems = this.widgetContainer.querySelectorAll('.category-item');
-        catItems.forEach((ci) => {
-            const text = ci.querySelector('.category-name');
-            if (text && text.textContent === catName) {
-                ci.classList.add('active');
-            } else {
-                ci.classList.remove('active');
-            }
-        });
-    }
+
+
+
+
 
     async fetchInterfaceLanguage(domainPath) {
         try {
@@ -981,6 +1009,27 @@ class ProductSearchWidget {
             console.error('[LOG:saveWordsToDatabase] Error:', err);
         }
     }
+}
+
+// Функция для экранирования HTML-опасных символов
+function escapeHtml(str = '') {
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
+// Универсальная функция для безопасной подстановки в шаблон
+function safeReplace(str, placeholder, replacement) {
+    // Если нужно экранировать, включаем escapeHtml
+    // но, например, для {{labelBlock}} (где уже есть готовый HTML) 
+    // можно не экранировать. Решите, где именно нужно экранировать.
+    const safe = replacement ?? ''; // здесь можно при желании вызывать escapeHtml(someValue)
+    // Делаем глобальную замену плейсхолдера:
+    const regex = new RegExp(`\\{\\{${placeholder}\\}\\}`, 'g');
+    return str.replace(regex, safe);
 }
 
 // Запуск

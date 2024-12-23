@@ -1,13 +1,23 @@
 <div class="product-item">
     <img src="{{imageUrl}}" alt="{{name}}" class="product-image">
     <div class="product-details">
+
+        <!-- Сюда вставим лейбл, если он есть -->
+        {{labelBlock}}
+
+        <!-- Название -->
         <p class="product-name">{{name}}</p>
-        <!-- Старую цену выводим, если есть -->
-        <p class="product-old-price" style="color: grey; font-size: 12px; text-decoration: line-through;">
-            {{oldPrice}} {{currencyId}}
-        </p>
-        
+
+        <!-- Старая цена, если есть -->
+        <!-- Вместо :style используем {{oldPriceStyle}}, которое будет подставляться в виде style="color: grey; ...", либо style="display: none;" -->
+        <p class="product-old-price">{{oldPrice}} {{currencyId}}</p>
+
+
+        <!-- Новая цена -->
         <p class="product-price">{{price}} {{currencyId}}</p>
+
+        <!-- Наличие -->
         <p class="product-presence">{{presence}}</p>
+
     </div>
 </div>
