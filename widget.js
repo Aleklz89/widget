@@ -474,13 +474,20 @@ class ProductSearchWidget {
 
     async getOrCreateUserId() {
         if (!window.Cookies) await this.loadJsCookieLibrary();
-        let userId = Cookies.get('userId');
+
+        // Возьмём хостнейм, например "example.com"
+        // Можете взять более специфичную часть пути, если нужно.
+        const domain = window.location.hostname || 'unknown-domain';
+        // Сформируем название куки вида userId_example.com
+        const cookieName = `userId_${domain}`;
+
+        let userId = Cookies.get(cookieName);
         if (!userId) {
             userId = Math.floor(Math.random() * 1e9).toString();
-            Cookies.set('userId', userId, { expires: 365 });
+            Cookies.set(cookieName, userId, { expires: 365 });
         }
         this.userId = userId;
-        console.log('[LOG:getOrCreateUserId] userId=', userId);
+        console.log('[LOG:getOrCreateUserId]', { cookieName, userId });
     }
 
     async loadJsCookieLibrary() {
@@ -495,13 +502,13 @@ class ProductSearchWidget {
     }
 
     async loadSearchHistory(userId) {
-        console.log('[LOG:loadSearchHistory] userId=', userId);
-        if (!userId) return;
+        // передаем еще и domain
+        const fullPathNoQuery = window.location.origin + window.location.pathname;
         try {
             const r = await fetch('https://smartsearch.spefix.com/api/get-user-query', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId }),
+                body: JSON.stringify({ userId, fullPathNoQuery }),
             });
             if (!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
             const data = await r.json();
@@ -985,10 +992,19 @@ class ProductSearchWidget {
     async saveSearchQuery(query) {
         if (!this.userId || !query) return;
         try {
+            // Берем домен:
+            const fullPathNoQuery = window.location.origin + window.location.pathname;
+            // Или, если нужно, полный путь без query:
+            // const domain = window.location.origin + window.location.pathname;
+
             const resp = await fetch('https://smartsearch.spefix.com/api/addSearchQuery', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: this.userId, query })
+                body: JSON.stringify({
+                    userId: this.userId,
+                    query: query,
+                    domain: fullPathNoQuery    // <-- добавили поле domain
+                })
             });
             console.log('[LOG:saveSearchQuery] status=', resp.status);
         } catch (err) {
