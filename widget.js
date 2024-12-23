@@ -101,7 +101,7 @@ class ProductSearchWidget {
         }
 
         // 1) Загружаем HTML
-        const resp = await fetch('https://aleklz89.github.io/widget/widget.html');
+          const resp = await fetch('https://aleklz89.github.io/widget/widget.html');
         // const resp = await fetch('widget.html');
         const widgetHtml = await resp.text();
 
@@ -128,9 +128,9 @@ class ProductSearchWidget {
         ];
         sheets.forEach((stylesheet) => {
             const link = document.createElement('link');
-            // link.rel = 'stylesheet';
+            link.rel = 'stylesheet';
             link.href = `https://aleklz89.github.io/widget/${stylesheet}`;
-            link.href = `${stylesheet}`;
+            // link.href = `${stylesheet}`;
             document.head.appendChild(link);
         });
 
