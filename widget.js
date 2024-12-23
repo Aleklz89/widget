@@ -4,7 +4,7 @@ class ProductSearchWidget {
         this.triggerInputId = triggerInputId;
 
         // Эндпоинты
-        this.apiUrl = 'http://localhost:3000/api/search';
+        this.apiUrl = 'https://smartsearch.spefix.com/api/search';
         this.suggestionsUrl = 'https://smartsearch.spefix.com/api/suggestions';
         this.correctionUrl = 'https://smartsearch.spefix.com/api/correct';
         this.languageRoute = 'https://smartsearch.spefix.com/api/language';
