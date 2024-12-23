@@ -196,4 +196,12 @@
         transform: scale(1);
         margin-top: -10px;
     }
+
+    .left-column {
+        display: flex;
+        flex-direction: column;
+        height: 20%;
+        min-width: 400px;
+    }
+    
 }

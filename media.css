@@ -1,3 +1,9 @@
+.category-accordion-content {
+    overflow-y: auto;
+    flex: 1;
+    height: auto;
+}
+
 @media (max-width: 1000px) {
 
     .categories-container {
@@ -14,7 +20,7 @@
         box-sizing: border-box;
         padding-bottom: 100px;
     }
-    
+
 }
 
 @media (max-width: 900px) {
@@ -33,7 +39,7 @@
         box-sizing: border-box;
         padding-bottom: 100px;
     }
-    
+
 }
 
 
@@ -50,7 +56,7 @@
 
     .categories-container {
         width: 100%;
-        height: 200px;
+        height: auto;
         /* Categories take 20% width */
         max-height: 100%;
         /* Ensure it spans the full height */
@@ -78,5 +84,19 @@
         padding: 20px;
         box-sizing: border-box;
     }
+
+    .left-column {
+        /* display: flex;
+        flex-direction: column; */
+        height: 35%;
+        min-width: 0px;
+    }
+
+    .category-accordion-content {
+        overflow-y: auto;
+        flex: 1;
+        max-height: 100px;
+    }
+
 
 }

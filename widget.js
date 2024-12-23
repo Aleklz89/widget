@@ -101,8 +101,8 @@ class ProductSearchWidget {
         }
 
         // 1) Загружаем HTML
-        //   const resp = await fetch('https://aleklz89.github.io/widget/widget.html');
-        const resp = await fetch('widget.html');
+          const resp = await fetch('https://aleklz89.github.io/widget/widget.html');
+        // const resp = await fetch('widget.html');
         const widgetHtml = await resp.text();
 
         // 2) Создаём DOM-элемент
@@ -128,8 +128,8 @@ class ProductSearchWidget {
         ];
         sheets.forEach((stylesheet) => {
             const link = document.createElement('link');
-            link.rel = 'stylesheet';
-            // link.href = `https://aleklz89.github.io/widget/${stylesheet}`;
+            // link.rel = 'stylesheet';
+            link.href = `https://aleklz89.github.io/widget/${stylesheet}`;
             link.href = `${stylesheet}`;
             document.head.appendChild(link);
         });
@@ -137,11 +137,6 @@ class ProductSearchWidget {
         // Дополнительные стили для аккордеона и т.д.
         const styleTag = document.createElement('style');
         styleTag.textContent = `
-        .left-column {
-          display: flex;
-          flex-direction: column;
-          height: 100%;
-        }
         /* Панель фильтров */
         .filter-container {
           background: #f9f9f9;
@@ -185,7 +180,7 @@ class ProductSearchWidget {
           transition: height 0.3s ease;
         }
         .category-accordion.collapsed {
-          height: 40px;
+          height: auto;
         }
         .category-accordion-header {
           background: #eee;
@@ -195,10 +190,7 @@ class ProductSearchWidget {
           border-bottom: 1px solid #ddd;
           font-size: 13px;
         }
-        .category-accordion-content {
-          overflow-y: auto;
-          flex: 1;
-        }
+        
   
         /* Ограничение на вывод */
         .product-container {
@@ -649,13 +641,25 @@ class ProductSearchWidget {
         this.allProducts = products;
         console.log('[LOG:fetchProducts] allProducts length=', products.length);
 
+        // 1) Достаём левую колонку
+        const leftCol = this.widgetContainer.querySelector('.left-column');
+
         if (!products.length) {
+            // Нет товаров
             resultContainer.innerHTML = `<p>${this.translations.noProductsFound}</p>`;
             categoriesContainer.innerHTML = '';
+
+            // Если хотите, дополнительно прячем левую колонку
+            if (leftCol) leftCol.style.display = 'none';
         } else {
-            this.buildFilterMenu();
+            // Есть товары
+            // Показываем левую колонку
+            if (leftCol) leftCol.style.display = 'flex';  // или 'block', как нужно
+
+            this.buildFilterMenu(); // фильтры
             const filtered = this.applyActiveFilters(products);
             this.displayProductsByCategory(filtered, categoriesContainer, resultContainer);
+
             await this.saveSearchQuery(query);
             await this.saveWordsToDatabase(query);
         }
@@ -766,8 +770,8 @@ class ProductSearchWidget {
         resultContainer.innerHTML = '';
 
         // Грузим шаблон
-        const tResp = await fetch('https://aleklz89.github.io/widget/product-item.html');
-        // const tResp = await fetch('product-item.html');
+        // const tResp = await fetch('https://aleklz89.github.io/widget/product-item.html');
+        const tResp = await fetch('product-item.html');
         if (!tResp.ok) throw new Error(`Failed to load product template: ${tResp.status}`);
         const productTemplate = await tResp.text();
 
