@@ -311,8 +311,7 @@
     }
 
     .left-column {
-        display: none;
-        
+        display: none;       
         height: auto;
         min-width: 0px;
         max-height: 300px;

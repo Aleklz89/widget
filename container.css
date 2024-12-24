@@ -1,10 +1,10 @@
 .main-content-container {
     display: flex;
-
     height: 100%;
-
-    width: 100%;
-
+    /* Родительская высота */
+    box-sizing: border-box;
+    overflow: hidden;
+    /* чтобы скролл был именно внутри .widget-result-container */
 }
 
 .categories-container {
@@ -87,5 +87,3 @@
 .old-price-hidden {
     display: none;
 }
-
-

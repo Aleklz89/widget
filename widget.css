@@ -9,7 +9,7 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: flex-start;
-    
+
     padding: 0;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     z-index: 1000;
@@ -25,7 +25,7 @@
 .widget-search-input {
     width: 100%;
     padding: 15px 20px 15px 70px;
-    
+
     font-size: 18px;
     border: none;
     outline: none;
@@ -50,7 +50,7 @@
     border-radius: 50%;
     box-sizing: border-box;
     pointer-events: none;
-    
+
 }
 
 .widget-search-icon::after {
@@ -66,7 +66,7 @@
 }
 
 .widget-close-button {
-    position: absolute !important; 
+    position: absolute !important;
     top: 3px !important;
     right: 10px !important;
     font-size: 36px !important;
@@ -84,14 +84,16 @@
 
 
 .widget-result-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    width: 100%;
-    padding: 20px;
-    box-sizing: border-box;
+    flex: 1;
+    margin-left: 15px;
     background-color: #fff;
+    box-sizing: border-box;
     overflow-y: auto;
+    /* Прокрутка по вертикали */
+    overflow-x: hidden;
+    /* Убираем горизонтальную прокрутку, если не нужна */
+    height: 100%;
+    /* или другая высота, если нужно */
 }
 
 
