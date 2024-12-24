@@ -96,7 +96,6 @@
     
     justify-content: flex-start;
     
-    margin-bottom: 200px;
     max-height: 450px;
     height: auto;
 }
@@ -191,7 +190,7 @@
         
         justify-content: flex-start;
         
-        margin-bottom: 200px;
+
         max-height: 450px;
         height: auto;
         width: 300px;

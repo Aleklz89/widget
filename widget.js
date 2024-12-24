@@ -188,7 +188,7 @@ class ProductSearchWidget {
         this.createCategoryAccordion();
 
         this.createFilterAccordion();
-        
+
 
         this.adjustDefaultPanels();
     }
@@ -560,9 +560,17 @@ class ProductSearchWidget {
         const sInp = document.querySelector('.widget-search-input');
         const histC = document.querySelector('.widget-history-container');
         if (!sInp || !histC) return;
+
         sInp.addEventListener('focus', () => {
-            if (this.searchHistory.length) this.showHistory();
+            // Показывать историю только если она есть
+            // И значение инпута ПУСТОЕ
+            if (this.searchHistory.length && !sInp.value.trim()) {
+                this.showHistory();
+            } else {
+                this.hideHistory();
+            }
         });
+
         sInp.addEventListener('input', (e) => {
             const q = e.target.value.trim();
             if (q.length > 0) {
@@ -914,13 +922,11 @@ class ProductSearchWidget {
         const inS = items.filter((p) => p.availability);
         const outS = items.filter((p) => !p.availability);
 
-        // Теперь в каждой группе сортируем по убыванию даты (новые → старые)
-        // Предполагаем, что p.createdAt — строка вида "2023-08-01 12:34:56" или похожая.
-        // Если это число/Date, адаптируйте как нужно.
+        // Сортируем обе группы по убыванию даты (новые → старые)
         inS.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         outS.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-        // Потом объединяем: сначала inStock (от новых к старым), потом outOfStock (от новых к старым).
+        // Объединяем: сначала inStock, потом outOfStock
         const sorted = [...inS, ...outS];
 
         // Обрезаем массив до limitCount (если нужно)
@@ -944,17 +950,17 @@ class ProductSearchWidget {
                 }
                 const labelColor = this.labelColorMap[prod.label];
                 labelHtml = `
-                  <div class="product-label"
-                       style="
-                         background-color: ${labelColor};
-                         color: #fff;
-                         display: inline-block;
-                         padding: 3px 6px;
-                         border-radius: 4px;
-                         font-size: 12px;
-                         margin-bottom: 5px;">
-                    ${escapeHtml(prod.label)}
-                  </div>`;
+                    <div class="product-label"
+                         style="
+                           background-color: ${labelColor};
+                           color: #fff;
+                           display: inline-block;
+                           padding: 3px 6px;
+                           border-radius: 4px;
+                           font-size: 12px;
+                           margin-bottom: 5px;">
+                      ${escapeHtml(prod.label)}
+                    </div>`;
             }
 
             // Старая/новая цена
@@ -970,6 +976,10 @@ class ProductSearchWidget {
                 ? this.translations.inStock
                 : this.translations.outOfStock;
 
+            // Фолбэк для изображения, если поле пустое
+            const fallbackImageUrl = 'https://i.pinimg.com/564x/0c/bb/aa/0cbbaab0deff7f188a7762d9569bf1b3.jpg';  // Замените на вашу заглушку
+            const finalImageUrl = prod.image ? prod.image : fallbackImageUrl;
+
             // Показываем шаблон до замен
             console.log('[DEBUG] BEFORE replacements:\n', productTemplate);
 
@@ -982,7 +992,7 @@ class ProductSearchWidget {
             pHtml = safeReplace(pHtml, 'presence', escapeHtml(presenceText));
             pHtml = safeReplace(pHtml, 'oldPrice', String(oldPriceValue));
             pHtml = safeReplace(pHtml, 'oldPriceStyle', oldPriceStyle);
-            pHtml = safeReplace(pHtml, 'imageUrl', escapeHtml(prod.image ?? ''));
+            pHtml = safeReplace(pHtml, 'imageUrl', escapeHtml(finalImageUrl));
 
             console.log('[DEBUG] AFTER replacements:\n', pHtml);
 
@@ -1026,6 +1036,7 @@ class ProductSearchWidget {
 
         console.log('[DEBUG] Appended catBlock for', catName, 'with', subset.length, 'items');
     }
+
 
 
 
