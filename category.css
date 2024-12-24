@@ -190,11 +190,12 @@
         
         justify-content: flex-start;
         
-
+        margin-bottom: 300px;
         max-height: 450px;
         height: auto;
         width: 300px;
     }
+    
 
     .product-details {
         width: 200px;
