@@ -125,7 +125,7 @@
 
         opacity: 1;
         transform: scale(1);
-        
+
         margin-top: 5px;
     }
 }
@@ -140,7 +140,7 @@
 
         opacity: 1;
         transform: scale(1);
-        
+
         margin-top: -5px;
     }
 }
@@ -155,9 +155,9 @@
 
         opacity: 1;
         transform: scale(1);
-        
+
         margin-top: -45px;
-        
+
     }
 }
 
@@ -173,9 +173,9 @@
 
         opacity: 1;
         transform: scale(1);
-        
+
         margin-top: 20px;
-        
+
     }
 }
 
@@ -189,9 +189,9 @@
 
         opacity: 1;
         transform: scale(1);
-        
+
         margin-top: -45px;
-        
+
     }
 }
 
@@ -206,14 +206,14 @@
         opacity: 1;
         transform: scale(1);
         margin-top: -35px;
-        
+
     }
 }
 
 @media (max-width: 900px) and (max-height: 400px) {
     .widget-history-list.show {
         margin-top: 20px;
-        
+
     }
 }
 
@@ -229,7 +229,7 @@
 
         opacity: 1;
         transform: scale(1);
-        
+
         margin-top: -35px;
     }
 }
@@ -237,7 +237,7 @@
 @media (max-width: 900px) and (min-height: 401px) and (max-height: 500px) {
     .widget-history-list.show {
         margin-top: 15px;
-        
+
     }
 }
 
@@ -250,7 +250,7 @@
         flex-direction: column;
         opacity: 1;
         transform: scale(1);
-        
+
         margin-top: 15px;
     }
 }
@@ -264,9 +264,9 @@
         flex-direction: column;
         opacity: 1;
         transform: scale(1);
-        
+
         margin-top: 0px;
-        
+
     }
 }
 
@@ -279,7 +279,7 @@
         flex-direction: column;
         opacity: 1;
         transform: scale(1);
-        
+
         margin-top: -30px;
     }
 }
@@ -299,6 +299,9 @@
 }
 
 
+
+
+/* 2) Экран шириной <= 500px и высотой <= 1000px */
 @media (max-width: 500px) and (max-height: 1000px) {
     .widget-history-list.show {
         display: flex;
@@ -311,14 +314,14 @@
     }
 
     .left-column {
-        display: none;       
+        display: none;
         height: auto;
         min-width: 0px;
         max-height: 300px;
     }
 }
 
-
+/* 3) Экран шириной <= 500px и высотой >= 1001px */
 @media (max-width: 500px) and (min-height: 1001px) {
     .widget-history-list.show {
         display: flex;
@@ -331,14 +334,33 @@
     }
 
     .left-column {
-        /* Можно переопределить стили: 
-           если нужно, чтобы .left-column была видна или имела другую высоту */
         display: flex;
-        
         flex-direction: column;
         height: 100%;
         min-width: 400px;
-        
+    }
+}
+
+/* 1) Экран шириной <= 500px и высотой <= 500px */
+@media (max-width: 500px) and (max-height: 500px) {
+    .widget-history-list.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        opacity: 1;
+        transform: scale(1);
+        margin-top: 20px;
+        /* например */
+    }
+
+    .left-column {
+        display: none;
+        /* или какой-то другой вариант стилизации,
+           если хочется, чтобы колонка вообще не показывалась */
+        height: auto;
+        min-width: 0px;
+        max-height: 300px;
     }
 }
 
@@ -351,7 +373,7 @@
         flex-direction: column;
         opacity: 1;
         transform: scale(1);
-        
+
         margin-top: -10px;
     }
 }
@@ -365,8 +387,8 @@
         flex-direction: column;
         opacity: 1;
         transform: scale(1);
-        
+
         margin-top: -15px;
-        
+
     }
 }
