@@ -54,10 +54,7 @@
         
         background-color: #f9f9f9;
         
-        padding: 10px;
-        
         box-sizing: border-box;
-        padding-bottom: 100px;
     }
 
 }
@@ -73,10 +70,8 @@
         
         background-color: #f9f9f9;
         
-        padding: 10px;
         
         box-sizing: border-box;
-        padding-bottom: 100px;
     }
 
 }
@@ -101,8 +96,6 @@
         overflow-y: auto;
         
         background-color: #f9f9f9;
-        
-        padding: 10px;
         
         box-sizing: border-box;
     }

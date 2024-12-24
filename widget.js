@@ -185,9 +185,10 @@ class ProductSearchWidget {
         this.updateSearchHistory();
         this.addHistoryPopupHandlers();
 
+        this.createCategoryAccordion();
 
         this.createFilterAccordion();
-        this.createCategoryAccordion();
+        
 
         this.adjustDefaultPanels();
     }
@@ -224,10 +225,57 @@ class ProductSearchWidget {
         }
     }
 
+    createCategoryAccordion() {
+        console.log('[LOG:createCategoryAccordion] Creating category accordion block...');
+
+        const leftCol = this.widgetContainer.querySelector('.left-column');
+        const catsContainer = this.widgetContainer.querySelector('.categories-container');
+        if (!leftCol || !catsContainer) {
+            console.warn('[LOG:createCategoryAccordion] No .left-column or .categories-container found.');
+            return;
+        }
+
+        const catAccordion = document.createElement('div');
+        catAccordion.className = 'category-accordion collapsed';
+
+        const catHeader = document.createElement('div');
+        catHeader.className = 'category-accordion-header';
+        catHeader.textContent = `${this.translations.categories} ▼`;
+
+        catHeader.addEventListener('click', () => {
+            catAccordion.classList.toggle('collapsed');
+            if (catAccordion.classList.contains('collapsed')) {
+                catHeader.textContent = `${this.translations.categories} ▼`;
+            } else {
+                catHeader.textContent = `${this.translations.categories} ▲`;
+            }
+        });
+
+        const catContent = document.createElement('div');
+        catContent.className = 'category-accordion-content';
+
+        // Переносим .categories-container внутрь аккордеона
+        catContent.appendChild(catsContainer);
+        catAccordion.appendChild(catHeader);
+        catAccordion.appendChild(catContent);
+
+        // **Просто** добавляем catAccordion в .left-column
+        leftCol.appendChild(catAccordion);
+        //                      ^^^^^^^^^^^
+        // чтобы аккордеон категорий был первым (перед фильтрами)
+        console.log('[LOG:createCategoryAccordion] Category accordion appended to .left-column');
+    }
+
     createFilterAccordion() {
         console.log('[LOG:createFilterAccordion] Inserting filter panel');
-        const filterContainer = document.createElement('div');
 
+        const leftCol = this.widgetContainer.querySelector('.left-column');
+        if (!leftCol) {
+            console.warn('[LOG:createFilterAccordion] .left-column not found => cannot insert filters');
+            return;
+        }
+
+        const filterContainer = document.createElement('div');
         filterContainer.className = 'filter-container collapsed';
 
         const toggleBtn = document.createElement('button');
@@ -254,67 +302,10 @@ class ProductSearchWidget {
         filterContainer.appendChild(toggleBtn);
         filterContainer.appendChild(filterContent);
 
-        const leftCol = this.widgetContainer.querySelector('.left-column');
-        console.log('[LOG:createFilterAccordion] leftCol=', leftCol);
-
-        if (leftCol) {
-            const categoriesContainer = leftCol.querySelector('.categories-container');
-            console.log('[LOG:createFilterAccordion] categoriesContainer=', categoriesContainer);
-
-            leftCol.insertBefore(filterContainer, categoriesContainer);
-            console.log('[LOG:createFilterAccordion] Filter panel inserted above .categories-container');
-        } else {
-            console.warn('[LOG:createFilterAccordion] .left-column not found => insertBefore(widgetContainer.firstChild)');
-            this.widgetContainer.insertBefore(filterContainer, this.widgetContainer.firstChild);
-        }
-    }
-
-    createCategoryAccordion() {
-        console.log('[LOG:createCategoryAccordion] Creating category accordion block...');
-
-        const leftCol = this.widgetContainer.querySelector('.left-column');
-        const catsContainer = this.widgetContainer.querySelector('.categories-container');
-        if (!leftCol || !catsContainer) {
-            console.warn('[LOG:createCategoryAccordion] No .left-column or .categories-container found.');
-            return;
-        }
-
-
-        const catAccordion = document.createElement('div');
-        catAccordion.className = 'category-accordion collapsed';
-
-
-
-
-        const catHeader = document.createElement('div');
-        catHeader.className = 'category-accordion-header';
-        catHeader.textContent = `${this.translations.categories} ▼`;
-
-
-        catHeader.addEventListener('click', () => {
-            catAccordion.classList.toggle('collapsed');
-            if (catAccordion.classList.contains('collapsed')) {
-                catHeader.textContent = `${this.translations.categories} ▼`;
-            } else {
-                catHeader.textContent = `${this.translations.categories} ▲`;
-            }
-        });
-
-
-        const catContent = document.createElement('div');
-        catContent.className = 'category-accordion-content';
-
-        catContent.appendChild(catsContainer);
-        catAccordion.appendChild(catHeader);
-        catAccordion.appendChild(catContent);
-
-
-        const filterCont = leftCol.querySelector('.filter-container');
-        if (filterCont) {
-            leftCol.insertBefore(catAccordion, filterCont.nextSibling);
-        } else {
-            leftCol.appendChild(catAccordion);
-        }
+        // **ТЕПЕРЬ** вставляем фильтры ПОСЛЕ категорий
+        // Просто дополняем .left-column
+        leftCol.appendChild(filterContainer);
+        console.log('[LOG:createFilterAccordion] Filter panel appended to .left-column');
     }
 
     buildFilterMenu() {
