@@ -9,7 +9,7 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: flex-start;
-    /* Выравнивание влево */
+    
     padding: 0;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     z-index: 1000;
@@ -25,7 +25,7 @@
 .widget-search-input {
     width: 100%;
     padding: 15px 20px 15px 70px;
-    /* Отступ для значка лупы */
+    
     font-size: 18px;
     border: none;
     outline: none;
@@ -50,7 +50,7 @@
     border-radius: 50%;
     box-sizing: border-box;
     pointer-events: none;
-    /* Сделать лупу неактивной */
+    
 }
 
 .widget-search-icon::after {
@@ -94,7 +94,7 @@
     overflow-y: auto;
 }
 
-/* Стиль для "Всі результати" */
+
 .widget-result-container.all-results {
     display: grid;
     grid-template-columns: repeat(3, 1fr);

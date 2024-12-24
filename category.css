@@ -10,10 +10,10 @@
     margin-bottom: 5px;
 }
 
-/* Стили продуктов */
+
 .product-item {
     display: flex;
-    /* Три элемента в ряд */
+    
     box-sizing: border-box;
     margin-bottom: 20px;
 }
@@ -21,18 +21,18 @@
 .product-item img {
     width: 80px;
     height: auto;
-    /* Высота изменяется автоматически, чтобы сохранить пропорции */
+    
     object-fit: contain;
-    /* Гарантирует, что изображение будет полностью отображаться, сохраняя пропорции */
+    
 }
 
-/* Затемняем блок, если товара нет в наличии */
+
 .product-item.out-of-stock {
     opacity: 0.5;
     pointer-events: none;
 }
 
-/* Красим текст наличия товара в красный цвет */
+
 .product-item.out-of-stock .product-presence {
     color: red;
 }
@@ -64,9 +64,9 @@
 
 .category-block {
     margin-bottom: 20px;
-    /* Добавляем пространство между блоками */
+    
     padding: 10px 0;
-    /* Дополнительный отступ сверху и снизу */
+    
 }
 
 .category-block h3 {
@@ -80,21 +80,21 @@
     display: flex;
     flex-wrap: wrap;
     gap: 20px;
-    /* Отступы между продуктами */
+    
     justify-content: flex-start;
-    /* Выравнивание */
-    /* Для проверки */
+    
+    
 }
 
 .category-multiple .product-container {
     display: flex;
-    /* Для горизонтального размещения */
+    
     flex-wrap: wrap;
-    /* Позволяет переносить элементы */
+    
     gap: 20px;
-    /* Расстояние между продуктами */
+    
     justify-content: flex-start;
-    /* Выравнивание по левому краю */
+    
     margin-bottom: 200px;
     max-height: 450px;
     height: auto;
@@ -103,14 +103,14 @@
 
 .category-item span {
     font-size: 14px;
-    /* Для текста */
+    
 }
 
 .category-item.active span {
     font-size: 14px;
-    /* Для числа справа */
+    
     color: inherit;
-    /* Используем цвет категории */
+    
 }
 
 .category-name {
@@ -147,25 +147,18 @@
     border: 1px solid #ddd;
     display: none;
     flex-direction: column;
-
-    /* Не указываем фиксированную высоту */
-    /* height: auto или вовсе убираем */
-
-    /* Можно оставить overflow-y: auto, если нужно прокручивать контент, 
-       но тогда высота должна быть где-то задана родительскому контейнеру. 
-       Если хотите, чтобы содержимое просто «текло» дальше — уберите overflow. */
     width: 300px;
 }
 
-/* Прячем ТОЛЬКО содержимое, но сам заголовок остаётся */
+
 .filter-container.collapsed .filter-content {
     display: none;
-    /* скрываем через display, тогда пустого места не будет */
+    
 }
 
 .filter-toggle-btn {
     background: #eee;
-    
+    font-family: "Montserrat", sans-serif;
     border: none;
     width: 100%;
     text-align: left;
@@ -190,13 +183,13 @@
 @media(max-width: 400px) {
     .category-multiple .product-container {
         display: flex;
-        /* Для горизонтального размещения */
+        
         flex-wrap: wrap;
-        /* Позволяет переносить элементы */
+        
         gap: 20px;
-        /* Расстояние между продуктами */
+        
         justify-content: flex-start;
-        /* Выравнивание по левому краю */
+        
         margin-bottom: 200px;
         max-height: 450px;
         height: auto;

@@ -2,22 +2,22 @@
     background: #f9f9f9;
     border: 1px solid #ddd;
     display: none;
-    /* Можно и block, если не нужен флекс */
+    
     flex-direction: column;
-    /* Если хотите, но не обязательно */
-    /* Удаляем height, пусть контейнер растягивается по содержимому */
+    
+    
     width: 300px;
 
 }
 
 .category-accordion-content {
     display: block;
-    /* по умолчанию */
+    
 }
 
 .category-accordion.collapsed .category-accordion-content {
     display: none;
-    /* свернуто — содержимое исчезает из потока */
+    
 }
 
 .category-accordion-header {
@@ -32,7 +32,7 @@
     align-items: center;
 }
 
-/* Чтобы внутри оставался скролл у контента */
+
 .category-accordion-content {
     overflow-y: auto;
     flex: 1;
@@ -42,15 +42,15 @@
 
     .categories-container {
         width: 40%;
-        /* Categories take 20% width */
+        
         max-height: 100%;
-        /* Ensure it spans the full height */
+        
         overflow-y: auto;
-        /* Add scrolling for long content */
+        
         background-color: #f9f9f9;
-        /* Optional background */
+        
         padding: 10px;
-        /* Optional padding */
+        
         box-sizing: border-box;
         padding-bottom: 100px;
     }
@@ -61,15 +61,15 @@
 
     .categories-container {
         width: 60%;
-        /* Categories take 20% width */
+        
         max-height: 100%;
-        /* Ensure it spans the full height */
+        
         overflow-y: auto;
-        /* Add scrolling for long content */
+        
         background-color: #f9f9f9;
-        /* Optional background */
+        
         padding: 10px;
-        /* Optional padding */
+        
         box-sizing: border-box;
         padding-bottom: 100px;
     }
@@ -81,35 +81,35 @@
     .main-content-container {
         display: flex;
         flex-direction: column;
-        /* Make categories and results appear side by side */
+        
         height: 100%;
-        /* Fill the height of the widget */
+        
         width: 100%;
-        /* Fill the width of the widget */
+        
     }
 
     .categories-container {
         width: 100%;
-        /* Categories take 20% width */
+        
         max-height: 100%;
-        /* Ensure it spans the full height */
+        
         overflow-y: auto;
-        /* Add scrolling for long content */
+        
         background-color: #f9f9f9;
-        /* Optional background */
+        
         padding: 10px;
-        /* Optional padding */
+        
         box-sizing: border-box;
     }
 
     .widget-result-container {
         display: flex;
         flex-wrap: wrap;
-        /* Позволяет переносить элементы на новую строку */
+        
         justify-content: flex-start;
         align-items: flex-start;
         gap: 20px;
-        /* Расстояние между элементами */
+        
         height: 90%;
         flex-grow: 1;
         overflow-y: auto;
@@ -138,10 +138,10 @@
         background: #f9f9f9;
         border: 1px solid #ddd;
         display: none;
-        /* Можно и block, если не нужен флекс */
+        
         flex-direction: column;
-        /* Если хотите, но не обязательно */
-        /* Удаляем height, пусть контейнер растягивается по содержимому */
+        
+        
         width: 100%;
     }
     .left-column {
