@@ -5,7 +5,7 @@ class ProductSearchWidget {
 
 
         this.apiUrl = 'https://smartsearch.spefix.com/api/search';
-        this.suggestionsUrl = 'hhttps://smartsearch.spefix.com/api/suggestions';
+        this.suggestionsUrl = 'https://smartsearch.spefix.com/api/suggestions';
         this.correctionUrl = 'https://smartsearch.spefix.com/api/correct';
         this.languageRoute = 'https://smartsearch.spefix.com/api/language';
 
@@ -923,7 +923,7 @@ class ProductSearchWidget {
 
 
 
-    renderSingleCategoryBlock(
+    async renderSingleCategoryBlock(
         catName,
         items,
         productTemplate,
@@ -974,8 +974,12 @@ class ProductSearchWidget {
             this.labelColorMap = {};
         }
 
-        // 4) Рендерим товары
-        subset.forEach((prod, idx) => {
+        // Фолбэк для изображения
+        const fallbackImageUrl = 'https://i.pinimg.com/564x/0c/bb/aa/0cbbaab0deff7f188a7762d9569bf1b3.jpg';
+
+        // 4) Рендерим товары (используем for-of, чтобы можно было делать await)
+        for (let idx = 0; idx < subset.length; idx++) {
+            const prod = subset[idx];
             console.log('[DEBUG] product item idx=', idx, ' data=', prod);
 
             // Лейбл
@@ -1013,11 +1017,19 @@ class ProductSearchWidget {
                 ? this.translations.inStock
                 : this.translations.outOfStock;
 
-            // Фолбэк для изображения, если поле пустое
-            const fallbackImageUrl = 'https://i.pinimg.com/564x/0c/bb/aa/0cbbaab0deff7f188a7762d9569bf1b3.jpg';  // Замените на вашу заглушку
-            const finalImageUrl = prod.image ? prod.image : fallbackImageUrl;
+            // Проверяем URL картинки
+            let finalImageUrl = prod.image?.trim() || '';
+            if (finalImageUrl) {
+                // Проверяем доступность (HEAD-запрос)
+                const isValid = await checkImageUrl(finalImageUrl);
+                if (!isValid) {
+                    console.log('[LOG:renderSingleCategoryBlock] Картинка недоступна, ставим fallback');
+                    finalImageUrl = fallbackImageUrl;
+                }
+            } else {
+                finalImageUrl = fallbackImageUrl;
+            }
 
-            // Показываем шаблон до замен
             console.log('[DEBUG] BEFORE replacements:\n', productTemplate);
 
             // Делаем подстановки в шаблон
@@ -1051,7 +1063,7 @@ class ProductSearchWidget {
             // Добавляем в контейнер
             linkWrap.appendChild(wrapperEl.firstElementChild);
             productContainer.appendChild(linkWrap);
-        });
+        }
 
         // 5) Кнопка «Показать ещё…»
         if (items.length > limitCount && !isSingle) {
@@ -1153,6 +1165,17 @@ class ProductSearchWidget {
     }
 }
 
+async function checkImageUrl(url) {
+    try {
+        // Делаем HEAD-запрос, чтобы проверить, вернётся ли статус 200.
+        const response = await fetch(url, { method: 'HEAD' });
+        // Если статус 200 — считаем, что изображение существует
+        return response.ok;
+    } catch (err) {
+        console.warn('[checkImageUrl] Error:', err);
+        return false;
+    }
+}
 
 function escapeHtml(str = '') {
     return str
