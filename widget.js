@@ -5,7 +5,7 @@ class ProductSearchWidget {
 
 
         this.apiUrl = 'https://smartsearch.spefix.com/api/search';
-        this.suggestionsUrl = 'hhttps://smartsearch.spefix.com/api/suggestions';
+        this.suggestionsUrl = 'https://smartsearch.spefix.com/api/suggestions';
         this.correctionUrl = 'https://smartsearch.spefix.com/api/correct';
         this.languageRoute = 'https://smartsearch.spefix.com/api/language';
 
