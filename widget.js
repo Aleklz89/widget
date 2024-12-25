@@ -5,7 +5,7 @@ class ProductSearchWidget {
 
 
         this.apiUrl = 'https://smartsearch.spefix.com/api/search';
-        this.suggestionsUrl = 'https://smartsearch.spefix.com/api/suggestions';
+        this.suggestionsUrl = 'hhttps://smartsearch.spefix.com/api/suggestions';
         this.correctionUrl = 'https://smartsearch.spefix.com/api/correct';
         this.languageRoute = 'https://smartsearch.spefix.com/api/language';
 
@@ -591,6 +591,8 @@ class ProductSearchWidget {
 
     async fetchSuggestions(query, suggestionsList, searchInput, requestToken, controller) {
         console.log('[LOG:fetchSuggestions] query=', query);
+
+        // Делаем запрос на сервер
         const r = await fetch(this.suggestionsUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -598,31 +600,66 @@ class ProductSearchWidget {
             signal: controller.signal
         });
         if (!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
+
+        // Парсим ответ
         const data = await r.json();
+
+        // Проверяем, не устарел ли наш запрос (отмена/перебой и т.д.)
         if (requestToken !== this.currentRequestToken) {
             console.log('[LOG:fetchSuggestions] Outdated => ignoring');
             return;
         }
-        let filtered = [];
-        if (Array.isArray(data)) {
-            filtered = data.filter((s) => s.word && s.word.trim().toLowerCase() !== query.trim().toLowerCase());
+
+        // Допустим, сервер шлёт объект вида: 
+        // { "suggestions": [ "повод", "поводок", "поводок нейлон", ... ] }
+        // Тогда извлекаем массив строк так:
+        const suggestionsArray = data.suggestions;
+
+        // Если же сервер возвращает напрямую массив строк без "suggestions", 
+        // то используем: const suggestionsArray = data;
+
+        if (!Array.isArray(suggestionsArray) || !suggestionsArray.length) {
+            console.log('[LOG:fetchSuggestions] Нет массива строк => скрываем подсказки');
+            suggestionsList.style.display = 'none';
+            return;
         }
+
+        // Фильтруем подсказки, чтобы исключить вариант, где подсказка == query точно
+        const filtered = suggestionsArray.filter(
+            (s) => s.trim().toLowerCase() !== query.trim().toLowerCase()
+        );
+
+        // Если после фильтрации ничего нет, скрываем блок
         if (!filtered.length) {
             suggestionsList.style.display = 'none';
             return;
         }
+
+        // Очищаем список и рендерим новые подсказки
         suggestionsList.innerHTML = '';
-        filtered.forEach((sObj) => {
+
+        filtered.forEach((suggText) => {
+            // Создаём div с классом .suggestion-item
             const item = document.createElement('div');
             item.className = 'suggestion-item';
-            const boldText = sObj.word.replace(query, '');
+
+            // Например, отделим жирной частью остаток от suggText после query.
+            // Если не нужно отделять, можно сразу вставить suggText целиком.
+            const boldText = suggText.replace(query, '');
+
+            // Формируем HTML для строки
             item.innerHTML = `<span>${query}</span><strong>${boldText}</strong>`;
+
+            // При клике подставляем выбранную подсказку в инпут и генерируем событие input
             item.addEventListener('click', () => {
-                searchInput.value = sObj.word;
+                searchInput.value = suggText;
                 searchInput.dispatchEvent(new Event('input'));
             });
+
             suggestionsList.appendChild(item);
         });
+
+        // Показываем список
         suggestionsList.style.display = 'flex';
     }
 
