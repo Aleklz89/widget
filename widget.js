@@ -13,7 +13,7 @@ class ProductSearchWidget {
         this.searchHistory = [];
         this.abortController = null;
         this.currentQuery = null;
-        this.siteDomain = window.location.pathname;
+        this.siteDomain = window.location.origin + window.location.pathname;
         this.allProducts = [];
         this.activeFilters = {};
 
@@ -130,7 +130,7 @@ class ProductSearchWidget {
             const link = document.createElement('link');
             link.rel = 'stylesheet';
             link.href = `https://aleklz89.github.io/widget/${stylesheet}`;
-            // link.href = `${stylesheet}`;
+            
             document.head.appendChild(link);
         });
 
@@ -254,15 +254,15 @@ class ProductSearchWidget {
         const catContent = document.createElement('div');
         catContent.className = 'category-accordion-content';
 
-        // Переносим .categories-container внутрь аккордеона
+        
         catContent.appendChild(catsContainer);
         catAccordion.appendChild(catHeader);
         catAccordion.appendChild(catContent);
 
-        // **Просто** добавляем catAccordion в .left-column
+        
         leftCol.appendChild(catAccordion);
-        //                      ^^^^^^^^^^^
-        // чтобы аккордеон категорий был первым (перед фильтрами)
+        
+        
         console.log('[LOG:createCategoryAccordion] Category accordion appended to .left-column');
     }
 
@@ -302,8 +302,8 @@ class ProductSearchWidget {
         filterContainer.appendChild(toggleBtn);
         filterContainer.appendChild(filterContent);
 
-        // **ТЕПЕРЬ** вставляем фильтры ПОСЛЕ категорий
-        // Просто дополняем .left-column
+        
+        
         leftCol.appendChild(filterContainer);
         console.log('[LOG:createFilterAccordion] Filter panel appended to .left-column');
     }
@@ -319,7 +319,7 @@ class ProductSearchWidget {
 
         filterContent.innerHTML = '';
 
-        // Собираем данные для фильтров
+        
         const filterData = {};
         this.allProducts.forEach((prod) => {
             if (!Array.isArray(prod.params)) return;
@@ -333,19 +333,19 @@ class ProductSearchWidget {
 
         const paramNames = Object.keys(filterData);
 
-        // Если совсем нет параметров => скрываем .filter-container и запоминаем флажок
+        
         if (!paramNames.length) {
             console.log('[LOG:buildFilterMenu] No filters => hide filterContainer.');
             filterContainer.style.display = 'none';
-            this.hasFilters = false;      // <-- флажок
+            this.hasFilters = false;      
             return;
         }
 
-        // Иначе у нас есть параметры => показываем .filter-container
+        
         filterContainer.style.display = 'flex';
-        this.hasFilters = true;          // <-- флажок
+        this.hasFilters = true;          
 
-        // Далее создаём чекбоксы
+        
         paramNames.forEach((paramName) => {
             const paramBlock = document.createElement('div');
             paramBlock.className = 'filter-param-block';
@@ -562,8 +562,8 @@ class ProductSearchWidget {
         if (!sInp || !histC) return;
 
         sInp.addEventListener('focus', () => {
-            // Показывать историю только если она есть
-            // И значение инпута ПУСТОЕ
+            
+            
             if (this.searchHistory.length && !sInp.value.trim()) {
                 this.showHistory();
             } else {
@@ -592,7 +592,7 @@ class ProductSearchWidget {
     async fetchSuggestions(query, suggestionsList, searchInput, requestToken, controller) {
         console.log('[LOG:fetchSuggestions] query=', query);
 
-        // Делаем запрос на сервер
+        
         const r = await fetch(this.suggestionsUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -601,22 +601,22 @@ class ProductSearchWidget {
         });
         if (!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
 
-        // Парсим ответ
+        
         const data = await r.json();
 
-        // Проверяем, не устарел ли наш запрос (отмена/перебой и т.д.)
+        
         if (requestToken !== this.currentRequestToken) {
             console.log('[LOG:fetchSuggestions] Outdated => ignoring');
             return;
         }
 
-        // Допустим, сервер шлёт объект вида: 
-        // { "suggestions": [ "повод", "поводок", "поводок нейлон", ... ] }
-        // Тогда извлекаем массив строк так:
+        
+        
+        
         const suggestionsArray = data.suggestions;
 
-        // Если же сервер возвращает напрямую массив строк без "suggestions", 
-        // то используем: const suggestionsArray = data;
+        
+        
 
         if (!Array.isArray(suggestionsArray) || !suggestionsArray.length) {
             console.log('[LOG:fetchSuggestions] Нет массива строк => скрываем подсказки');
@@ -624,33 +624,33 @@ class ProductSearchWidget {
             return;
         }
 
-        // Фильтруем подсказки, чтобы исключить вариант, где подсказка == query точно
+        
         const filtered = suggestionsArray.filter(
             (s) => s.trim().toLowerCase() !== query.trim().toLowerCase()
         );
 
-        // Если после фильтрации ничего нет, скрываем блок
+        
         if (!filtered.length) {
             suggestionsList.style.display = 'none';
             return;
         }
 
-        // Очищаем список и рендерим новые подсказки
+        
         suggestionsList.innerHTML = '';
 
         filtered.forEach((suggText) => {
-            // Создаём div с классом .suggestion-item
+            
             const item = document.createElement('div');
             item.className = 'suggestion-item';
 
-            // Например, отделим жирной частью остаток от suggText после query.
-            // Если не нужно отделять, можно сразу вставить suggText целиком.
+            
+            
             const boldText = suggText.replace(query, '');
 
-            // Формируем HTML для строки
+            
             item.innerHTML = `<span>${query}</span><strong>${boldText}</strong>`;
 
-            // При клике подставляем выбранную подсказку в инпут и генерируем событие input
+            
             item.addEventListener('click', () => {
                 searchInput.value = suggText;
                 searchInput.dispatchEvent(new Event('input'));
@@ -659,7 +659,7 @@ class ProductSearchWidget {
             suggestionsList.appendChild(item);
         });
 
-        // Показываем список
+        
         suggestionsList.style.display = 'flex';
     }
 
@@ -744,7 +744,7 @@ class ProductSearchWidget {
         categoriesContainer.innerHTML = '';
         resultContainer.innerHTML = '';
 
-        // 1) Если нет товаров вообще
+        
         if (!products.length) {
             if (filterContainer) filterContainer.style.display = 'none';
             if (catAccordion) catAccordion.style.display = 'none';
@@ -752,7 +752,7 @@ class ProductSearchWidget {
             return;
         }
 
-        // 2) Проверяем, есть ли вообще фильтры
+        
         if (!this.hasFilters) {
             console.log('[LOG:displayProductsByCategory] hasFilters=false => скрываем filterContainer');
             if (filterContainer) filterContainer.style.display = 'none';
@@ -761,7 +761,7 @@ class ProductSearchWidget {
             if (filterContainer) filterContainer.style.display = 'flex';
         }
 
-        // 3) Формируем карту категорий
+        
         const catMap = {};
         products.forEach((p) => {
             if (!p.categories) return;
@@ -771,7 +771,7 @@ class ProductSearchWidget {
             });
         });
 
-        // 4) Если categories вообще нет => прячем аккордеон
+        
         const catNames = Object.keys(catMap);
         if (!catNames.length) {
             console.log('[LOG:displayProductsByCategory] Нет категорий => скрыть catAccordion');
@@ -782,7 +782,7 @@ class ProductSearchWidget {
             if (catAccordion) catAccordion.style.display = 'flex';
         }
 
-        // 5) Подсчитываем «очки» (score) для каждой категории
+        
         const categoryScores = {};
         Object.entries(catMap).forEach(([catName, items]) => {
             const inStock = items.filter((x) => x.availability);
@@ -799,33 +799,33 @@ class ProductSearchWidget {
             console.log(`[DEBUG-catScore] Category="${catName}", subset.length=${subset.length}, score=${score}`);
         });
 
-        // 6) Сортируем catNames по убыванию score
+        
         catNames.sort((a, b) => (categoryScores[b] || 0) - (categoryScores[a] || 0));
 
-        // 7) Вставляем «Всі результати» (или "Все результаты") в начало
+        
         const allResultsName = this.translations.allResults || 'Всі результати';
         const finalCats = [allResultsName, ...catNames];
         console.log('[DEBUG-catScore] Итоговый порядок категорий:', finalCats);
 
-        // 8) Рендерим список категорий
+        
         finalCats.forEach((catName) => {
             const cItem = document.createElement('div');
             cItem.className = 'category-item';
 
-            // Обрезаем текст категории до 22 символов, если он длиннее
+            
             let displayName = catName;
             if (catName.length > 22) {
-                // Логируем, что обрезаем
+                
                 console.log(`[LOG:displayProductsByCategory] Обрезаем категорию "${catName}" до 22 символов`);
                 displayName = catName.substring(0, 22) + '...';
             } else {
-                // Логируем, что не обрезаем
+                
                 console.log(`[LOG:displayProductsByCategory] Категория "${catName}" не обрезается (length <= 22)`);
             }
 
             const cText = document.createElement('span');
             cText.className = 'category-name';
-            // Важно: используем displayName (обрезанную строку) для вывода
+            
             cText.textContent = displayName;
 
             const cCount = document.createElement('div');
@@ -852,14 +852,14 @@ class ProductSearchWidget {
                 }
             });
 
-            // Если это «Все результаты», делаем активным
+            
             if (catName === allResultsName) {
                 cItem.classList.add('active');
             }
             categoriesContainer.appendChild(cItem);
         });
 
-        // 9) Сразу показываем «Всі результати»
+        
         this.showCategoryProducts(catMap, finalCats, resultContainer, true, null);
     }
 
@@ -878,34 +878,57 @@ class ProductSearchWidget {
 
         resultContainer.innerHTML = '';
 
-
+        
         const tResp = await fetch('https://aleklz89.github.io/widget/product-item.html');
-
         if (!tResp.ok) throw new Error(`Failed to load product template: ${tResp.status}`);
         const productTemplate = await tResp.text();
 
-
+        
+        
+        
         if (isAllResults) {
-
-
+            const usedSet = new Set();
 
             for (const catName of finalCategoryNames) {
+                if (catName === this.translations.allResults) {
+                    continue; 
+                }
 
-                if (catName === this.translations.allResults) continue;
-
+                
                 const items = groupedProducts[catName] || [];
-                this.renderSingleCategoryBlock(
+
+                
+                const uniqueItems = items.filter((prod) => !usedSet.has(prod.id));
+
+                
+                if (!uniqueItems.length) {
+                    
+                    continue;
+                }
+
+                
+                const actuallyRendered = this.renderSingleCategoryBlock(
                     catName,
-                    items,
+                    uniqueItems,
                     productTemplate,
                     resultContainer,
                     showTitles,
                     null,
-                    this.maxItemsOnAllResults
+                    this.maxItemsOnAllResults,
+                    null 
                 );
+
+                
+                
+                if (Array.isArray(actuallyRendered)) {
+                    actuallyRendered.forEach((p) => usedSet.add(p.id));
+                }
             }
         } else {
-
+            
+            
+            
+            
             for (const catName of finalCategoryNames) {
                 const arr = groupedProducts[catName] || [];
                 this.renderSingleCategoryBlock(
@@ -930,55 +953,80 @@ class ProductSearchWidget {
         resultContainer,
         showTitles,
         selectedCat,
-        limitCount
+        limitCount,
+        usedSet = null 
     ) {
         console.log('[LOG:renderSingleCategoryBlock] catName=', catName, 'items.length=', items.length);
 
-        // 1) Формируем заголовок категории (если нужно)
+        
         const isSingle = !!selectedCat;
         const categoryTitleHtml = (showTitles || selectedCat)
             ? `<h3><a href="#" class="category-link">${catName} →</a></h3>`
             : '';
 
-        // 2) Создаем контейнер для категории
+        
         const catBlock = document.createElement('div');
         catBlock.className = `category-block ${isSingle ? 'category-single' : 'category-multiple'}`;
         if (categoryTitleHtml) {
             catBlock.innerHTML = categoryTitleHtml;
         }
 
-        // 3) Контейнер для товаров
+        
         const productContainer = document.createElement('div');
         productContainer.className = 'product-container';
 
-        // Список возможных цветов для лейбла
+        
         const possibleColors = ['#E91E63', '#2196F3', '#4CAF50', '#9C27B0', '#FF5722', '#FF9800'];
 
-        // -- ЛОГИКА СОРТИРОВКИ --
-        // Сначала делим товары на inStock/outOfStock
+        
+
+        
         const inS = items.filter((p) => p.availability);
         const outS = items.filter((p) => !p.availability);
 
-        // Сортируем обе группы по убыванию даты (новые → старые)
-        inS.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        outS.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        
+        
+        
+        function sortByScoreAndDate(arr) {
+            arr.sort((a, b) => {
+                
+                if (b.totalScore !== a.totalScore) {
+                    return b.totalScore - a.totalScore;
+                }
+                
+                const dateA = new Date(a.createdAt).getTime();
+                const dateB = new Date(b.createdAt).getTime();
+                return dateB - dateA;
+            });
+        }
 
-        // Объединяем: сначала inStock, потом outOfStock
-        const sorted = [...inS, ...outS];
+        sortByScoreAndDate(inS);
+        sortByScoreAndDate(outS);
 
-        // Обрезаем массив до limitCount (если нужно)
-        const subset = sorted.slice(0, limitCount);
+        
+        let combined = [...inS, ...outS];
 
-        // Если нет карты цветов лейблов – создаём
+        
+        
+        
+        
+        if (usedSet) {
+            combined = combined.filter((prod) => !usedSet.has(prod.id));
+        }
+
+        
+        const subset = combined.slice(0, limitCount);
+
+        
         if (!this.labelColorMap) {
             this.labelColorMap = {};
         }
 
-        // 4) Рендерим товары
+        
         subset.forEach((prod, idx) => {
             console.log('[DEBUG] product item idx=', idx, ' data=', prod);
 
-            // Лейбл
+            
             let labelHtml = '';
             if (prod.label) {
                 if (!this.labelColorMap[prod.label]) {
@@ -1000,7 +1048,7 @@ class ProductSearchWidget {
                     </div>`;
             }
 
-            // Старая/новая цена
+            
             let oldPriceValue = prod.oldPrice || '';
             let oldPriceStyle = 'display: none;';
             if (prod.oldPrice && prod.oldPrice > 0 && prod.oldPrice !== prod.newPrice) {
@@ -1008,22 +1056,27 @@ class ProductSearchWidget {
             }
             console.log('[DEBUG] oldPriceValue=', oldPriceValue, ' oldPriceStyle=', oldPriceStyle);
 
-            // Текст наличия
+            
             const presenceText = prod.availability
                 ? this.translations.inStock
                 : this.translations.outOfStock;
 
-            // Фолбэк для изображения, если поле пустое
-            const fallbackImageUrl = 'https://i.pinimg.com/564x/0c/bb/aa/0cbbaab0deff7f188a7762d9569bf1b3.jpg';  // Замените на вашу заглушку
+            
+            const fallbackImageUrl = 'https://i.pinimg.com/564x/0c/bb/aa/0cbbaab0deff7f188a7762d9569bf1b3.jpg';
             const finalImageUrl = prod.image ? prod.image : fallbackImageUrl;
 
-            // Показываем шаблон до замен
+            
+            let displayName = prod.name || 'No Name';
+            if (displayName.length > 90) {
+                displayName = displayName.slice(0, 90) + '...';
+            }
+
             console.log('[DEBUG] BEFORE replacements:\n', productTemplate);
 
-            // Делаем подстановки в шаблон
+            
             let pHtml = productTemplate;
             pHtml = safeReplace(pHtml, 'labelBlock', labelHtml);
-            pHtml = safeReplace(pHtml, 'name', escapeHtml(prod.name ?? 'No Name'));
+            pHtml = safeReplace(pHtml, 'name', escapeHtml(displayName));
             pHtml = safeReplace(pHtml, 'price', String(prod.newPrice ?? '???'));
             pHtml = safeReplace(pHtml, 'currencyId', escapeHtml(prod.currencyId ?? '???'));
             pHtml = safeReplace(pHtml, 'presence', escapeHtml(presenceText));
@@ -1033,46 +1086,51 @@ class ProductSearchWidget {
 
             console.log('[DEBUG] AFTER replacements:\n', pHtml);
 
-            // Создаем DOM-элемент
+            
             const wrapperEl = document.createElement('div');
             wrapperEl.innerHTML = pHtml.trim();
 
-            // Обёртываем товар ссылкой
+            
             const linkWrap = document.createElement('a');
             linkWrap.href = prod.url || '#';
             linkWrap.target = '_blank';
             linkWrap.className = 'product-link';
 
-            // Если нет в наличии - добавляем класс
+            
             if (!prod.availability) {
                 linkWrap.classList.add('out-of-stock');
             }
 
-            // Добавляем в контейнер
+            
             linkWrap.appendChild(wrapperEl.firstElementChild);
             productContainer.appendChild(linkWrap);
         });
 
-        // 5) Кнопка «Показать ещё…»
+        
         if (items.length > limitCount && !isSingle) {
             const moreDiv = document.createElement('div');
             moreDiv.className = 'more-link';
             moreDiv.textContent = `${this.translations.more} ${items.length - limitCount} ...`;
             moreDiv.addEventListener('click', () => {
                 console.log('[LOG:renderSingleCategoryBlock] More clicked. catName=', catName);
-                const singleObj = { [catName]: sorted };
+                const singleObj = { [catName]: combined };
                 this.showCategoryProducts(singleObj, [catName], resultContainer, true, catName);
                 this.activateCategory(catName);
             });
             productContainer.appendChild(moreDiv);
         }
 
-        // 6) Добавляем всё в общий контейнер
+        
         catBlock.appendChild(productContainer);
         resultContainer.appendChild(catBlock);
 
         console.log('[DEBUG] Appended catBlock for', catName, 'with', subset.length, 'items');
+
+        
+        
+        return subset;
     }
+
 
 
 
