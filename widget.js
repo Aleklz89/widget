@@ -130,7 +130,7 @@ class ProductSearchWidget {
             const link = document.createElement('link');
             link.rel = 'stylesheet';
             link.href = `https://aleklz89.github.io/widget/${stylesheet}`;
-            
+
             document.head.appendChild(link);
         });
 
@@ -254,15 +254,15 @@ class ProductSearchWidget {
         const catContent = document.createElement('div');
         catContent.className = 'category-accordion-content';
 
-        
+
         catContent.appendChild(catsContainer);
         catAccordion.appendChild(catHeader);
         catAccordion.appendChild(catContent);
 
-        
+
         leftCol.appendChild(catAccordion);
-        
-        
+
+
         console.log('[LOG:createCategoryAccordion] Category accordion appended to .left-column');
     }
 
@@ -302,8 +302,8 @@ class ProductSearchWidget {
         filterContainer.appendChild(toggleBtn);
         filterContainer.appendChild(filterContent);
 
-        
-        
+
+
         leftCol.appendChild(filterContainer);
         console.log('[LOG:createFilterAccordion] Filter panel appended to .left-column');
     }
@@ -319,7 +319,7 @@ class ProductSearchWidget {
 
         filterContent.innerHTML = '';
 
-        
+
         const filterData = {};
         this.allProducts.forEach((prod) => {
             if (!Array.isArray(prod.params)) return;
@@ -333,19 +333,19 @@ class ProductSearchWidget {
 
         const paramNames = Object.keys(filterData);
 
-        
+
         if (!paramNames.length) {
             console.log('[LOG:buildFilterMenu] No filters => hide filterContainer.');
             filterContainer.style.display = 'none';
-            this.hasFilters = false;      
+            this.hasFilters = false;
             return;
         }
 
-        
-        filterContainer.style.display = 'flex';
-        this.hasFilters = true;          
 
-        
+        filterContainer.style.display = 'flex';
+        this.hasFilters = true;
+
+
         paramNames.forEach((paramName) => {
             const paramBlock = document.createElement('div');
             paramBlock.className = 'filter-param-block';
@@ -562,8 +562,8 @@ class ProductSearchWidget {
         if (!sInp || !histC) return;
 
         sInp.addEventListener('focus', () => {
-            
-            
+
+
             if (this.searchHistory.length && !sInp.value.trim()) {
                 this.showHistory();
             } else {
@@ -592,7 +592,7 @@ class ProductSearchWidget {
     async fetchSuggestions(query, suggestionsList, searchInput, requestToken, controller) {
         console.log('[LOG:fetchSuggestions] query=', query);
 
-        
+
         const r = await fetch(this.suggestionsUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -601,22 +601,22 @@ class ProductSearchWidget {
         });
         if (!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
 
-        
+
         const data = await r.json();
 
-        
+
         if (requestToken !== this.currentRequestToken) {
             console.log('[LOG:fetchSuggestions] Outdated => ignoring');
             return;
         }
 
-        
-        
-        
+
+
+
         const suggestionsArray = data.suggestions;
 
-        
-        
+
+
 
         if (!Array.isArray(suggestionsArray) || !suggestionsArray.length) {
             console.log('[LOG:fetchSuggestions] Нет массива строк => скрываем подсказки');
@@ -624,33 +624,33 @@ class ProductSearchWidget {
             return;
         }
 
-        
+
         const filtered = suggestionsArray.filter(
             (s) => s.trim().toLowerCase() !== query.trim().toLowerCase()
         );
 
-        
+
         if (!filtered.length) {
             suggestionsList.style.display = 'none';
             return;
         }
 
-        
+
         suggestionsList.innerHTML = '';
 
         filtered.forEach((suggText) => {
-            
+
             const item = document.createElement('div');
             item.className = 'suggestion-item';
 
-            
-            
+
+
             const boldText = suggText.replace(query, '');
 
-            
+
             item.innerHTML = `<span>${query}</span><strong>${boldText}</strong>`;
 
-            
+
             item.addEventListener('click', () => {
                 searchInput.value = suggText;
                 searchInput.dispatchEvent(new Event('input'));
@@ -659,7 +659,7 @@ class ProductSearchWidget {
             suggestionsList.appendChild(item);
         });
 
-        
+
         suggestionsList.style.display = 'flex';
     }
 
@@ -741,6 +741,7 @@ class ProductSearchWidget {
         const filterContainer = this.widgetContainer.querySelector('.filter-container');
         const catAccordion = this.widgetContainer.querySelector('.category-accordion');
 
+        
         categoriesContainer.innerHTML = '';
         resultContainer.innerHTML = '';
 
@@ -762,8 +763,25 @@ class ProductSearchWidget {
         }
 
         
+        const uniqueProducts = [];
+        const usedIds = new Set();
+
+        for (const p of products) {
+            if (!usedIds.has(p.id)) {
+                uniqueProducts.push(p);
+                usedIds.add(p.id);
+            } else {
+                console.log('[LOG:displayProductsByCategory] Duplicate removed:', {
+                    id: p.id,
+                    name: p.name
+                });
+            }
+        }
+        console.log(`[LOG:displayProductsByCategory] After dedup => uniqueProducts.length=${uniqueProducts.length}`);
+
+        
         const catMap = {};
-        products.forEach((p) => {
+        uniqueProducts.forEach((p) => {
             if (!p.categories) return;
             p.categories.forEach((cat) => {
                 if (!catMap[cat]) catMap[cat] = [];
@@ -772,10 +790,26 @@ class ProductSearchWidget {
         });
 
         
-        const catNames = Object.keys(catMap);
+        const catMapNoDupes = {};
+        for (const catName in catMap) {
+            const arr = catMap[catName];
+            const localSet = new Set();
+            const filtered = [];
+            for (const prod of arr) {
+                if (!localSet.has(prod.id)) {
+                    localSet.add(prod.id);
+                    filtered.push(prod);
+                }
+            }
+            catMapNoDupes[catName] = filtered;
+        }
+
+        
+        let catNames = Object.keys(catMapNoDupes);
         if (!catNames.length) {
             console.log('[LOG:displayProductsByCategory] Нет категорий => скрыть catAccordion');
             if (catAccordion) catAccordion.style.display = 'none';
+            resultContainer.innerHTML = `<p>${this.translations.noProductsFound}</p>`;
             return;
         } else {
             console.log('[LOG:displayProductsByCategory] Есть категории => показываем catAccordion');
@@ -784,17 +818,24 @@ class ProductSearchWidget {
 
         
         const categoryScores = {};
-        Object.entries(catMap).forEach(([catName, items]) => {
+        Object.entries(catMapNoDupes).forEach(([catName, items]) => {
+            
             const inStock = items.filter((x) => x.availability);
             const outStock = items.filter((x) => !x.availability);
+
+            
             const sortedItems = [...inStock, ...outStock];
+
+            
             const subset = sortedItems.slice(0, this.maxItemsOnAllResults);
 
+            
             let score = 0;
             subset.forEach((prd) => {
                 if (prd.availability) score += 1;
                 else score -= 1;
             });
+
             categoryScores[catName] = score;
             console.log(`[DEBUG-catScore] Category="${catName}", subset.length=${subset.length}, score=${score}`);
         });
@@ -803,8 +844,9 @@ class ProductSearchWidget {
         catNames.sort((a, b) => (categoryScores[b] || 0) - (categoryScores[a] || 0));
 
         
-        const allResultsName = this.translations.allResults || 'Всі результати';
+        const allResultsName = this.translations.allResults || 'All results';
         const finalCats = [allResultsName, ...catNames];
+
         console.log('[DEBUG-catScore] Итоговый порядок категорий:', finalCats);
 
         
@@ -812,57 +854,54 @@ class ProductSearchWidget {
             const cItem = document.createElement('div');
             cItem.className = 'category-item';
 
-            
             let displayName = catName;
-            if (catName.length > 22) {
-                
-                console.log(`[LOG:displayProductsByCategory] Обрезаем категорию "${catName}" до 22 символов`);
-                displayName = catName.substring(0, 22) + '...';
-            } else {
-                
-                console.log(`[LOG:displayProductsByCategory] Категория "${catName}" не обрезается (length <= 22)`);
+            if (displayName.length > 22) {
+                displayName = displayName.substring(0, 22) + '...';
             }
 
             const cText = document.createElement('span');
             cText.className = 'category-name';
-            
             cText.textContent = displayName;
 
             const cCount = document.createElement('div');
             cCount.className = 'category-count';
+
+            
             if (catName === allResultsName) {
-                cCount.textContent = products.length;
+                cCount.textContent = uniqueProducts.length;
             } else {
-                cCount.textContent = catMap[catName].length;
+                cCount.textContent = catMapNoDupes[catName].length;
             }
 
             cItem.appendChild(cText);
             cItem.appendChild(cCount);
 
+            
             cItem.addEventListener('click', () => {
                 Array.from(categoriesContainer.getElementsByClassName('category-item'))
                     .forEach((el) => el.classList.remove('active'));
                 cItem.classList.add('active');
 
                 if (catName === allResultsName) {
-                    this.showCategoryProducts(catMap, finalCats, resultContainer, true, null);
+                    
+                    this.showCategoryProducts(catMapNoDupes, finalCats, resultContainer, true, null);
                 } else {
-                    const singleObj = { [catName]: catMap[catName] };
+                    
+                    const singleObj = { [catName]: catMapNoDupes[catName] };
                     this.showCategoryProducts(singleObj, [catName], resultContainer, true, catName);
                 }
             });
 
-            
-            if (catName === allResultsName) {
-                cItem.classList.add('active');
-            }
             categoriesContainer.appendChild(cItem);
         });
 
         
-        this.showCategoryProducts(catMap, finalCats, resultContainer, true, null);
-    }
+        const firstItem = categoriesContainer.querySelector('.category-item');
+        if (firstItem) firstItem.classList.add('active');
 
+        
+        this.showCategoryProducts(catMapNoDupes, finalCats, resultContainer, true, null);
+    }
 
 
 
@@ -874,60 +913,150 @@ class ProductSearchWidget {
         selectedCat = null
     ) {
         console.log('[LOG:showCategoryProducts] selectedCat=', selectedCat);
+
         const isAllResults = (selectedCat === null);
 
+        
         resultContainer.innerHTML = '';
 
         
         const tResp = await fetch('https://aleklz89.github.io/widget/product-item.html');
-        if (!tResp.ok) throw new Error(`Failed to load product template: ${tResp.status}`);
+        if (!tResp.ok) {
+            throw new Error(`Failed to load product template: ${tResp.status}`);
+        }
         const productTemplate = await tResp.text();
 
         
-        
-        
         if (isAllResults) {
+            
+            const realCats = finalCategoryNames.filter(
+                (catName) => catName !== this.translations.allResults
+            );
+
+            
+            
+            const catData = [];
+
+            
+            
             const usedSet = new Set();
 
-            for (const catName of finalCategoryNames) {
-                if (catName === this.translations.allResults) {
-                    continue; 
-                }
-
-                
-                const items = groupedProducts[catName] || [];
-
-                
-                const uniqueItems = items.filter((prod) => !usedSet.has(prod.id));
-
-                
-                if (!uniqueItems.length) {
+            
+            for (const catName of realCats) {
+                const allItems = groupedProducts[catName] || [];
+                if (!allItems.length) {
                     
+                    catData.push({ catName, top4: [], score: 0, finalItems: [] });
                     continue;
                 }
 
                 
-                const actuallyRendered = this.renderSingleCategoryBlock(
-                    catName,
-                    uniqueItems,
-                    productTemplate,
-                    resultContainer,
-                    showTitles,
-                    null,
-                    this.maxItemsOnAllResults,
-                    null 
-                );
+                const inStock = allItems.filter((p) => p.availability);
+                const outStock = allItems.filter((p) => !p.availability);
 
                 
                 
-                if (Array.isArray(actuallyRendered)) {
-                    actuallyRendered.forEach((p) => usedSet.add(p.id));
+                
+                function compareByScoreAndDate(a, b) {
+                    
+                    if (b.totalScore !== a.totalScore) {
+                        return b.totalScore - a.totalScore;
+                    }
+                    
+                    const dateA = new Date(a.createdAt).getTime();
+                    const dateB = new Date(b.createdAt).getTime();
+                    return dateB - dateA;
                 }
+                inStock.sort(compareByScoreAndDate);
+                outStock.sort(compareByScoreAndDate);
+
+                
+                const sortedItems = [...inStock, ...outStock];
+
+                
+                const top4 = [];
+                for (const item of sortedItems) {
+                    if (usedSet.has(item.id)) {
+                        
+                        continue;
+                    }
+                    top4.push(item);
+                    if (top4.length >= 4) break;
+                }
+
+                
+                let score = 0;
+                top4.forEach((prod) => {
+                    
+                    score += prod.availability ? 1 : -1;
+                });
+
+                console.log(
+                    `[LOG:showCategoryProducts] Cat="${catName}": totalItems=${allItems.length}, inStock=${inStock.length}, ` +
+                    `top4.length=${top4.length}, score=${score}`
+                );
+
+                
+                const top4Ids = top4.map((p) => p.id);
+                console.log(`[DEBUG] Category="${catName}" => top4 IDs:`, top4Ids);
+
+                
+                top4.forEach((p) => usedSet.add(p.id));
+
+                
+                
+                
+                
+                const finalItems = sortedItems.filter((itm) => {
+                    
+                    if (top4.includes(itm)) return true;
+                    
+                    return !usedSet.has(itm.id);
+                });
+
+                
+                catData.push({
+                    catName,
+                    score,
+                    top4,
+                    finalItems
+                });
             }
-        } else {
+
             
+            catData.sort((a, b) => b.score - a.score);
+
             
-            
+            catData.forEach((catObj) => {
+                const { catName, score, top4, finalItems } = catObj;
+
+                
+                
+                if (!finalItems || finalItems.length === 0) {
+                    console.log(`[LOG] Category="${catName}" => нет товаров => пропускаем`);
+                    return;
+                }
+                
+
+                
+                const actuallyRendered = this.renderSingleCategoryBlock(
+                    catName,
+                    finalItems,          
+                    productTemplate,
+                    resultContainer,
+                    showTitles,
+                    null,                
+                    4,                   
+                    null
+                );
+
+                console.log(
+                    `[LOG] Category="${catName}", rendered=${actuallyRendered.length}, score=${score}`
+                );
+            });
+        }
+        
+        else {
             
             for (const catName of finalCategoryNames) {
                 const arr = groupedProducts[catName] || [];
@@ -954,46 +1083,46 @@ class ProductSearchWidget {
         showTitles,
         selectedCat,
         limitCount,
-        usedSet = null 
+        usedSet = null
     ) {
         console.log('[LOG:renderSingleCategoryBlock] catName=', catName, 'items.length=', items.length);
 
-        
+
         const isSingle = !!selectedCat;
         const categoryTitleHtml = (showTitles || selectedCat)
             ? `<h3><a href="#" class="category-link">${catName} →</a></h3>`
             : '';
 
-        
+
         const catBlock = document.createElement('div');
         catBlock.className = `category-block ${isSingle ? 'category-single' : 'category-multiple'}`;
         if (categoryTitleHtml) {
             catBlock.innerHTML = categoryTitleHtml;
         }
 
-        
+
         const productContainer = document.createElement('div');
         productContainer.className = 'product-container';
 
-        
+
         const possibleColors = ['#E91E63', '#2196F3', '#4CAF50', '#9C27B0', '#FF5722', '#FF9800'];
 
-        
 
-        
+
+
         const inS = items.filter((p) => p.availability);
         const outS = items.filter((p) => !p.availability);
 
-        
-        
-        
+
+
+
         function sortByScoreAndDate(arr) {
             arr.sort((a, b) => {
-                
+
                 if (b.totalScore !== a.totalScore) {
                     return b.totalScore - a.totalScore;
                 }
-                
+
                 const dateA = new Date(a.createdAt).getTime();
                 const dateB = new Date(b.createdAt).getTime();
                 return dateB - dateA;
@@ -1003,30 +1132,30 @@ class ProductSearchWidget {
         sortByScoreAndDate(inS);
         sortByScoreAndDate(outS);
 
-        
+
         let combined = [...inS, ...outS];
 
-        
-        
-        
-        
+
+
+
+
         if (usedSet) {
             combined = combined.filter((prod) => !usedSet.has(prod.id));
         }
 
-        
+
         const subset = combined.slice(0, limitCount);
 
-        
+
         if (!this.labelColorMap) {
             this.labelColorMap = {};
         }
 
-        
+
         subset.forEach((prod, idx) => {
             console.log('[DEBUG] product item idx=', idx, ' data=', prod);
 
-            
+
             let labelHtml = '';
             if (prod.label) {
                 if (!this.labelColorMap[prod.label]) {
@@ -1048,7 +1177,7 @@ class ProductSearchWidget {
                     </div>`;
             }
 
-            
+
             let oldPriceValue = prod.oldPrice || '';
             let oldPriceStyle = 'display: none;';
             if (prod.oldPrice && prod.oldPrice > 0 && prod.oldPrice !== prod.newPrice) {
@@ -1056,16 +1185,16 @@ class ProductSearchWidget {
             }
             console.log('[DEBUG] oldPriceValue=', oldPriceValue, ' oldPriceStyle=', oldPriceStyle);
 
-            
+
             const presenceText = prod.availability
                 ? this.translations.inStock
                 : this.translations.outOfStock;
 
-            
+
             const fallbackImageUrl = 'https://i.pinimg.com/564x/0c/bb/aa/0cbbaab0deff7f188a7762d9569bf1b3.jpg';
             const finalImageUrl = prod.image ? prod.image : fallbackImageUrl;
 
-            
+
             let displayName = prod.name || 'No Name';
             if (displayName.length > 90) {
                 displayName = displayName.slice(0, 90) + '...';
@@ -1073,7 +1202,7 @@ class ProductSearchWidget {
 
             console.log('[DEBUG] BEFORE replacements:\n', productTemplate);
 
-            
+
             let pHtml = productTemplate;
             pHtml = safeReplace(pHtml, 'labelBlock', labelHtml);
             pHtml = safeReplace(pHtml, 'name', escapeHtml(displayName));
@@ -1086,27 +1215,27 @@ class ProductSearchWidget {
 
             console.log('[DEBUG] AFTER replacements:\n', pHtml);
 
-            
+
             const wrapperEl = document.createElement('div');
             wrapperEl.innerHTML = pHtml.trim();
 
-            
+
             const linkWrap = document.createElement('a');
             linkWrap.href = prod.url || '#';
             linkWrap.target = '_blank';
             linkWrap.className = 'product-link';
 
-            
+
             if (!prod.availability) {
                 linkWrap.classList.add('out-of-stock');
             }
 
-            
+
             linkWrap.appendChild(wrapperEl.firstElementChild);
             productContainer.appendChild(linkWrap);
         });
 
-        
+
         if (items.length > limitCount && !isSingle) {
             const moreDiv = document.createElement('div');
             moreDiv.className = 'more-link';
@@ -1120,14 +1249,14 @@ class ProductSearchWidget {
             productContainer.appendChild(moreDiv);
         }
 
-        
+
         catBlock.appendChild(productContainer);
         resultContainer.appendChild(catBlock);
 
         console.log('[DEBUG] Appended catBlock for', catName, 'with', subset.length, 'items');
 
-        
-        
+
+
         return subset;
     }
 
