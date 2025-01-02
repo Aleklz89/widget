@@ -1118,12 +1118,10 @@ class ProductSearchWidget {
     ) {
         console.log('[LOG:renderSingleCategoryBlock] catName=', catName, 'items.length=', items.length);
 
-
         const isSingle = !!selectedCat;
         const categoryTitleHtml = (showTitles || selectedCat)
             ? `<h3><a href="#" class="category-link">${catName} →</a></h3>`
             : '';
-
 
         const catBlock = document.createElement('div');
         catBlock.className = `category-block ${isSingle ? 'category-single' : 'category-multiple'}`;
@@ -1131,62 +1129,51 @@ class ProductSearchWidget {
             catBlock.innerHTML = categoryTitleHtml;
         }
 
-
         const productContainer = document.createElement('div');
         productContainer.className = 'product-container';
 
-
         const possibleColors = ['#E91E63', '#2196F3', '#4CAF50', '#9C27B0', '#FF5722', '#FF9800'];
 
-
-
-
+        // Разделяем товары на inStock / outOfStock
         const inS = items.filter((p) => p.availability);
         const outS = items.filter((p) => !p.availability);
 
-
-
-
+        // Функция для сортировки по totalScore, затем по дате
         function sortByScoreAndDate(arr) {
             arr.sort((a, b) => {
-
                 if (b.totalScore !== a.totalScore) {
                     return b.totalScore - a.totalScore;
                 }
-
                 const dateA = new Date(a.createdAt).getTime();
                 const dateB = new Date(b.createdAt).getTime();
                 return dateB - dateA;
             });
         }
 
+        // Сортируем обе группы (in-stock / out-of-stock) по score
         sortByScoreAndDate(inS);
         sortByScoreAndDate(outS);
 
-
+        // Объединяем обратно
         let combined = [...inS, ...outS];
 
-
-
-
-
+        // Если нужно исключать уже использованные товары
         if (usedSet) {
             combined = combined.filter((prod) => !usedSet.has(prod.id));
         }
 
-
+        // Берём первые limitCount товаров
         const subset = combined.slice(0, limitCount);
 
-
+        // Если словарь цветов для label ещё не создавали — инициализируем
         if (!this.labelColorMap) {
             this.labelColorMap = {};
         }
 
-
         subset.forEach((prod, idx) => {
             console.log('[DEBUG] product item idx=', idx, ' data=', prod);
 
-
+            // ===== 1) Формируем HTML для label (если есть) =====
             let labelHtml = '';
             if (prod.label) {
                 if (!this.labelColorMap[prod.label]) {
@@ -1208,31 +1195,39 @@ class ProductSearchWidget {
                     </div>`;
             }
 
-
-            let oldPriceValue = prod.oldPrice || '';
+            // ===== 2) Логика для oldPrice =====
+            // Если нет старой цены или она равна 0 — скрываем
+            // Иначе показываем её зачёркнутой
+            let oldPriceValue = '';
             let oldPriceStyle = 'display: none;';
-            if (prod.oldPrice && prod.oldPrice > 0 && prod.oldPrice !== prod.newPrice) {
+
+            if (
+                prod.oldPrice &&
+                prod.oldPrice > 0 &&
+                prod.oldPrice !== prod.newPrice
+            ) {
+                oldPriceValue = String(prod.oldPrice ?? '').trim();
                 oldPriceStyle = 'color: grey; font-size: 13px; text-decoration: line-through;';
             }
             console.log('[DEBUG] oldPriceValue=', oldPriceValue, ' oldPriceStyle=', oldPriceStyle);
 
-
+            // ===== 3) Текст наличия =====
             const presenceText = prod.availability
                 ? this.translations.inStock
                 : this.translations.outOfStock;
 
-
+            // ===== 4) Картинка =====
             const fallbackImageUrl = 'https://i.pinimg.com/564x/0c/bb/aa/0cbbaab0deff7f188a7762d9569bf1b3.jpg';
             const finalImageUrl = prod.image ? prod.image : fallbackImageUrl;
 
-
+            // ===== 5) Название продукта (обрезка до 90 символов) =====
             let displayName = prod.name || 'No Name';
             if (displayName.length > 90) {
                 displayName = displayName.slice(0, 90) + '...';
             }
 
+            // ===== 6) Подставляем всё в HTML-шаблон =====
             console.log('[DEBUG] BEFORE replacements:\n', productTemplate);
-
 
             let pHtml = productTemplate;
             pHtml = safeReplace(pHtml, 'labelBlock', labelHtml);
@@ -1240,33 +1235,31 @@ class ProductSearchWidget {
             pHtml = safeReplace(pHtml, 'price', String(prod.newPrice ?? '???'));
             pHtml = safeReplace(pHtml, 'currencyId', escapeHtml(prod.currencyId ?? '???'));
             pHtml = safeReplace(pHtml, 'presence', escapeHtml(presenceText));
-            pHtml = safeReplace(pHtml, 'oldPrice', String(oldPriceValue));
+            pHtml = safeReplace(pHtml, 'oldPrice', oldPriceValue);
             pHtml = safeReplace(pHtml, 'oldPriceStyle', oldPriceStyle);
             pHtml = safeReplace(pHtml, 'imageUrl', escapeHtml(finalImageUrl));
 
             console.log('[DEBUG] AFTER replacements:\n', pHtml);
 
-
+            // ===== 7) Создаём DOM-элементы =====
             const wrapperEl = document.createElement('div');
             wrapperEl.innerHTML = pHtml.trim();
 
-
+            // Ссылка-обёртка (чтобы кликать по товару)
             const linkWrap = document.createElement('a');
             linkWrap.href = prod.url || '#';
             linkWrap.target = '_blank';
             linkWrap.className = 'product-link';
 
-
             if (!prod.availability) {
                 linkWrap.classList.add('out-of-stock');
             }
-
 
             linkWrap.appendChild(wrapperEl.firstElementChild);
             productContainer.appendChild(linkWrap);
         });
 
-
+        // Если товаров больше, чем limitCount, добавляем «Ещё...»
         if (items.length > limitCount && !isSingle) {
             const moreDiv = document.createElement('div');
             moreDiv.className = 'more-link';
@@ -1280,16 +1273,13 @@ class ProductSearchWidget {
             productContainer.appendChild(moreDiv);
         }
 
-
         catBlock.appendChild(productContainer);
         resultContainer.appendChild(catBlock);
 
         console.log('[DEBUG] Appended catBlock for', catName, 'with', subset.length, 'items');
-
-
-
         return subset;
     }
+
 
 
 

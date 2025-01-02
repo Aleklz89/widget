@@ -161,6 +161,27 @@
     margin-bottom: 5px;
 }
 
+.hidden {
+    display: none;
+}
+
+.old-price {
+    color: grey;
+    font-size: 13px;
+    text-decoration: line-through;
+}
+
+/* Если нет старой цены — скрываем. */
+.hidden-old-price {
+    display: none;
+}
+
+/* Если старая цена есть — делаем её зачёркнутой. */
+.strike-old-price {
+    color: grey;
+    font-size: 13px;
+    text-decoration: line-through;
+}
 
 
 @keyframes spin {
