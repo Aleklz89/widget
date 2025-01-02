@@ -102,7 +102,7 @@ class ProductSearchWidget {
 
 
 
-        const resp = await fetch('widget.html');
+        const resp = await fetch('https://aleklz89.github.io/widget/widget.html');
         const widgetHtml = await resp.text();
 
 
@@ -1206,7 +1206,7 @@ class ProductSearchWidget {
                 prod.oldPrice > 0 &&
                 prod.oldPrice !== prod.newPrice
             ) {
-                oldPriceValue = String(prod.oldPrice ?? '').trim();
+                oldPriceValue = `${prod.oldPrice} ${prod.currencyId ?? ''}`.trim();
                 oldPriceStyle = 'color: grey; font-size: 13px; text-decoration: line-through;';
             }
             console.log('[DEBUG] oldPriceValue=', oldPriceValue, ' oldPriceStyle=', oldPriceStyle);
