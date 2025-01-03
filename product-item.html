@@ -1,20 +1,19 @@
 <div class="product-item">
-    <img src="{{imageUrl}}" alt="{{name}}" class="product-image">
+    <img src="{{imageUrl}}" alt="{{name}}" class="product-image" />
+
     <div class="product-details">
-
-
         {{labelBlock}}
-
 
         <p class="product-name">{{name}}</p>
 
-        <p class="product-old-price {{styleClass}}">{{oldPrice}}</p>
+        <div class="price-container">
+            <!-- Старая цена (можно скрывать через CSS или {{styleClass}}) -->
+            <span class="old-price {{styleClass}}">{{oldPrice}}</span>
 
-
-
-        <p class="product-price">{{price}} {{currencyId}}</p>
+            <!-- Новая цена (по умолчанию красная) -->
+            <span class="new-price">{{price}} {{currencyId}}</span>
+        </div>
 
         <p class="product-presence">{{presence}}</p>
-
     </div>
 </div>
