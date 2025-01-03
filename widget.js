@@ -96,6 +96,7 @@ class ProductSearchWidget {
 
 
         const userLang = await this.fetchInterfaceLanguage(this.siteDomain);
+        console.log("Язык пользователя:", userLang)
         if (userLang) {
             this.applyTranslations(userLang);
         }
@@ -375,22 +376,22 @@ class ProductSearchWidget {
                     }
                     console.log('[LOG:buildFilterMenu] activeFilters=', this.activeFilters);
 
-                    
+
                     try {
                         await fetch('https://smartsearch.spefix.com/api/filter-operation', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
-                                domain: this.siteDomain,  
-                                filterName: paramName,    
-                                value: val,               
+                                domain: this.siteDomain,
+                                filterName: paramName,
+                                value: val,
                                 isChecked: checkbox.checked
                             })
                         });
                     } catch (error) {
                         console.error('[LOG:filter-operation] Error calling /api/filter-operation:', error);
                     }
-                    
+
 
                     const filtered = this.applyActiveFilters(this.allProducts);
                     const cats = this.widgetContainer.querySelector('.categories-container');
@@ -430,32 +431,41 @@ class ProductSearchWidget {
     setupEventHandlers(widgetContainer, triggerInput) {
         console.log('[LOG:setupEventHandlers]', triggerInput);
 
+        // 1. Находим важные элементы
         const sInput = widgetContainer.querySelector('.widget-search-input');
         const cButton = widgetContainer.querySelector('.widget-close-button');
         const catsCont = widgetContainer.querySelector('.categories-container');
         const resCont = widgetContainer.querySelector('.widget-result-container');
         const suggList = widgetContainer.querySelector('.widget-suggestions-list');
 
-        
+        // Допустим, ваш HTML содержит что-то вроде <div class="widget-search-icon"></div>
+        // — добавим обработчик, чтобы при клике запустить поиск:
+        const searchIcon = widgetContainer.querySelector('.widget-search-icon');
+
+        // 2. Клик по кнопке «закрыть» виджет
         cButton.addEventListener('click', () => {
             widgetContainer.style.display = 'none';
         });
 
-        
+        // 3. При фокусе на triggerInput (внешний инпут, который открывает виджет)
         triggerInput.addEventListener('focus', () => {
             widgetContainer.style.display = 'flex';
             sInput.focus();
             const q = sInput.value.trim();
-            if (!q) this.showHistory();
-            else this.hideHistory();
+            if (!q) {
+                this.showHistory();
+            } else {
+                this.hideHistory();
+            }
         });
 
-        
+        // 4. Основной обработчик ввода (в виджетном инпуте sInput)
         sInput.addEventListener('input', async (e) => {
             let query = e.target.value;
             const reqToken = Symbol('requestToken');
             this.currentRequestToken = reqToken;
 
+            // Если пользователь поставил пробел в конце — пытаемся исправить опечатку
             const last = query.slice(-1);
             if (last === ' ') {
                 query = query.trimEnd();
@@ -464,6 +474,7 @@ class ProductSearchWidget {
                 this.currentQuery = query;
             }
 
+            // Если пустой запрос — показываем историю, скрываем список подсказок
             if (!query.trim()) {
                 this.showHistory();
                 suggList.style.display = 'none';
@@ -472,10 +483,12 @@ class ProductSearchWidget {
                 this.hideHistory();
             }
 
+            // Прерываем предыдущий запрос (abortController) при новом вводе
             if (this.abortController) this.abortController.abort();
             this.abortController = new AbortController();
             const controller = this.abortController;
 
+            // Если всего 1 символ или вообще ничего — пока не даём подсказок
             if (query.trim().length < 1) {
                 suggList.innerHTML = '';
                 suggList.style.display = 'none';
@@ -483,10 +496,13 @@ class ProductSearchWidget {
             }
 
             try {
+                // 1) Подгружаем подсказки
                 await this.fetchSuggestions(query.trim(), suggList, sInput, reqToken, controller);
+                // 2) Если длина >= 3, параллельно ищем товары
                 if (query.trim().length >= 3) {
                     await this.fetchProducts(query.trim(), catsCont, resCont, reqToken, controller);
                 } else {
+                    // Мало символов => просто "Начните поиск..."
                     resCont.innerHTML = `<p>${this.translations.startSearch}</p>`;
                     catsCont.innerHTML = '';
                 }
@@ -501,11 +517,10 @@ class ProductSearchWidget {
             }
         });
 
-        
+        // 5. Обработчик нажатия Enter
         sInput.addEventListener('keydown', async (e) => {
-            
             if (e.key === 'Enter') {
-                e.preventDefault(); 
+                e.preventDefault();
 
                 const query = sInput.value.trim();
                 if (!query) {
@@ -513,22 +528,18 @@ class ProductSearchWidget {
                     return;
                 }
 
-                
                 console.log('[LOG] Enter pressed => force search with query=', query);
 
-                
+                // Попытка исправить опечатки перед поиском
                 await this.correctQuery(query, sInput);
 
-                
                 try {
                     const reqToken = Symbol('requestToken');
                     this.currentRequestToken = reqToken;
 
-                    
                     if (this.abortController) this.abortController.abort();
                     this.abortController = new AbortController();
 
-                    
                     if (query.length >= 1) {
                         const catsCont = widgetContainer.querySelector('.categories-container');
                         const resCont = widgetContainer.querySelector('.widget-result-container');
@@ -540,7 +551,37 @@ class ProductSearchWidget {
             }
         });
 
-        
+        // 6. Если лупа (иконка) есть в HTML, при клике тоже запускаем поиск
+        if (searchIcon) {
+            searchIcon.addEventListener('click', async () => {
+                const query = sInput.value.trim();
+                if (!query) {
+                    console.log('[LOG] searchIcon clicked, but query is empty => do nothing');
+                    return;
+                }
+
+                console.log('[LOG] searchIcon clicked => force search with query=', query);
+
+                // Попытка исправить опечатки перед поиском
+                await this.correctQuery(query, sInput);
+
+                try {
+                    const reqToken = Symbol('requestToken');
+                    this.currentRequestToken = reqToken;
+
+                    if (this.abortController) this.abortController.abort();
+                    this.abortController = new AbortController();
+
+                    if (query.length >= 1) {
+                        await this.fetchProducts(query, catsCont, resCont, reqToken, this.abortController);
+                    }
+                } catch (err) {
+                    console.error('[LOG:searchIcon] Error:', err);
+                }
+            });
+        }
+
+        // 7. Закрываем выпадающий список подсказок, если кликнули вне него
         document.addEventListener('click', (evt) => {
             if (suggList && !suggList.contains(evt.target) && evt.target !== sInput) {
                 suggList.style.display = 'none';
@@ -672,7 +713,7 @@ class ProductSearchWidget {
             return;
         }
 
-        
+
         const filtered = suggestionsArray.filter(
             (s) => s.trim().toLowerCase() !== query.trim().toLowerCase()
         );
@@ -688,24 +729,24 @@ class ProductSearchWidget {
             const item = document.createElement('div');
             item.className = 'suggestion-item';
 
-            
+
             const boldText = suggText.replace(query, '');
             item.innerHTML = `<span>${query}</span><strong>${boldText}</strong>`;
 
-            
+
             item.addEventListener('click', async () => {
-                
+
                 searchInput.value = suggText;
                 searchInput.dispatchEvent(new Event('input'));
 
-                
+
                 try {
                     await fetch('https://smartsearch.spefix.com/api/hint-click', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             hint: suggText,
-                            domain: this.siteDomain,  
+                            domain: this.siteDomain,
                         }),
                     });
                 } catch (err) {
@@ -723,7 +764,7 @@ class ProductSearchWidget {
         console.log('[LOG:correctQuery] word=', word);
 
         try {
-            
+
             const requestBody = {
                 word,
                 domain: this.siteDomain,
@@ -739,7 +780,7 @@ class ProductSearchWidget {
 
             const data = await r.json();
             if (data && data.incorrectWord && data.correctWord) {
-                
+
                 const corrected = searchInput.value
                     .trim()
                     .split(' ')
@@ -762,7 +803,7 @@ class ProductSearchWidget {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    domain: this.siteDomain,  
+                    domain: this.siteDomain,
                 }),
             });
             if (!resp.ok) {
@@ -1189,7 +1230,7 @@ class ProductSearchWidget {
 
         const possibleColors = ['#E91E63', '#2196F3', '#4CAF50', '#9C27B0', '#FF5722', '#FF9800'];
 
-        
+
         const inS = items.filter((p) => p.availability);
         const outS = items.filter((p) => !p.availability);
 
@@ -1222,7 +1263,7 @@ class ProductSearchWidget {
         subset.forEach((prod, idx) => {
             console.log('[DEBUG] product item idx=', idx, ' data=', prod);
 
-            
+
             let labelHtml = '';
             if (prod.label) {
                 if (!this.labelColorMap[prod.label]) {
@@ -1244,7 +1285,7 @@ class ProductSearchWidget {
                     </div>`;
             }
 
-            
+
             let oldPriceValue = '';
             let oldPriceStyle = 'display: none;';
 
@@ -1283,31 +1324,31 @@ class ProductSearchWidget {
             const wrapperEl = document.createElement('div');
             wrapperEl.innerHTML = pHtml.trim();
 
-            
+
             const linkWrap = document.createElement('a');
             linkWrap.href = prod.url || '#';
             linkWrap.target = '_blank';
             linkWrap.className = 'product-link';
 
-            
+
             linkWrap.addEventListener('click', async (evt) => {
                 try {
-                    
-                    
+
+
 
                     await fetch('https://smartsearch.spefix.com/api/product-transition', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            domain: this.siteDomain,  
-                            productId: prod.id        
+                            domain: this.siteDomain,
+                            productId: prod.id
                         }),
                     });
                 } catch (err) {
                     console.error('[LOG:product-transition] Error:', err);
                 }
             });
-            
+
 
             if (!prod.availability) {
                 linkWrap.classList.add('out-of-stock');
