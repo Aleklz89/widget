@@ -320,7 +320,6 @@ class ProductSearchWidget {
 
         filterContent.innerHTML = '';
 
-
         const filterData = {};
         this.allProducts.forEach((prod) => {
             if (!Array.isArray(prod.params)) return;
@@ -334,7 +333,6 @@ class ProductSearchWidget {
 
         const paramNames = Object.keys(filterData);
 
-
         if (!paramNames.length) {
             console.log('[LOG:buildFilterMenu] No filters => hide filterContainer.');
             filterContainer.style.display = 'none';
@@ -342,10 +340,8 @@ class ProductSearchWidget {
             return;
         }
 
-
         filterContainer.style.display = 'flex';
         this.hasFilters = true;
-
 
         paramNames.forEach((paramName) => {
             const paramBlock = document.createElement('div');
@@ -365,7 +361,7 @@ class ProductSearchWidget {
                 checkbox.className = 'filter-checkbox';
                 checkbox.value = val;
 
-                checkbox.addEventListener('change', () => {
+                checkbox.addEventListener('change', async () => {
                     if (!this.activeFilters[paramName]) {
                         this.activeFilters[paramName] = new Set();
                     }
@@ -378,6 +374,23 @@ class ProductSearchWidget {
                         }
                     }
                     console.log('[LOG:buildFilterMenu] activeFilters=', this.activeFilters);
+
+                    
+                    try {
+                        await fetch('https://smartsearch.spefix.com/api/filter-operation', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                domain: this.siteDomain,  
+                                filterName: paramName,    
+                                value: val,               
+                                isChecked: checkbox.checked
+                            })
+                        });
+                    } catch (error) {
+                        console.error('[LOG:filter-operation] Error calling /api/filter-operation:', error);
+                    }
+                    
 
                     const filtered = this.applyActiveFilters(this.allProducts);
                     const cats = this.widgetContainer.querySelector('.categories-container');
@@ -416,23 +429,28 @@ class ProductSearchWidget {
 
     setupEventHandlers(widgetContainer, triggerInput) {
         console.log('[LOG:setupEventHandlers]', triggerInput);
+
         const sInput = widgetContainer.querySelector('.widget-search-input');
         const cButton = widgetContainer.querySelector('.widget-close-button');
         const catsCont = widgetContainer.querySelector('.categories-container');
         const resCont = widgetContainer.querySelector('.widget-result-container');
         const suggList = widgetContainer.querySelector('.widget-suggestions-list');
 
+        
         cButton.addEventListener('click', () => {
             widgetContainer.style.display = 'none';
         });
 
+        
         triggerInput.addEventListener('focus', () => {
             widgetContainer.style.display = 'flex';
             sInput.focus();
             const q = sInput.value.trim();
-            if (!q) this.showHistory(); else this.hideHistory();
+            if (!q) this.showHistory();
+            else this.hideHistory();
         });
 
+        
         sInput.addEventListener('input', async (e) => {
             let query = e.target.value;
             const reqToken = Symbol('requestToken');
@@ -483,6 +501,46 @@ class ProductSearchWidget {
             }
         });
 
+        
+        sInput.addEventListener('keydown', async (e) => {
+            
+            if (e.key === 'Enter') {
+                e.preventDefault(); 
+
+                const query = sInput.value.trim();
+                if (!query) {
+                    console.log('[LOG] Enter pressed, but query is empty => do nothing');
+                    return;
+                }
+
+                
+                console.log('[LOG] Enter pressed => force search with query=', query);
+
+                
+                await this.correctQuery(query, sInput);
+
+                
+                try {
+                    const reqToken = Symbol('requestToken');
+                    this.currentRequestToken = reqToken;
+
+                    
+                    if (this.abortController) this.abortController.abort();
+                    this.abortController = new AbortController();
+
+                    
+                    if (query.length >= 1) {
+                        const catsCont = widgetContainer.querySelector('.categories-container');
+                        const resCont = widgetContainer.querySelector('.widget-result-container');
+                        await this.fetchProducts(query, catsCont, resCont, reqToken, this.abortController);
+                    }
+                } catch (err) {
+                    console.error('[LOG:Enter Search] Error:', err);
+                }
+            }
+        });
+
+        
         document.addEventListener('click', (evt) => {
             if (suggList && !suggList.contains(evt.target) && evt.target !== sInput) {
                 suggList.style.display = 'none';
@@ -593,7 +651,6 @@ class ProductSearchWidget {
     async fetchSuggestions(query, suggestionsList, searchInput, requestToken, controller) {
         console.log('[LOG:fetchSuggestions] query=', query);
 
-
         const r = await fetch(this.suggestionsUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -602,64 +659,62 @@ class ProductSearchWidget {
         });
         if (!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
 
-
         const data = await r.json();
-
-
         if (requestToken !== this.currentRequestToken) {
             console.log('[LOG:fetchSuggestions] Outdated => ignoring');
             return;
         }
 
-
-
-
         const suggestionsArray = data.suggestions;
-
-
-
-
         if (!Array.isArray(suggestionsArray) || !suggestionsArray.length) {
             console.log('[LOG:fetchSuggestions] Нет массива строк => скрываем подсказки');
             suggestionsList.style.display = 'none';
             return;
         }
 
-
+        
         const filtered = suggestionsArray.filter(
             (s) => s.trim().toLowerCase() !== query.trim().toLowerCase()
         );
-
 
         if (!filtered.length) {
             suggestionsList.style.display = 'none';
             return;
         }
 
-
         suggestionsList.innerHTML = '';
 
         filtered.forEach((suggText) => {
-
             const item = document.createElement('div');
             item.className = 'suggestion-item';
 
-
-
+            
             const boldText = suggText.replace(query, '');
-
-
             item.innerHTML = `<span>${query}</span><strong>${boldText}</strong>`;
 
-
-            item.addEventListener('click', () => {
+            
+            item.addEventListener('click', async () => {
+                
                 searchInput.value = suggText;
                 searchInput.dispatchEvent(new Event('input'));
+
+                
+                try {
+                    await fetch('https://smartsearch.spefix.com/api/hint-click', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            hint: suggText,
+                            domain: this.siteDomain,  
+                        }),
+                    });
+                } catch (err) {
+                    console.error('[LOG:hint-click] Error:', err);
+                }
             });
 
             suggestionsList.appendChild(item);
         });
-
 
         suggestionsList.style.display = 'flex';
     }
@@ -668,7 +723,7 @@ class ProductSearchWidget {
         console.log('[LOG:correctQuery] word=', word);
 
         try {
-            // Допустим, вы хотите передавать "this.siteDomain":
+            
             const requestBody = {
                 word,
                 domain: this.siteDomain,
@@ -684,7 +739,7 @@ class ProductSearchWidget {
 
             const data = await r.json();
             if (data && data.incorrectWord && data.correctWord) {
-                // Если бэкенд вернул, что `word` надо исправить на `correctWord`
+                
                 const corrected = searchInput.value
                     .trim()
                     .split(' ')
@@ -707,7 +762,7 @@ class ProductSearchWidget {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    domain: this.siteDomain,  // <-- ваш домен (строка)
+                    domain: this.siteDomain,  
                 }),
             });
             if (!resp.ok) {
@@ -1134,11 +1189,10 @@ class ProductSearchWidget {
 
         const possibleColors = ['#E91E63', '#2196F3', '#4CAF50', '#9C27B0', '#FF5722', '#FF9800'];
 
-        // Разделяем товары на inStock / outOfStock
+        
         const inS = items.filter((p) => p.availability);
         const outS = items.filter((p) => !p.availability);
 
-        // Функция для сортировки по totalScore, затем по дате
         function sortByScoreAndDate(arr) {
             arr.sort((a, b) => {
                 if (b.totalScore !== a.totalScore) {
@@ -1150,22 +1204,17 @@ class ProductSearchWidget {
             });
         }
 
-        // Сортируем обе группы (in-stock / out-of-stock) по score
         sortByScoreAndDate(inS);
         sortByScoreAndDate(outS);
 
-        // Объединяем обратно
         let combined = [...inS, ...outS];
 
-        // Если нужно исключать уже использованные товары
         if (usedSet) {
             combined = combined.filter((prod) => !usedSet.has(prod.id));
         }
 
-        // Берём первые limitCount товаров
         const subset = combined.slice(0, limitCount);
 
-        // Если словарь цветов для label ещё не создавали — инициализируем
         if (!this.labelColorMap) {
             this.labelColorMap = {};
         }
@@ -1173,7 +1222,7 @@ class ProductSearchWidget {
         subset.forEach((prod, idx) => {
             console.log('[DEBUG] product item idx=', idx, ' data=', prod);
 
-            // ===== 1) Формируем HTML для label (если есть) =====
+            
             let labelHtml = '';
             if (prod.label) {
                 if (!this.labelColorMap[prod.label]) {
@@ -1195,38 +1244,28 @@ class ProductSearchWidget {
                     </div>`;
             }
 
-            // ===== 2) Логика для oldPrice =====
-            // Если нет старой цены или она равна 0 — скрываем
-            // Иначе показываем её зачёркнутой
+            
             let oldPriceValue = '';
             let oldPriceStyle = 'display: none;';
 
-            if (
-                prod.oldPrice &&
-                prod.oldPrice > 0 &&
-                prod.oldPrice !== prod.newPrice
-            ) {
+            if (prod.oldPrice && prod.oldPrice > 0 && prod.oldPrice !== prod.newPrice) {
                 oldPriceValue = `${prod.oldPrice} ${prod.currencyId ?? ''}`.trim();
                 oldPriceStyle = 'color: grey; font-size: 13px; text-decoration: line-through;';
             }
             console.log('[DEBUG] oldPriceValue=', oldPriceValue, ' oldPriceStyle=', oldPriceStyle);
 
-            // ===== 3) Текст наличия =====
             const presenceText = prod.availability
                 ? this.translations.inStock
                 : this.translations.outOfStock;
 
-            // ===== 4) Картинка =====
             const fallbackImageUrl = 'https://i.pinimg.com/564x/0c/bb/aa/0cbbaab0deff7f188a7762d9569bf1b3.jpg';
             const finalImageUrl = prod.image ? prod.image : fallbackImageUrl;
 
-            // ===== 5) Название продукта (обрезка до 90 символов) =====
             let displayName = prod.name || 'No Name';
             if (displayName.length > 90) {
                 displayName = displayName.slice(0, 90) + '...';
             }
 
-            // ===== 6) Подставляем всё в HTML-шаблон =====
             console.log('[DEBUG] BEFORE replacements:\n', productTemplate);
 
             let pHtml = productTemplate;
@@ -1241,15 +1280,34 @@ class ProductSearchWidget {
 
             console.log('[DEBUG] AFTER replacements:\n', pHtml);
 
-            // ===== 7) Создаём DOM-элементы =====
             const wrapperEl = document.createElement('div');
             wrapperEl.innerHTML = pHtml.trim();
 
-            // Ссылка-обёртка (чтобы кликать по товару)
+            
             const linkWrap = document.createElement('a');
             linkWrap.href = prod.url || '#';
             linkWrap.target = '_blank';
             linkWrap.className = 'product-link';
+
+            
+            linkWrap.addEventListener('click', async (evt) => {
+                try {
+                    
+                    
+
+                    await fetch('https://smartsearch.spefix.com/api/product-transition', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            domain: this.siteDomain,  
+                            productId: prod.id        
+                        }),
+                    });
+                } catch (err) {
+                    console.error('[LOG:product-transition] Error:', err);
+                }
+            });
+            
 
             if (!prod.availability) {
                 linkWrap.classList.add('out-of-stock');
@@ -1259,7 +1317,6 @@ class ProductSearchWidget {
             productContainer.appendChild(linkWrap);
         });
 
-        // Если товаров больше, чем limitCount, добавляем «Ещё...»
         if (items.length > limitCount && !isSingle) {
             const moreDiv = document.createElement('div');
             moreDiv.className = 'more-link';
@@ -1279,7 +1336,6 @@ class ProductSearchWidget {
         console.log('[DEBUG] Appended catBlock for', catName, 'with', subset.length, 'items');
         return subset;
     }
-
 
 
 
