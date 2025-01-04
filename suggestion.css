@@ -72,18 +72,17 @@
 .product-old-price {
     color: grey;
     font-size: 13px;
-    text-decoration: line-through;
+
 }
 
 .old-price {
     color: grey;
     font-size: 13px;
-    text-decoration: line-through;
+
 }
 
 .price-container {
     display: flex;
-    justify-content: space-between;
     /* старая цена слева, новая справа */
     align-items: center;
     /* по вертикали по центру */
@@ -96,7 +95,7 @@
     /* стиль для старой цены */
     color: grey;
     font-size: 14px;
-    text-decoration: line-through;
+
 }
 
 /* а если нужна динамика скрытия/показа —

@@ -1200,7 +1200,28 @@ class ProductSearchWidget {
         }
     }
 
+    activateCategory(catName) {
+        // Предположим, что в боковой панели у нас .categories-container > .category-item,
+        // и внутри каждого .category-item есть .category-name c текстом
+        const categoriesContainer = this.widgetContainer.querySelector('.categories-container');
+        if (!categoriesContainer) return;
 
+        // Снимаем класс active со всех
+        const allCatItems = categoriesContainer.querySelectorAll('.category-item');
+        allCatItems.forEach((el) => el.classList.remove('active'));
+
+        // Ищем нужный блок по тексту внутри .category-name
+        allCatItems.forEach((catItem) => {
+            const catNameEl = catItem.querySelector('.category-name');
+            if (!catNameEl) return;
+
+            const text = catNameEl.textContent.trim();
+            if (text === catName) {
+                // Нашли совпадающую категорию => делаем active
+                catItem.classList.add('active');
+            }
+        });
+    }
 
     renderSingleCategoryBlock(
         catName,
@@ -1290,8 +1311,16 @@ class ProductSearchWidget {
             let oldPriceStyle = 'display: none;';
 
             if (prod.oldPrice && prod.oldPrice > 0 && prod.oldPrice !== prod.newPrice) {
-                oldPriceValue = `${prod.oldPrice} ${prod.currencyId ?? ''}`.trim();
-                oldPriceStyle = 'color: grey; font-size: 13px; text-decoration: line-through;';
+                oldPriceValue = `
+                  <span style="white-space: nowrap;">
+                    <span style="color: grey; font-size: 13px; text-decoration: line-through;">
+                      ${prod.oldPrice} ${prod.currencyId ?? ''}
+                    </span>
+                    <span style="text-decoration: none;">&nbsp;&nbsp;</span>
+                  </span>
+                `.trim();
+            } else {
+                oldPriceValue = '';
             }
             console.log('[DEBUG] oldPriceValue=', oldPriceValue, ' oldPriceStyle=', oldPriceStyle);
 
@@ -1362,12 +1391,18 @@ class ProductSearchWidget {
             const moreDiv = document.createElement('div');
             moreDiv.className = 'more-link';
             moreDiv.textContent = `${this.translations.more} ${items.length - limitCount} ...`;
+
             moreDiv.addEventListener('click', () => {
                 console.log('[LOG:renderSingleCategoryBlock] More clicked. catName=', catName);
+
+                // Переходим в «одну» категорию
                 const singleObj = { [catName]: combined };
                 this.showCategoryProducts(singleObj, [catName], resultContainer, true, catName);
+
+                // А теперь подсвечиваем ту же категорию и в боковой панели:
                 this.activateCategory(catName);
             });
+
             productContainer.appendChild(moreDiv);
         }
 

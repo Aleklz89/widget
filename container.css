@@ -79,7 +79,6 @@
 .old-price {
     color: grey;
     font-size: 13px;
-    text-decoration: line-through;
 }
 
 .old-price-hidden {

@@ -33,6 +33,7 @@
     color: #333;
     transition: background-color 0.3s ease;
     box-sizing: border-box;
+    
 }
 
 .widget-search-input:focus {
@@ -168,7 +169,7 @@
 .old-price {
     color: grey;
     font-size: 13px;
-    text-decoration: line-through;
+
 }
 
 /* Если нет старой цены — скрываем. */
@@ -180,7 +181,47 @@
 .strike-old-price {
     color: grey;
     font-size: 13px;
-    text-decoration: line-through;
+ 
+}
+
+.old-price.hidden {
+    display: none;
+    /* полностью скрывает элемент */
+}
+
+.old-price.strike {
+    color: grey;
+
+    margin-right: 5px;
+    /* небольшой отступ, если нужно */
+}
+
+.new-price {
+    color: red;
+    /* новая цена красная по умолчанию */
+}
+
+.new-price.with-gap {
+    margin-left: 5px;
+    /* если нужен отступ, когда старая цена есть */
+}
+
+/* Когда нет старой цены — скрываем полностью */
+.old-price.hidden {
+    display: none;
+}
+
+/* Когда старая цена есть — делаем зачёркивание, задаём цвет, и если нужен — отступ */
+.old-price.strike {
+    color: grey;
+
+    margin-right: 6px;
+    /* например */
+}
+
+/* Новая цена обычно красная (пример) */
+.new-price {
+    color: red;
 }
 
 
@@ -208,4 +249,25 @@
         grid-template-columns: repeat(1, 1fr);
         margin: 0;
     }
+}
+
+@media(max-width: 700px) {
+    .widget-container {
+        position: fixed;
+        top: 1%;
+        left: 1%;
+        width: 97%;
+        height: 98%;
+        background-color: rgba(255, 255, 255, 1);
+        display: none;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: flex-start;
+        padding: 0;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        z-index: 1000;
+        overflow: hidden;
+        font-family: "Montserrat", sans-serif;
+    }
+
 }
