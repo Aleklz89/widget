@@ -1,6 +1,6 @@
 class ProductSearchWidget {
     constructor(triggerInputId) {
-        console.log('[LOG:constructor] Initializing with triggerInputId:', triggerInputId);
+
         this.triggerInputId = triggerInputId;
 
 
@@ -92,11 +92,10 @@ class ProductSearchWidget {
     }
 
     async initWidget() {
-        console.log('[LOG:initWidget] Start.');
+
 
 
         const userLang = await this.fetchInterfaceLanguage(this.siteDomain);
-        console.log("Язык пользователя:", userLang)
         if (userLang) {
             this.applyTranslations(userLang);
         }
@@ -196,44 +195,35 @@ class ProductSearchWidget {
     }
 
     adjustDefaultPanels() {
-        console.log('[LOG:adjustDefaultPanels] Start.');
 
 
         const currentWidth = window.innerWidth;
-        console.log('[LOG:adjustDefaultPanels] window.innerWidth=', currentWidth);
 
 
         const filterContainer = this.widgetContainer.querySelector('.filter-container');
         const catAccordion = this.widgetContainer.querySelector('.category-accordion');
 
 
-        console.log('[LOG:adjustDefaultPanels] filterContainer=', filterContainer);
-        console.log('[LOG:adjustDefaultPanels] catAccordion=', catAccordion);
 
         if (!filterContainer || !catAccordion) {
-            console.warn('[LOG:adjustDefaultPanels] filterContainer or catAccordion not found => return');
             return;
         }
 
 
         if (currentWidth < 1100) {
-            console.log('[LOG:adjustDefaultPanels] => collapsing filters & categories (because width > 1100).');
             filterContainer.classList.add('collapsed');
             catAccordion.classList.add('collapsed');
         } else {
-            console.log('[LOG:adjustDefaultPanels] => uncollapsing filters & categories (width <= 1100).');
             filterContainer.classList.remove('collapsed');
             catAccordion.classList.remove('collapsed');
         }
     }
 
     createCategoryAccordion() {
-        console.log('[LOG:createCategoryAccordion] Creating category accordion block...');
 
         const leftCol = this.widgetContainer.querySelector('.left-column');
         const catsContainer = this.widgetContainer.querySelector('.categories-container');
         if (!leftCol || !catsContainer) {
-            console.warn('[LOG:createCategoryAccordion] No .left-column or .categories-container found.');
             return;
         }
 
@@ -265,15 +255,12 @@ class ProductSearchWidget {
         leftCol.appendChild(catAccordion);
 
 
-        console.log('[LOG:createCategoryAccordion] Category accordion appended to .left-column');
     }
 
     createFilterAccordion() {
-        console.log('[LOG:createFilterAccordion] Inserting filter panel');
 
         const leftCol = this.widgetContainer.querySelector('.left-column');
         if (!leftCol) {
-            console.warn('[LOG:createFilterAccordion] .left-column not found => cannot insert filters');
             return;
         }
 
@@ -285,11 +272,9 @@ class ProductSearchWidget {
         toggleBtn.textContent = `${this.translations.filters} ▼`;
 
         toggleBtn.addEventListener('click', () => {
-            console.log('[LOG:createFilterAccordion] filter-toggle-btn clicked');
             filterContainer.classList.toggle('collapsed');
 
             const isCollapsedNow = filterContainer.classList.contains('collapsed');
-            console.log('[LOG:createFilterAccordion] isCollapsedNow=', isCollapsedNow);
 
             if (isCollapsedNow) {
                 toggleBtn.textContent = `${this.translations.filters} ▼`;
@@ -307,15 +292,12 @@ class ProductSearchWidget {
 
 
         leftCol.appendChild(filterContainer);
-        console.log('[LOG:createFilterAccordion] Filter panel appended to .left-column');
     }
 
     buildFilterMenu() {
-        console.log('[LOG:buildFilterMenu] Building filter checkboxes...');
         const filterContainer = this.widgetContainer.querySelector('.filter-container');
         const filterContent = filterContainer?.querySelector('.filter-content');
         if (!filterContainer || !filterContent) {
-            console.warn('[LOG:buildFilterMenu] filterContainer or filterContent not found!');
             return;
         }
 
@@ -335,7 +317,6 @@ class ProductSearchWidget {
         const paramNames = Object.keys(filterData);
 
         if (!paramNames.length) {
-            console.log('[LOG:buildFilterMenu] No filters => hide filterContainer.');
             filterContainer.style.display = 'none';
             this.hasFilters = false;
             return;
@@ -374,7 +355,6 @@ class ProductSearchWidget {
                             delete this.activeFilters[paramName];
                         }
                     }
-                    console.log('[LOG:buildFilterMenu] activeFilters=', this.activeFilters);
 
 
                     try {
@@ -413,7 +393,6 @@ class ProductSearchWidget {
 
 
     applyActiveFilters(products) {
-        console.log('[LOG:applyActiveFilters] activeFilters=', this.activeFilters);
         const keys = Object.keys(this.activeFilters);
         if (!keys.length) return products;
 
@@ -429,25 +408,24 @@ class ProductSearchWidget {
     }
 
     setupEventHandlers(widgetContainer, triggerInput) {
-        console.log('[LOG:setupEventHandlers]', triggerInput);
 
-        // 1. Находим важные элементы
+        
         const sInput = widgetContainer.querySelector('.widget-search-input');
         const cButton = widgetContainer.querySelector('.widget-close-button');
         const catsCont = widgetContainer.querySelector('.categories-container');
         const resCont = widgetContainer.querySelector('.widget-result-container');
         const suggList = widgetContainer.querySelector('.widget-suggestions-list');
 
-        // Допустим, ваш HTML содержит что-то вроде <div class="widget-search-icon"></div>
-        // — добавим обработчик, чтобы при клике запустить поиск:
+        
+        
         const searchIcon = widgetContainer.querySelector('.widget-search-icon');
 
-        // 2. Клик по кнопке «закрыть» виджет
+        
         cButton.addEventListener('click', () => {
             widgetContainer.style.display = 'none';
         });
 
-        // 3. При фокусе на triggerInput (внешний инпут, который открывает виджет)
+        
         triggerInput.addEventListener('focus', () => {
             widgetContainer.style.display = 'flex';
             sInput.focus();
@@ -459,13 +437,13 @@ class ProductSearchWidget {
             }
         });
 
-        // 4. Основной обработчик ввода (в виджетном инпуте sInput)
+        
         sInput.addEventListener('input', async (e) => {
             let query = e.target.value;
             const reqToken = Symbol('requestToken');
             this.currentRequestToken = reqToken;
 
-            // Если пользователь поставил пробел в конце — пытаемся исправить опечатку
+            
             const last = query.slice(-1);
             if (last === ' ') {
                 query = query.trimEnd();
@@ -474,7 +452,7 @@ class ProductSearchWidget {
                 this.currentQuery = query;
             }
 
-            // Если пустой запрос — показываем историю, скрываем список подсказок
+            
             if (!query.trim()) {
                 this.showHistory();
                 suggList.style.display = 'none';
@@ -483,12 +461,12 @@ class ProductSearchWidget {
                 this.hideHistory();
             }
 
-            // Прерываем предыдущий запрос (abortController) при новом вводе
+            
             if (this.abortController) this.abortController.abort();
             this.abortController = new AbortController();
             const controller = this.abortController;
 
-            // Если всего 1 символ или вообще ничего — пока не даём подсказок
+            
             if (query.trim().length < 1) {
                 suggList.innerHTML = '';
                 suggList.style.display = 'none';
@@ -496,19 +474,18 @@ class ProductSearchWidget {
             }
 
             try {
-                // 1) Подгружаем подсказки
+                
                 await this.fetchSuggestions(query.trim(), suggList, sInput, reqToken, controller);
-                // 2) Если длина >= 3, параллельно ищем товары
+                
                 if (query.trim().length >= 3) {
                     await this.fetchProducts(query.trim(), catsCont, resCont, reqToken, controller);
                 } else {
-                    // Мало символов => просто "Начните поиск..."
+                    
                     resCont.innerHTML = `<p>${this.translations.startSearch}</p>`;
                     catsCont.innerHTML = '';
                 }
             } catch (err) {
                 if (err.name === 'AbortError') {
-                    console.log('[LOG:setupEventHandlers] Request aborted.');
                 } else {
                     console.error('[LOG:setupEventHandlers] Error:', err);
                     resCont.innerHTML = `<p>${this.translations.errorWhileSearch || 'Error in search...'}</p>`;
@@ -517,20 +494,18 @@ class ProductSearchWidget {
             }
         });
 
-        // 5. Обработчик нажатия Enter
+        
         sInput.addEventListener('keydown', async (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
 
                 const query = sInput.value.trim();
                 if (!query) {
-                    console.log('[LOG] Enter pressed, but query is empty => do nothing');
                     return;
                 }
 
-                console.log('[LOG] Enter pressed => force search with query=', query);
 
-                // Попытка исправить опечатки перед поиском
+                
                 await this.correctQuery(query, sInput);
 
                 try {
@@ -551,18 +526,16 @@ class ProductSearchWidget {
             }
         });
 
-        // 6. Если лупа (иконка) есть в HTML, при клике тоже запускаем поиск
+        
         if (searchIcon) {
             searchIcon.addEventListener('click', async () => {
                 const query = sInput.value.trim();
                 if (!query) {
-                    console.log('[LOG] searchIcon clicked, but query is empty => do nothing');
                     return;
                 }
 
-                console.log('[LOG] searchIcon clicked => force search with query=', query);
 
-                // Попытка исправить опечатки перед поиском
+                
                 await this.correctQuery(query, sInput);
 
                 try {
@@ -581,7 +554,7 @@ class ProductSearchWidget {
             });
         }
 
-        // 7. Закрываем выпадающий список подсказок, если кликнули вне него
+        
         document.addEventListener('click', (evt) => {
             if (suggList && !suggList.contains(evt.target) && evt.target !== sInput) {
                 suggList.style.display = 'none';
@@ -604,7 +577,6 @@ class ProductSearchWidget {
             Cookies.set(cookieName, userId, { expires: 365 });
         }
         this.userId = userId;
-        console.log('[LOG:getOrCreateUserId]', { cookieName, userId });
     }
 
     async loadJsCookieLibrary() {
@@ -690,7 +662,6 @@ class ProductSearchWidget {
     }
 
     async fetchSuggestions(query, suggestionsList, searchInput, requestToken, controller) {
-        console.log('[LOG:fetchSuggestions] query=', query);
 
         const r = await fetch(this.suggestionsUrl, {
             method: 'POST',
@@ -702,13 +673,11 @@ class ProductSearchWidget {
 
         const data = await r.json();
         if (requestToken !== this.currentRequestToken) {
-            console.log('[LOG:fetchSuggestions] Outdated => ignoring');
             return;
         }
 
         const suggestionsArray = data.suggestions;
         if (!Array.isArray(suggestionsArray) || !suggestionsArray.length) {
-            console.log('[LOG:fetchSuggestions] Нет массива строк => скрываем подсказки');
             suggestionsList.style.display = 'none';
             return;
         }
@@ -761,7 +730,6 @@ class ProductSearchWidget {
     }
 
     async correctQuery(word, searchInput) {
-        console.log('[LOG:correctQuery] word=', word);
 
         try {
 
@@ -789,7 +757,6 @@ class ProductSearchWidget {
                     )
                     .join(' ');
                 searchInput.value = corrected;
-                console.log('[LOG:correctQuery] corrected=', corrected);
             }
         } catch (err) {
             console.error('[LOG:correctQuery] Error:', err);
@@ -797,7 +764,6 @@ class ProductSearchWidget {
     }
 
     async incrementPageView() {
-        console.log('[LOG:incrementPageView] Sending page view to server...');
         try {
             const resp = await fetch('https://smartsearch.spefix.com/api/add-page-view', {
                 method: 'POST',
@@ -806,18 +772,13 @@ class ProductSearchWidget {
                     domain: this.siteDomain,
                 }),
             });
-            if (!resp.ok) {
-                console.warn('[LOG:incrementPageView] Response not OK:', resp.status);
-            } else {
-                console.log('[LOG:incrementPageView] Page view incremented successfully.');
-            }
+
         } catch (err) {
             console.error('[LOG:incrementPageView] Error:', err);
         }
     }
 
     async fetchProducts(query, categoriesContainer, resultContainer, requestToken, controller) {
-        console.log('[LOG:fetchProducts] query=', query);
         const lang = navigator.language || 'en';
         const r = await fetch(this.apiUrl, {
             method: 'POST',
@@ -828,15 +789,12 @@ class ProductSearchWidget {
         if (!r.ok) throw new Error(`HTTP error! status=${r.status}`);
         const products = await r.json();
         if (requestToken !== this.currentRequestToken) {
-            console.log('[LOG:fetchProducts] Outdated => ignoring');
             return;
         }
         if (!Array.isArray(products)) {
-            console.log('[LOG:fetchProducts] Not array => ignoring');
             return;
         }
         this.allProducts = products;
-        console.log('[LOG:fetchProducts] allProducts length=', products.length);
 
 
         const leftCol = this.widgetContainer.querySelector('.left-column');
@@ -862,67 +820,50 @@ class ProductSearchWidget {
         }
     }
 
-    displayProductsByCategory(products, categoriesContainer, resultContainer) {
-        console.log('[LOG:displayProductsByCategory] products.length=', products.length);
-
+    async displayProductsByCategory(products, categoriesContainer, resultContainer) {
         const filterContainer = this.widgetContainer.querySelector('.filter-container');
         const catAccordion = this.widgetContainer.querySelector('.category-accordion');
+        const leftCol = this.widgetContainer.querySelector('.left-column');
 
-
+        
         categoriesContainer.innerHTML = '';
         resultContainer.innerHTML = '';
 
-
+        
         if (!products.length) {
-            // Показываем "товаров не найдено"
             resultContainer.innerHTML = `<p>${this.translations.noProductsFound}</p>`;
-
-            // 1. Если фильтров нет (this.hasFilters = false) — скрываем левую колонку
-            //    Иначе оставляем панель фильтров
+            
             if (!this.hasFilters) {
                 if (filterContainer) filterContainer.style.display = 'none';
                 if (catAccordion) catAccordion.style.display = 'none';
-                // Можно скрыть и .left-column целиком, если хотите
                 if (leftCol) leftCol.style.display = 'none';
             } else {
-                // Есть фильтры => оставляем панель,
-                // чтобы пользователь мог снять галочки.
+                
                 if (filterContainer) filterContainer.style.display = 'flex';
                 if (catAccordion) catAccordion.style.display = 'none';
-                // Категории имеет смысл скрыть, т.к. всё равно ничего нет,
-                // но фильтры должны оставаться.
                 if (leftCol) leftCol.style.display = 'flex';
             }
             return;
         }
 
-
+        
         if (!this.hasFilters) {
-            console.log('[LOG:displayProductsByCategory] hasFilters=false => скрываем filterContainer');
             if (filterContainer) filterContainer.style.display = 'none';
         } else {
-            console.log('[LOG:displayProductsByCategory] hasFilters=true => показываем filterContainer');
             if (filterContainer) filterContainer.style.display = 'flex';
         }
 
-
+        
         const uniqueProducts = [];
-        const usedIds = new Set();
-
+        const usedIdsGlobal = new Set();
         for (const p of products) {
-            if (!usedIds.has(p.id)) {
+            if (!usedIdsGlobal.has(p.id)) {
                 uniqueProducts.push(p);
-                usedIds.add(p.id);
-            } else {
-                console.log('[LOG:displayProductsByCategory] Duplicate removed:', {
-                    id: p.id,
-                    name: p.name
-                });
+                usedIdsGlobal.add(p.id);
             }
         }
-        console.log(`[LOG:displayProductsByCategory] After dedup => uniqueProducts.length=${uniqueProducts.length}`);
 
-
+        
         const catMap = {};
         uniqueProducts.forEach((p) => {
             if (!p.categories) return;
@@ -932,7 +873,7 @@ class ProductSearchWidget {
             });
         });
 
-
+        
         const catMapNoDupes = {};
         for (const catName in catMap) {
             const arr = catMap[catName];
@@ -947,56 +888,115 @@ class ProductSearchWidget {
             catMapNoDupes[catName] = filtered;
         }
 
-
         let catNames = Object.keys(catMapNoDupes);
+
+        
         if (!catNames.length) {
-            console.log('[LOG:displayProductsByCategory] Нет категорий => скрыть catAccordion');
             if (catAccordion) catAccordion.style.display = 'none';
             resultContainer.innerHTML = `<p>${this.translations.noProductsFound}</p>`;
             return;
         } else {
-            console.log('[LOG:displayProductsByCategory] Есть категории => показываем catAccordion');
             if (catAccordion) catAccordion.style.display = 'flex';
         }
 
+        
+        const usedSet = new Set();
 
+        
         const categoryScores = {};
-        Object.entries(catMapNoDupes).forEach(([catName, items]) => {
 
+        
+        this.catAllItemsMap = catMapNoDupes; 
+
+        
+        this.catScoringSubsets = {};         
+
+        console.log('[SCORE] Начинаем подсчёт очков для категорий.');
+        Object.entries(catMapNoDupes).forEach(([catName, items]) => {
+            
             const inStock = items.filter((x) => x.availability);
             const outStock = items.filter((x) => !x.availability);
-
-
             const sortedItems = [...inStock, ...outStock];
 
+            
+            const filteredItems = sortedItems.filter((p) => !usedSet.has(p.id));
 
-            const subset = sortedItems.slice(0, this.maxItemsOnAllResults);
+            
+            const subsetCount = Math.min(this.maxItemsOnAllResults, filteredItems.length);
+            const subset = filteredItems.slice(0, subsetCount);
 
+            console.log(
+                `[SCORE] === Категория "${catName}" ===\n` +
+                `   Берём первые ${subset.length} из ${filteredItems.length} (изначально было ${sortedItems.length})`
+            );
+            console.log(
+                `[SCORE] Subset (для подсчёта очков) [${catName}]: ` +
+                subset.map((p) => p.name).join(', ')
+            );
 
+            
             let score = 0;
-            subset.forEach((prd) => {
-                if (prd.availability) score += 1;
-                else score -= 1;
+            subset.forEach((prd, idx) => {
+                let productScore = 0;
+                let reasons = [];
+
+                
+                if (prd.availability) {
+                    productScore += 1;
+                    reasons.push('+1 (товар в наличии)');
+                } else {
+                    productScore -= 1;
+                    reasons.push('-1 (товар нет в наличии)');
+                }
+
+                
+                const PLACEHOLDER_URL =
+                    'https://i.pinimg.com/564x/0c/bb/aa/0cbbaab0deff7f188a7762d9569bf1b3.jpg';
+                if (!prd.image || prd.image === PLACEHOLDER_URL) {
+                    productScore -= 1.5;
+                    reasons.push('-1.5 (нет реальной картинки)');
+                }
+
+                score += productScore;
+                console.log(
+                    `[SCORE] Товар №${idx + 1} (ID=${prd.id}, name="${prd.name}"): ${reasons.join(' | ')}, ` +
+                    `итог=${productScore.toFixed(2)}, суммарно=${score.toFixed(2)}`
+                );
             });
 
             categoryScores[catName] = score;
-            console.log(`[DEBUG-catScore] Category="${catName}", subset.length=${subset.length}, score=${score}`);
+            console.log(
+                `[SCORE] Итоговое число баллов для категории "${catName}" = ${score.toFixed(2)}\n`
+            );
+
+            
+            this.catScoringSubsets[catName] = subset;
+
+            
+            subset.forEach((p) => usedSet.add(p.id));
         });
 
-
+        
         catNames.sort((a, b) => (categoryScores[b] || 0) - (categoryScores[a] || 0));
 
-
+        
         const allResultsName = this.translations.allResults || 'All results';
         const finalCats = [allResultsName, ...catNames];
 
-        console.log('[DEBUG-catScore] Итоговый порядок категорий:', finalCats);
+        
+        console.log('[SCORE] ИТОГОВАЯ ТАБЛИЦА КАТЕГОРИЙ (по убыванию очков):');
+        catNames.forEach((cn, idx) => {
+            const catScore = categoryScores[cn] ?? 0;
+            console.log(`[SCORE] Место ${idx + 1}: "${cn}", счёт = ${catScore.toFixed(2)}`);
+        });
+        console.log('[SCORE] =====================\n');
 
-
+        
         finalCats.forEach((catName) => {
             const cItem = document.createElement('div');
             cItem.className = 'category-item';
 
+            
             let displayName = catName;
             if (displayName.length > 22) {
                 displayName = displayName.substring(0, 22) + '...';
@@ -1009,7 +1009,7 @@ class ProductSearchWidget {
             const cCount = document.createElement('div');
             cCount.className = 'category-count';
 
-
+            
             if (catName === allResultsName) {
                 cCount.textContent = uniqueProducts.length;
             } else {
@@ -1019,288 +1019,182 @@ class ProductSearchWidget {
             cItem.appendChild(cText);
             cItem.appendChild(cCount);
 
-
-            cItem.addEventListener('click', () => {
+            cItem.addEventListener('click', async () => {
                 Array.from(categoriesContainer.getElementsByClassName('category-item'))
                     .forEach((el) => el.classList.remove('active'));
                 cItem.classList.add('active');
 
                 if (catName === allResultsName) {
-
-                    this.showCategoryProducts(catMapNoDupes, finalCats, resultContainer, true, null);
+                    
+                    await this.renderAllCategories(finalCats, catMapNoDupes, resultContainer);
                 } else {
-
+                    
                     const singleObj = { [catName]: catMapNoDupes[catName] };
-                    this.showCategoryProducts(singleObj, [catName], resultContainer, true, catName);
+                    await this.renderAllCategories([catName], singleObj, resultContainer, true);
                 }
             });
 
             categoriesContainer.appendChild(cItem);
         });
 
-
+        
         const firstItem = categoriesContainer.querySelector('.category-item');
         if (firstItem) firstItem.classList.add('active');
 
-
-        this.showCategoryProducts(catMapNoDupes, finalCats, resultContainer, true, null);
+        
+        await this.renderAllCategories(finalCats, catMapNoDupes, resultContainer);
     }
 
 
 
-    async showCategoryProducts(
+    
+    
+    
+    async renderAllCategories(
+        categoryNames,
         groupedProducts,
-        finalCategoryNames,
         resultContainer,
-        showTitles = true,
-        selectedCat = null
+        isSingle = false
     ) {
-        console.log('[LOG:showCategoryProducts] selectedCat=', selectedCat);
-
-        const isAllResults = (selectedCat === null);
-
-
         resultContainer.innerHTML = '';
 
-
+        
         const tResp = await fetch('https://aleklz89.github.io/widget/product-item.html');
         if (!tResp.ok) {
             throw new Error(`Failed to load product template: ${tResp.status}`);
         }
         const productTemplate = await tResp.text();
 
+        const allResultsName = this.translations.allResults || 'All results';
+        const showingAllCats = !isSingle && categoryNames.includes(allResultsName);
 
-        if (isAllResults) {
-
-            const realCats = finalCategoryNames.filter(
-                (catName) => catName !== this.translations.allResults
-            );
-
-
-
-            const catData = [];
-
-
-
-            const usedSet = new Set();
-
+        
+        if (showingAllCats) {
+            
+            const realCats = categoryNames.filter((cn) => cn !== allResultsName);
 
             for (const catName of realCats) {
-                const allItems = groupedProducts[catName] || [];
-                if (!allItems.length) {
+                
+                const top4 = this.catScoringSubsets?.[catName] || [];
 
-                    catData.push({ catName, top4: [], score: 0, finalItems: [] });
-                    continue;
+                
+                const allItems = this.catAllItemsMap?.[catName] || [];
+
+                
+                if (!top4.length) {
+                    console.log(`[RENDER] Пропускаем категорию "${catName}", так как top4 пусто.`);
+                    continue;  
                 }
-
-
-                const inStock = allItems.filter((p) => p.availability);
-                const outStock = allItems.filter((p) => !p.availability);
-
-
-
-
-                function compareByScoreAndDate(a, b) {
-
-                    if (b.totalScore !== a.totalScore) {
-                        return b.totalScore - a.totalScore;
-                    }
-
-                    const dateA = new Date(a.createdAt).getTime();
-                    const dateB = new Date(b.createdAt).getTime();
-                    return dateB - dateA;
-                }
-                inStock.sort(compareByScoreAndDate);
-                outStock.sort(compareByScoreAndDate);
-
-
-                const sortedItems = [...inStock, ...outStock];
-
-
-                const top4 = [];
-                for (const item of sortedItems) {
-                    if (usedSet.has(item.id)) {
-
-                        continue;
-                    }
-                    top4.push(item);
-                    if (top4.length >= 4) break;
-                }
-
-
-                let score = 0;
-                top4.forEach((prod) => {
-
-                    score += prod.availability ? 1 : -1;
-                });
 
                 console.log(
-                    `[LOG:showCategoryProducts] Cat="${catName}": totalItems=${allItems.length}, inStock=${inStock.length}, ` +
-                    `top4.length=${top4.length}, score=${score}`
+                    `[RENDER] Категория "${catName}": top4 (для score): ` +
+                    top4.map((p) => p.name).join(', ')
                 );
 
-
-                const top4Ids = top4.map((p) => p.id);
-                console.log(`[DEBUG] Category="${catName}" => top4 IDs:`, top4Ids);
-
-
-                top4.forEach((p) => usedSet.add(p.id));
-
-
-
-
-
-                const finalItems = sortedItems.filter((itm) => {
-
-                    if (top4.includes(itm)) return true;
-
-                    return !usedSet.has(itm.id);
-                });
-
-
-                catData.push({
+                
+                this.renderCategoryBlock(
                     catName,
-                    score,
-                    top4,
-                    finalItems
-                });
-            }
-
-
-            catData.sort((a, b) => b.score - a.score);
-
-
-            catData.forEach((catObj) => {
-                const { catName, score, top4, finalItems } = catObj;
-
-
-
-                if (!finalItems || finalItems.length === 0) {
-                    console.log(`[LOG] Category="${catName}" => нет товаров => пропускаем`);
-                    return;
-                }
-
-
-
-                const actuallyRendered = this.renderSingleCategoryBlock(
-                    catName,
-                    finalItems,
+                    allItems,          
+                    top4,              
                     productTemplate,
-                    resultContainer,
-                    showTitles,
-                    null,
-                    4,
-                    null
+                    false,
+                    resultContainer
                 );
-
-                console.log(
-                    `[LOG] Category="${catName}", rendered=${actuallyRendered.length}, score=${score}`
-                );
-            });
+            }
         }
-
         else {
-
-            for (const catName of finalCategoryNames) {
+            
+            for (const catName of categoryNames) {
                 const arr = groupedProducts[catName] || [];
-                this.renderSingleCategoryBlock(
+                if (!arr.length) continue;
+
+                console.log(
+                    `[RENDER] Одна категория "${catName}": все товары: ` +
+                    arr.map((p) => p.name).join(', ')
+                );
+
+                
+                this.renderCategoryBlock(
                     catName,
-                    arr,
+                    arr,   
+                    arr,   
                     productTemplate,
-                    resultContainer,
-                    showTitles,
-                    selectedCat,
-                    Number.MAX_SAFE_INTEGER
+                    true,
+                    resultContainer
                 );
             }
         }
     }
 
-    activateCategory(catName) {
-        // Предположим, что в боковой панели у нас .categories-container > .category-item,
-        // и внутри каждого .category-item есть .category-name c текстом
-        const categoriesContainer = this.widgetContainer.querySelector('.categories-container');
-        if (!categoriesContainer) return;
 
-        // Снимаем класс active со всех
-        const allCatItems = categoriesContainer.querySelectorAll('.category-item');
-        allCatItems.forEach((el) => el.classList.remove('active'));
 
-        // Ищем нужный блок по тексту внутри .category-name
-        allCatItems.forEach((catItem) => {
-            const catNameEl = catItem.querySelector('.category-name');
-            if (!catNameEl) return;
 
-            const text = catNameEl.textContent.trim();
-            if (text === catName) {
-                // Нашли совпадающую категорию => делаем active
-                catItem.classList.add('active');
-            }
-        });
-    }
-
-    renderSingleCategoryBlock(
+    renderCategoryBlock(
         catName,
-        items,
+        allItems,           
+        top4,               
         productTemplate,
-        resultContainer,
-        showTitles,
-        selectedCat,
-        limitCount,
-        usedSet = null
+        isSingleCat,
+        resultContainer
     ) {
-        console.log('[LOG:renderSingleCategoryBlock] catName=', catName, 'items.length=', items.length);
-
-        const isSingle = !!selectedCat;
-        const categoryTitleHtml = (showTitles || selectedCat)
-            ? `<h3><a href="#" class="category-link">${catName} →</a></h3>`
-            : '';
-
         const catBlock = document.createElement('div');
-        catBlock.className = `category-block ${isSingle ? 'category-single' : 'category-multiple'}`;
-        if (categoryTitleHtml) {
-            catBlock.innerHTML = categoryTitleHtml;
-        }
+        catBlock.className = `category-block ${isSingleCat ? 'category-single' : 'category-multiple'}`;
+
+        
+        const titleHtml = `<h3><a href="#" class="category-link">${catName} →</a></h3>`;
+        catBlock.innerHTML = titleHtml;
 
         const productContainer = document.createElement('div');
         productContainer.className = 'product-container';
+        catBlock.appendChild(productContainer);
+        resultContainer.appendChild(catBlock);
 
-        const possibleColors = ['#E91E63', '#2196F3', '#4CAF50', '#9C27B0', '#FF5722', '#FF9800'];
-
-
-        const inS = items.filter((p) => p.availability);
-        const outS = items.filter((p) => !p.availability);
-
-        function sortByScoreAndDate(arr) {
-            arr.sort((a, b) => {
-                if (b.totalScore !== a.totalScore) {
-                    return b.totalScore - a.totalScore;
-                }
-                const dateA = new Date(a.createdAt).getTime();
-                const dateB = new Date(b.createdAt).getTime();
-                return dateB - dateA;
-            });
+        
+        
+        let itemsToRender;
+        if (isSingleCat) {
+            itemsToRender = allItems;
+        } else {
+            itemsToRender = top4;
         }
 
-        sortByScoreAndDate(inS);
-        sortByScoreAndDate(outS);
-
-        let combined = [...inS, ...outS];
-
-        if (usedSet) {
-            combined = combined.filter((prod) => !usedSet.has(prod.id));
-        }
-
-        const subset = combined.slice(0, limitCount);
-
+        
+        
+        
+        
+        
         if (!this.labelColorMap) {
             this.labelColorMap = {};
         }
+        const possibleColors = ['#E91E63', '#2196F3', '#4CAF50', '#9C27B0', '#FF5722', '#FF9800'];
 
-        subset.forEach((prod, idx) => {
-            console.log('[DEBUG] product item idx=', idx, ' data=', prod);
+        const PLACEHOLDER_URL =
+            'https://i.pinimg.com/564x/0c/bb/aa/0cbbaab0deff7f188a7762d9569bf1b3.jpg';
 
+        const inStockWithImg = itemsToRender.filter(
+            (p) => p.availability && p.image && p.image !== PLACEHOLDER_URL
+        );
+        const inStockNoImg = itemsToRender.filter(
+            (p) => p.availability && (!p.image || p.image === PLACEHOLDER_URL)
+        );
+        const outStockWithImg = itemsToRender.filter(
+            (p) => !p.availability && p.image && p.image !== PLACEHOLDER_URL
+        );
+        const outStockNoImg = itemsToRender.filter(
+            (p) => !p.availability && (!p.image || p.image === PLACEHOLDER_URL)
+        );
 
+        
+        const sortedItems = [
+            ...inStockWithImg,
+            ...inStockNoImg,
+            ...outStockWithImg,
+            ...outStockNoImg,
+        ];
+
+        
+        sortedItems.forEach((prod) => {
+            
             let labelHtml = '';
             if (prod.label) {
                 if (!this.labelColorMap[prod.label]) {
@@ -1322,10 +1216,9 @@ class ProductSearchWidget {
                     </div>`;
             }
 
-
+            
             let oldPriceValue = '';
             let oldPriceStyle = 'display: none;';
-
             if (prod.oldPrice && prod.oldPrice > 0 && prod.oldPrice !== prod.newPrice) {
                 oldPriceValue = `
                   <span style="white-space: nowrap;">
@@ -1335,25 +1228,24 @@ class ProductSearchWidget {
                     <span style="text-decoration: none;">&nbsp;&nbsp;</span>
                   </span>
                 `.trim();
-            } else {
-                oldPriceValue = '';
             }
-            console.log('[DEBUG] oldPriceValue=', oldPriceValue, ' oldPriceStyle=', oldPriceStyle);
 
+            
             const presenceText = prod.availability
                 ? this.translations.inStock
                 : this.translations.outOfStock;
 
-            const fallbackImageUrl = 'https://i.pinimg.com/564x/0c/bb/aa/0cbbaab0deff7f188a7762d9569bf1b3.jpg';
+            
+            const fallbackImageUrl = PLACEHOLDER_URL;
             const finalImageUrl = prod.image ? prod.image : fallbackImageUrl;
 
+            
             let displayName = prod.name || 'No Name';
             if (displayName.length > 90) {
                 displayName = displayName.slice(0, 90) + '...';
             }
 
-            console.log('[DEBUG] BEFORE replacements:\n', productTemplate);
-
+            
             let pHtml = productTemplate;
             pHtml = safeReplace(pHtml, 'labelBlock', labelHtml);
             pHtml = safeReplace(pHtml, 'name', escapeHtml(displayName));
@@ -1364,23 +1256,18 @@ class ProductSearchWidget {
             pHtml = safeReplace(pHtml, 'oldPriceStyle', oldPriceStyle);
             pHtml = safeReplace(pHtml, 'imageUrl', escapeHtml(finalImageUrl));
 
-            console.log('[DEBUG] AFTER replacements:\n', pHtml);
-
+            
             const wrapperEl = document.createElement('div');
             wrapperEl.innerHTML = pHtml.trim();
-
 
             const linkWrap = document.createElement('a');
             linkWrap.href = prod.url || '#';
             linkWrap.target = '_blank';
             linkWrap.className = 'product-link';
 
-
-            linkWrap.addEventListener('click', async (evt) => {
+            
+            linkWrap.addEventListener('click', async () => {
                 try {
-
-
-
                     await fetch('https://smartsearch.spefix.com/api/product-transition', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -1394,7 +1281,7 @@ class ProductSearchWidget {
                 }
             });
 
-
+            
             if (!prod.availability) {
                 linkWrap.classList.add('out-of-stock');
             }
@@ -1403,36 +1290,50 @@ class ProductSearchWidget {
             productContainer.appendChild(linkWrap);
         });
 
-        if (items.length > limitCount && !isSingle) {
+        
+        
+        const shownCount = sortedItems.length; 
+        const totalCount = allItems.length;    
+
+        
+        if (!isSingleCat && totalCount > shownCount) {
             const moreDiv = document.createElement('div');
             moreDiv.className = 'more-link';
-            moreDiv.textContent = `${this.translations.more} ${items.length - limitCount} ...`;
+
+            
+            moreDiv.textContent = `${this.translations.more} ${totalCount - shownCount} ...`;
 
             moreDiv.addEventListener('click', () => {
-                console.log('[LOG:renderSingleCategoryBlock] More clicked. catName=', catName);
+                
+                const singleObj = { [catName]: allItems };
+                this.renderAllCategories([catName], singleObj, resultContainer, true);
 
-                // Переходим в «одну» категорию
-                const singleObj = { [catName]: combined };
-                this.showCategoryProducts(singleObj, [catName], resultContainer, true, catName);
-
-                // А теперь подсвечиваем ту же категорию и в боковой панели:
                 this.activateCategory(catName);
             });
-
             productContainer.appendChild(moreDiv);
         }
-
-        catBlock.appendChild(productContainer);
-        resultContainer.appendChild(catBlock);
-
-        console.log('[DEBUG] Appended catBlock for', catName, 'with', subset.length, 'items');
-        return subset;
     }
 
+    activateCategory(catName) {
+        
+        const categoriesContainer = this.widgetContainer.querySelector('.categories-container');
+        if (!categoriesContainer) return;
 
+        
+        const allCatItems = categoriesContainer.querySelectorAll('.category-item');
+        allCatItems.forEach((el) => el.classList.remove('active'));
 
+        
+        allCatItems.forEach((catItem) => {
+            const catNameEl = catItem.querySelector('.category-name');
+            if (!catNameEl) return;
 
-
+            
+            if (catNameEl.textContent.trim() === catName) {
+                catItem.classList.add('active');
+            }
+        });
+    }
 
 
 
@@ -1446,15 +1347,12 @@ class ProductSearchWidget {
                 body: JSON.stringify({ domain: domainPath }),
             });
             if (!resp.ok) {
-                console.warn('[WARN] Language route not OK => use default...');
                 return null;
             }
             const data = await resp.json();
             if (!data.success) {
-                console.warn('[WARN] Language route success=false => default...');
                 return null;
             }
-            console.log('[DEBUG] language from route:', data.language);
             return data.language || null;
         } catch (err) {
             console.error('[ERROR] fetchInterfaceLanguage:', err);
@@ -1464,10 +1362,8 @@ class ProductSearchWidget {
 
     applyTranslations(langCode) {
         if (this.translationsMap[langCode]) {
-            console.log('[DEBUG] Found translations for', langCode);
             this.translations = this.translationsMap[langCode];
         } else {
-            console.log('[DEBUG] No translations for', langCode, '=> keep default.');
         }
     }
 
@@ -1476,8 +1372,6 @@ class ProductSearchWidget {
         try {
 
             const fullPathNoQuery = window.location.origin + window.location.pathname;
-
-
 
             const resp = await fetch('https://smartsearch.spefix.com/api/addSearchQuery', {
                 method: 'POST',
@@ -1488,7 +1382,6 @@ class ProductSearchWidget {
                     domain: fullPathNoQuery
                 })
             });
-            console.log('[LOG:saveSearchQuery] status=', resp.status);
         } catch (err) {
             console.error('[LOG:saveSearchQuery] Error:', err);
         }
@@ -1502,7 +1395,6 @@ class ProductSearchWidget {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text: query })
             });
-            console.log('[LOG:saveWordsToDatabase] status=', r.status);
         } catch (err) {
             console.error('[LOG:saveWordsToDatabase] Error:', err);
         }
@@ -1532,6 +1424,5 @@ function safeReplace(str, placeholder, replacement) {
 
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('[DEBUG] DOMContentLoaded');
     new ProductSearchWidget('searchInput');
 });
