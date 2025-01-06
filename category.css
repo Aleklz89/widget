@@ -77,7 +77,7 @@
     font-weight: 500;
 }
 
-.category-single .product-container {
+.category-single {
     display: flex;
     flex-wrap: wrap;
     gap: 20px;

@@ -109,9 +109,8 @@
 }
 
 
-.widget-result-container.all-results {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
+.widget-result-container.category {
+    display: flex;
 }
 
 .widget-result-item {

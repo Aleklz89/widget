@@ -1002,12 +1002,14 @@ class ProductSearchWidget {
             const cItem = document.createElement('div');
             cItem.className = 'category-item';
 
+            // Сохраняем полное название категории в data-catName
+            cItem.dataset.catName = catName;
+
             let displayName = catName;
             if (displayName.length > 22) {
                 displayName = displayName.substring(0, 22) + '...';
             }
 
-            // Тут делаем обычный <span>, а не <a>
             const cText = document.createElement('span');
             cText.className = 'category-name';
             cText.textContent = displayName;
@@ -1047,9 +1049,15 @@ class ProductSearchWidget {
         const firstItem = categoriesContainer.querySelector('.category-item');
         if (firstItem) firstItem.classList.add('active');
 
+        this.catMapNoDupes = catMapNoDupes;
+        console.log("[DEBUG] just assigned this.catMapNoDupes =", this.catMapNoDupes);
+
         // 9) Сразу показываем товары «Все результаты»
         await this.renderAllCategories(finalCats, catMapNoDupes, resultContainer);
+
+
     }
+
 
 
 
@@ -1062,7 +1070,17 @@ class ProductSearchWidget {
         resultContainer,
         isSingle = false
     ) {
+        console.log("[DEBUG] inside renderAllCategories, about to render:", categoryNames);
+
+        // Сбрасываем содержимое
         resultContainer.innerHTML = '';
+
+        // Включаем/выключаем класс .category
+        if (isSingle) {
+            resultContainer.classList.add('category');
+        } else {
+            resultContainer.classList.remove('category');
+        }
 
 
         const tResp = await fetch('https://aleklz89.github.io/widget/product-item.html');
@@ -1143,6 +1161,9 @@ class ProductSearchWidget {
         isSingleCat,    // true => показывать все товары, false => только top4
         resultContainer
     ) {
+
+        console.log("[DEBUG] inside renderCategoryBlock for catName=", catName);
+        console.log("[DEBUG] this.catMapNoDupes?.[catName] =", this.catMapNoDupes?.[catName]);
         // 1) Создаём обёртку для категории
         const catBlock = document.createElement('div');
         catBlock.className = `category-block ${isSingleCat ? 'category-single' : 'category-multiple'}`;
@@ -1333,6 +1354,21 @@ class ProductSearchWidget {
             });
             productContainer.appendChild(moreDiv);
         }
+    }
+
+    activateCategory(catName) {
+        const categoriesContainer = this.widgetContainer.querySelector('.categories-container');
+        if (!categoriesContainer) return;
+
+        const allCatItems = categoriesContainer.querySelectorAll('.category-item');
+        allCatItems.forEach((el) => el.classList.remove('active'));
+
+        allCatItems.forEach((catItem) => {
+            // Сравниваем именно dataset.catName, а не обрезанный textContent:
+            if (catItem.dataset.catName === catName) {
+                catItem.classList.add('active');
+            }
+        });
     }
 
 
