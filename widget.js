@@ -4,7 +4,7 @@ class ProductSearchWidget {
         this.triggerInputId = triggerInputId;
 
 
-        this.apiUrl = 'https://smartsearch.spefix.com/api/search';
+        this.apiUrl = 'http://localhost:3000/api/search';
         this.suggestionsUrl = 'https://smartsearch.spefix.com/api/suggestions';
         this.correctionUrl = 'https://smartsearch.spefix.com/api/correct';
         this.languageRoute = 'https://smartsearch.spefix.com/api/language';
@@ -874,9 +874,25 @@ class ProductSearchWidget {
 
 
         if (!products.length) {
-            if (filterContainer) filterContainer.style.display = 'none';
-            if (catAccordion) catAccordion.style.display = 'none';
+            // Показываем "товаров не найдено"
             resultContainer.innerHTML = `<p>${this.translations.noProductsFound}</p>`;
+
+            // 1. Если фильтров нет (this.hasFilters = false) — скрываем левую колонку
+            //    Иначе оставляем панель фильтров
+            if (!this.hasFilters) {
+                if (filterContainer) filterContainer.style.display = 'none';
+                if (catAccordion) catAccordion.style.display = 'none';
+                // Можно скрыть и .left-column целиком, если хотите
+                if (leftCol) leftCol.style.display = 'none';
+            } else {
+                // Есть фильтры => оставляем панель,
+                // чтобы пользователь мог снять галочки.
+                if (filterContainer) filterContainer.style.display = 'flex';
+                if (catAccordion) catAccordion.style.display = 'none';
+                // Категории имеет смысл скрыть, т.к. всё равно ничего нет,
+                // но фильтры должны оставаться.
+                if (leftCol) leftCol.style.display = 'flex';
+            }
             return;
         }
 
