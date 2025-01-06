@@ -409,23 +409,23 @@ class ProductSearchWidget {
 
     setupEventHandlers(widgetContainer, triggerInput) {
 
-        
+
         const sInput = widgetContainer.querySelector('.widget-search-input');
         const cButton = widgetContainer.querySelector('.widget-close-button');
         const catsCont = widgetContainer.querySelector('.categories-container');
         const resCont = widgetContainer.querySelector('.widget-result-container');
         const suggList = widgetContainer.querySelector('.widget-suggestions-list');
 
-        
-        
+
+
         const searchIcon = widgetContainer.querySelector('.widget-search-icon');
 
-        
+
         cButton.addEventListener('click', () => {
             widgetContainer.style.display = 'none';
         });
 
-        
+
         triggerInput.addEventListener('focus', () => {
             widgetContainer.style.display = 'flex';
             sInput.focus();
@@ -437,13 +437,13 @@ class ProductSearchWidget {
             }
         });
 
-        
+
         sInput.addEventListener('input', async (e) => {
             let query = e.target.value;
             const reqToken = Symbol('requestToken');
             this.currentRequestToken = reqToken;
 
-            
+
             const last = query.slice(-1);
             if (last === ' ') {
                 query = query.trimEnd();
@@ -452,7 +452,7 @@ class ProductSearchWidget {
                 this.currentQuery = query;
             }
 
-            
+
             if (!query.trim()) {
                 this.showHistory();
                 suggList.style.display = 'none';
@@ -461,12 +461,12 @@ class ProductSearchWidget {
                 this.hideHistory();
             }
 
-            
+
             if (this.abortController) this.abortController.abort();
             this.abortController = new AbortController();
             const controller = this.abortController;
 
-            
+
             if (query.trim().length < 1) {
                 suggList.innerHTML = '';
                 suggList.style.display = 'none';
@@ -474,13 +474,13 @@ class ProductSearchWidget {
             }
 
             try {
-                
+
                 await this.fetchSuggestions(query.trim(), suggList, sInput, reqToken, controller);
-                
+
                 if (query.trim().length >= 3) {
                     await this.fetchProducts(query.trim(), catsCont, resCont, reqToken, controller);
                 } else {
-                    
+
                     resCont.innerHTML = `<p>${this.translations.startSearch}</p>`;
                     catsCont.innerHTML = '';
                 }
@@ -494,7 +494,7 @@ class ProductSearchWidget {
             }
         });
 
-        
+
         sInput.addEventListener('keydown', async (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -505,7 +505,7 @@ class ProductSearchWidget {
                 }
 
 
-                
+
                 await this.correctQuery(query, sInput);
 
                 try {
@@ -526,7 +526,7 @@ class ProductSearchWidget {
             }
         });
 
-        
+
         if (searchIcon) {
             searchIcon.addEventListener('click', async () => {
                 const query = sInput.value.trim();
@@ -535,7 +535,7 @@ class ProductSearchWidget {
                 }
 
 
-                
+
                 await this.correctQuery(query, sInput);
 
                 try {
@@ -554,7 +554,7 @@ class ProductSearchWidget {
             });
         }
 
-        
+
         document.addEventListener('click', (evt) => {
             if (suggList && !suggList.contains(evt.target) && evt.target !== sInput) {
                 suggList.style.display = 'none';
@@ -825,20 +825,20 @@ class ProductSearchWidget {
         const catAccordion = this.widgetContainer.querySelector('.category-accordion');
         const leftCol = this.widgetContainer.querySelector('.left-column');
 
-        
+        // 1) Очищаем контейнеры
         categoriesContainer.innerHTML = '';
         resultContainer.innerHTML = '';
 
-        
+        // 2) Если товаров нет
         if (!products.length) {
             resultContainer.innerHTML = `<p>${this.translations.noProductsFound}</p>`;
-            
+            // Если нет фильтров — скрываем левую колонку полностью
             if (!this.hasFilters) {
                 if (filterContainer) filterContainer.style.display = 'none';
                 if (catAccordion) catAccordion.style.display = 'none';
                 if (leftCol) leftCol.style.display = 'none';
             } else {
-                
+                // Есть фильтры => оставляем панель
                 if (filterContainer) filterContainer.style.display = 'flex';
                 if (catAccordion) catAccordion.style.display = 'none';
                 if (leftCol) leftCol.style.display = 'flex';
@@ -846,14 +846,14 @@ class ProductSearchWidget {
             return;
         }
 
-        
+        // 3) Показывать ли фильтры?
         if (!this.hasFilters) {
             if (filterContainer) filterContainer.style.display = 'none';
         } else {
             if (filterContainer) filterContainer.style.display = 'flex';
         }
 
-        
+        // 4) Убираем дубликаты товаров по id
         const uniqueProducts = [];
         const usedIdsGlobal = new Set();
         for (const p of products) {
@@ -863,20 +863,27 @@ class ProductSearchWidget {
             }
         }
 
-        
+        // 5) Группируем товары по названию категории (p.categories — массив { name, url })
         const catMap = {};
-        uniqueProducts.forEach((p) => {
-            if (!p.categories) return;
-            p.categories.forEach((cat) => {
-                if (!catMap[cat]) catMap[cat] = [];
-                catMap[cat].push(p);
+        uniqueProducts.forEach((product) => {
+            if (!product.categories) return;
+            product.categories.forEach((catObj) => {
+                const catName = catObj.name;
+                const catUrl = catObj.url;
+                if (!catMap[catName]) {
+                    catMap[catName] = {
+                        items: [],
+                        url: catUrl
+                    };
+                }
+                catMap[catName].items.push(product);
             });
         });
 
-        
+        // 6) Убираем дубликаты внутри каждой категории
         const catMapNoDupes = {};
         for (const catName in catMap) {
-            const arr = catMap[catName];
+            const arr = catMap[catName].items;
             const localSet = new Set();
             const filtered = [];
             for (const prod of arr) {
@@ -885,12 +892,16 @@ class ProductSearchWidget {
                     filtered.push(prod);
                 }
             }
-            catMapNoDupes[catName] = filtered;
+            // Сохраняем ту же ссылку catMap[catName].url
+            catMapNoDupes[catName] = {
+                items: filtered,
+                url: catMap[catName].url
+            };
         }
 
         let catNames = Object.keys(catMapNoDupes);
 
-        
+        // Если категорий нет
         if (!catNames.length) {
             if (catAccordion) catAccordion.style.display = 'none';
             resultContainer.innerHTML = `<p>${this.translations.noProductsFound}</p>`;
@@ -899,48 +910,44 @@ class ProductSearchWidget {
             if (catAccordion) catAccordion.style.display = 'flex';
         }
 
-        
+        // === ЛОГИКА: один и тот же товар не может попасть в топ другой категории
         const usedSet = new Set();
-
-        
         const categoryScores = {};
 
-        
-        this.catAllItemsMap = catMapNoDupes; 
-
-        
-        this.catScoringSubsets = {};         
+        // Подготовим поля
+        this.catAllItemsMap = {};
+        this.catScoringSubsets = {};
 
         console.log('[SCORE] Начинаем подсчёт очков для категорий.');
-        Object.entries(catMapNoDupes).forEach(([catName, items]) => {
-            
+        catNames.forEach((catName) => {
+            const items = catMapNoDupes[catName].items;
+            // При желании сохраняем все товары в this.catAllItemsMap
+            this.catAllItemsMap[catName] = items;
+
+            // Сортируем: сначала "в наличии", потом "нет в наличии"
             const inStock = items.filter((x) => x.availability);
             const outStock = items.filter((x) => !x.availability);
             const sortedItems = [...inStock, ...outStock];
 
-            
+            // Исключаем товары, которые уже были использованы в subset другой категории
             const filteredItems = sortedItems.filter((p) => !usedSet.has(p.id));
 
-            
+            // Берём первые N (this.maxItemsOnAllResults)
             const subsetCount = Math.min(this.maxItemsOnAllResults, filteredItems.length);
             const subset = filteredItems.slice(0, subsetCount);
 
+            console.log(`[SCORE] === Категория "${catName}" ===`);
             console.log(
-                `[SCORE] === Категория "${catName}" ===\n` +
-                `   Берём первые ${subset.length} из ${filteredItems.length} (изначально было ${sortedItems.length})`
-            );
-            console.log(
-                `[SCORE] Subset (для подсчёта очков) [${catName}]: ` +
-                subset.map((p) => p.name).join(', ')
+                `   Берём первые ${subset.length} из ${filteredItems.length} (всего было ${sortedItems.length})`
             );
 
-            
+            // Подсчитаем очки
             let score = 0;
             subset.forEach((prd, idx) => {
                 let productScore = 0;
                 let reasons = [];
 
-                
+                // +1 / -1 за наличие
                 if (prd.availability) {
                     productScore += 1;
                     reasons.push('+1 (товар в наличии)');
@@ -949,9 +956,8 @@ class ProductSearchWidget {
                     reasons.push('-1 (товар нет в наличии)');
                 }
 
-                
-                const PLACEHOLDER_URL =
-                    'https://i.pinimg.com/564x/0c/bb/aa/0cbbaab0deff7f188a7762d9569bf1b3.jpg';
+                // -1.5 за отсутствие (placeholder) картинки
+                const PLACEHOLDER_URL = 'https://i.pinimg.com/564x/0c/bb/aa/0cbbaab0deff7f188a7762d9569bf1b3.jpg';
                 if (!prd.image || prd.image === PLACEHOLDER_URL) {
                     productScore -= 1.5;
                     reasons.push('-1.5 (нет реальной картинки)');
@@ -960,30 +966,27 @@ class ProductSearchWidget {
                 score += productScore;
                 console.log(
                     `[SCORE] Товар №${idx + 1} (ID=${prd.id}, name="${prd.name}"): ${reasons.join(' | ')}, ` +
-                    `итог=${productScore.toFixed(2)}, суммарно=${score.toFixed(2)}`
+                    `итог=${productScore}, суммарно=${score.toFixed(2)}`
                 );
             });
 
             categoryScores[catName] = score;
-            console.log(
-                `[SCORE] Итоговое число баллов для категории "${catName}" = ${score.toFixed(2)}\n`
-            );
+            console.log(`[SCORE] Итоговое число баллов для категории "${catName}" = ${score.toFixed(2)}\n`);
 
-            
+            // Сохраняем subset
             this.catScoringSubsets[catName] = subset;
 
-            
+            // Помечаем товары как использованные
             subset.forEach((p) => usedSet.add(p.id));
         });
 
-        
+        // Сортируем категории по убыванию очков
         catNames.sort((a, b) => (categoryScores[b] || 0) - (categoryScores[a] || 0));
 
-        
+        // Добавляем "Все результаты"
         const allResultsName = this.translations.allResults || 'All results';
         const finalCats = [allResultsName, ...catNames];
 
-        
         console.log('[SCORE] ИТОГОВАЯ ТАБЛИЦА КАТЕГОРИЙ (по убыванию очков):');
         catNames.forEach((cn, idx) => {
             const catScore = categoryScores[cn] ?? 0;
@@ -991,45 +994,48 @@ class ProductSearchWidget {
         });
         console.log('[SCORE] =====================\n');
 
-        
+        // Для наглядности выведем структуру
+        console.log('[DEBUG] catMapNoDupes final result:', catMapNoDupes);
+
+        // 7) Рисуем категории в левой колонке (без ссылок! просто span)
         finalCats.forEach((catName) => {
             const cItem = document.createElement('div');
             cItem.className = 'category-item';
 
-            
             let displayName = catName;
             if (displayName.length > 22) {
                 displayName = displayName.substring(0, 22) + '...';
             }
 
+            // Тут делаем обычный <span>, а не <a>
             const cText = document.createElement('span');
             cText.className = 'category-name';
             cText.textContent = displayName;
 
+            // Количество товаров
             const cCount = document.createElement('div');
             cCount.className = 'category-count';
 
-            
             if (catName === allResultsName) {
                 cCount.textContent = uniqueProducts.length;
             } else {
-                cCount.textContent = catMapNoDupes[catName].length;
+                cCount.textContent = catMapNoDupes[catName].items.length;
             }
 
             cItem.appendChild(cText);
             cItem.appendChild(cCount);
 
+            // При клике на блок cItem
             cItem.addEventListener('click', async () => {
+                // Подсветка
                 Array.from(categoriesContainer.getElementsByClassName('category-item'))
                     .forEach((el) => el.classList.remove('active'));
                 cItem.classList.add('active');
 
                 if (catName === allResultsName) {
-                    
                     await this.renderAllCategories(finalCats, catMapNoDupes, resultContainer);
                 } else {
-                    
-                    const singleObj = { [catName]: catMapNoDupes[catName] };
+                    const singleObj = { [catName]: catMapNoDupes[catName].items };
                     await this.renderAllCategories([catName], singleObj, resultContainer, true);
                 }
             });
@@ -1037,19 +1043,19 @@ class ProductSearchWidget {
             categoriesContainer.appendChild(cItem);
         });
 
-        
+        // 8) По умолчанию делаем активной первую категорию
         const firstItem = categoriesContainer.querySelector('.category-item');
         if (firstItem) firstItem.classList.add('active');
 
-        
+        // 9) Сразу показываем товары «Все результаты»
         await this.renderAllCategories(finalCats, catMapNoDupes, resultContainer);
     }
 
 
 
-    
-    
-    
+
+
+
     async renderAllCategories(
         categoryNames,
         groupedProducts,
@@ -1058,7 +1064,7 @@ class ProductSearchWidget {
     ) {
         resultContainer.innerHTML = '';
 
-        
+
         const tResp = await fetch('https://aleklz89.github.io/widget/product-item.html');
         if (!tResp.ok) {
             throw new Error(`Failed to load product template: ${tResp.status}`);
@@ -1068,22 +1074,22 @@ class ProductSearchWidget {
         const allResultsName = this.translations.allResults || 'All results';
         const showingAllCats = !isSingle && categoryNames.includes(allResultsName);
 
-        
+
         if (showingAllCats) {
-            
+
             const realCats = categoryNames.filter((cn) => cn !== allResultsName);
 
             for (const catName of realCats) {
-                
+
                 const top4 = this.catScoringSubsets?.[catName] || [];
 
-                
+
                 const allItems = this.catAllItemsMap?.[catName] || [];
 
-                
+
                 if (!top4.length) {
                     console.log(`[RENDER] Пропускаем категорию "${catName}", так как top4 пусто.`);
-                    continue;  
+                    continue;
                 }
 
                 console.log(
@@ -1091,11 +1097,11 @@ class ProductSearchWidget {
                     top4.map((p) => p.name).join(', ')
                 );
 
-                
+
                 this.renderCategoryBlock(
                     catName,
-                    allItems,          
-                    top4,              
+                    allItems,
+                    top4,
                     productTemplate,
                     false,
                     resultContainer
@@ -1103,7 +1109,7 @@ class ProductSearchWidget {
             }
         }
         else {
-            
+
             for (const catName of categoryNames) {
                 const arr = groupedProducts[catName] || [];
                 if (!arr.length) continue;
@@ -1113,11 +1119,11 @@ class ProductSearchWidget {
                     arr.map((p) => p.name).join(', ')
                 );
 
-                
+
                 this.renderCategoryBlock(
                     catName,
-                    arr,   
-                    arr,   
+                    arr,
+                    arr,
                     productTemplate,
                     true,
                     resultContainer
@@ -1131,26 +1137,47 @@ class ProductSearchWidget {
 
     renderCategoryBlock(
         catName,
-        allItems,           
-        top4,               
+        allItems,       // полный список товаров для данной категории
+        top4,           // первые N товаров (top4) в режиме "Все результаты"
         productTemplate,
-        isSingleCat,
+        isSingleCat,    // true => показывать все товары, false => только top4
         resultContainer
     ) {
+        // 1) Создаём обёртку для категории
         const catBlock = document.createElement('div');
         catBlock.className = `category-block ${isSingleCat ? 'category-single' : 'category-multiple'}`;
 
-        
-        const titleHtml = `<h3><a href="#" class="category-link">${catName} →</a></h3>`;
+        const allResultsName = this.translations.allResults || 'All results';
+        let categoryUrl = '#';
+
+        console.log('[DEBUG] current catName:', catName);
+
+        if (catName !== allResultsName && this.catMapNoDupes?.[catName]?.url) {
+            categoryUrl = this.catMapNoDupes[catName].url;
+        }
+
+        console.log('[DEBUG] catMapNoDupes final result:', this.catMapNoDupes);
+
+        console.log('[DEBUG] for catName=', catName, 'found categoryUrl=', categoryUrl);
+
+        const titleHtml = `
+          <h3>
+            <a href="${categoryUrl}" class="category-link" target="_blank">
+              ${catName} →
+            </a>
+          </h3>
+        `;
         catBlock.innerHTML = titleHtml;
 
+        // 4) Блок, куда будем помещать товары
         const productContainer = document.createElement('div');
         productContainer.className = 'product-container';
         catBlock.appendChild(productContainer);
+
+        // Добавляем всё в resultContainer
         resultContainer.appendChild(catBlock);
 
-        
-        
+        // 5) Выбираем, какие товары показывать
         let itemsToRender;
         if (isSingleCat) {
             itemsToRender = allItems;
@@ -1158,19 +1185,15 @@ class ProductSearchWidget {
             itemsToRender = top4;
         }
 
-        
-        
-        
-        
-        
+        // 6) (Опционально) сортируем товары на 4 группы:
         if (!this.labelColorMap) {
             this.labelColorMap = {};
         }
         const possibleColors = ['#E91E63', '#2196F3', '#4CAF50', '#9C27B0', '#FF5722', '#FF9800'];
-
         const PLACEHOLDER_URL =
             'https://i.pinimg.com/564x/0c/bb/aa/0cbbaab0deff7f188a7762d9569bf1b3.jpg';
 
+        // Делим на 4 группы
         const inStockWithImg = itemsToRender.filter(
             (p) => p.availability && p.image && p.image !== PLACEHOLDER_URL
         );
@@ -1184,7 +1207,7 @@ class ProductSearchWidget {
             (p) => !p.availability && (!p.image || p.image === PLACEHOLDER_URL)
         );
 
-        
+        // Собираем итоговый массив
         const sortedItems = [
             ...inStockWithImg,
             ...inStockNoImg,
@@ -1192,9 +1215,9 @@ class ProductSearchWidget {
             ...outStockNoImg,
         ];
 
-        
+        // 7) Рендер каждого товара
         sortedItems.forEach((prod) => {
-            
+            // Лейбл (prod.label)
             let labelHtml = '';
             if (prod.label) {
                 if (!this.labelColorMap[prod.label]) {
@@ -1203,49 +1226,51 @@ class ProductSearchWidget {
                 }
                 const labelColor = this.labelColorMap[prod.label];
                 labelHtml = `
-                    <div class="product-label"
-                         style="
-                           background-color: ${labelColor};
-                           color: #fff;
-                           display: inline-block;
-                           padding: 3px 6px;
-                           border-radius: 4px;
-                           font-size: 12px;
-                           margin-bottom: 5px;">
-                      ${escapeHtml(prod.label)}
-                    </div>`;
+              <div class="product-label"
+                   style="
+                     background-color: ${labelColor};
+                     color: #fff;
+                     display: inline-block;
+                     padding: 3px 6px;
+                     border-radius: 4px;
+                     font-size: 12px;
+                     margin-bottom: 5px;">
+                ${escapeHtml(prod.label)}
+              </div>`;
             }
 
-            
+            // Старые цены, если есть
             let oldPriceValue = '';
             let oldPriceStyle = 'display: none;';
             if (prod.oldPrice && prod.oldPrice > 0 && prod.oldPrice !== prod.newPrice) {
                 oldPriceValue = `
-                  <span style="white-space: nowrap;">
-                    <span style="color: grey; font-size: 13px; text-decoration: line-through;">
-                      ${prod.oldPrice} ${prod.currencyId ?? ''}
-                    </span>
-                    <span style="text-decoration: none;">&nbsp;&nbsp;</span>
-                  </span>
-                `.trim();
+              <span style="white-space: nowrap;">
+                <span style="color: grey; font-size: 13px; text-decoration: line-through;">
+                  ${prod.oldPrice} ${prod.currencyId ?? ''}
+                </span>
+                <span style="text-decoration: none;">&nbsp;&nbsp;</span>
+              </span>
+            `.trim();
             }
 
-            
+            // Текст "в наличии" / "нет в наличии"
             const presenceText = prod.availability
                 ? this.translations.inStock
                 : this.translations.outOfStock;
 
-            
-            const fallbackImageUrl = PLACEHOLDER_URL;
-            const finalImageUrl = prod.image ? prod.image : fallbackImageUrl;
+            // Картинка (placeholder, если нет)
+            const finalImageUrl =
+                prod.image && prod.image !== PLACEHOLDER_URL
+                    ? prod.image
+                    : PLACEHOLDER_URL;
 
-            
+            // Название (обрезаем, если слишком длинное)
             let displayName = prod.name || 'No Name';
             if (displayName.length > 90) {
                 displayName = displayName.slice(0, 90) + '...';
             }
 
-            
+            // Подставляем в HTML-шаблон
             let pHtml = productTemplate;
             pHtml = safeReplace(pHtml, 'labelBlock', labelHtml);
             pHtml = safeReplace(pHtml, 'name', escapeHtml(displayName));
@@ -1256,16 +1281,16 @@ class ProductSearchWidget {
             pHtml = safeReplace(pHtml, 'oldPriceStyle', oldPriceStyle);
             pHtml = safeReplace(pHtml, 'imageUrl', escapeHtml(finalImageUrl));
 
-            
+            // Оборачиваем весь шаблон <a href="prod.url">...</a>
             const wrapperEl = document.createElement('div');
             wrapperEl.innerHTML = pHtml.trim();
 
             const linkWrap = document.createElement('a');
-            linkWrap.href = prod.url || '#';
+            linkWrap.href = prod.url || '#';   // ссылка на сам товар
             linkWrap.target = '_blank';
             linkWrap.className = 'product-link';
 
-            
+            // Логирование перехода при клике
             linkWrap.addEventListener('click', async () => {
                 try {
                     await fetch('https://smartsearch.spefix.com/api/product-transition', {
@@ -1281,7 +1306,7 @@ class ProductSearchWidget {
                 }
             });
 
-            
+            // Если нет в наличии => класс .out-of-stock
             if (!prod.availability) {
                 linkWrap.classList.add('out-of-stock');
             }
@@ -1290,50 +1315,26 @@ class ProductSearchWidget {
             productContainer.appendChild(linkWrap);
         });
 
-        
-        
-        const shownCount = sortedItems.length; 
-        const totalCount = allItems.length;    
-
-        
+        // 8) Добавляем кнопку "Еще..." (если товаров больше, чем мы показали)
+        const shownCount = sortedItems.length;
+        const totalCount = allItems.length;
         if (!isSingleCat && totalCount > shownCount) {
             const moreDiv = document.createElement('div');
             moreDiv.className = 'more-link';
-
-            
             moreDiv.textContent = `${this.translations.more} ${totalCount - shownCount} ...`;
 
             moreDiv.addEventListener('click', () => {
-                
+                // Переходим в режим "одна категория"
                 const singleObj = { [catName]: allItems };
                 this.renderAllCategories([catName], singleObj, resultContainer, true);
 
+                // Подсвечиваем категорию
                 this.activateCategory(catName);
             });
             productContainer.appendChild(moreDiv);
         }
     }
 
-    activateCategory(catName) {
-        
-        const categoriesContainer = this.widgetContainer.querySelector('.categories-container');
-        if (!categoriesContainer) return;
-
-        
-        const allCatItems = categoriesContainer.querySelectorAll('.category-item');
-        allCatItems.forEach((el) => el.classList.remove('active'));
-
-        
-        allCatItems.forEach((catItem) => {
-            const catNameEl = catItem.querySelector('.category-name');
-            if (!catNameEl) return;
-
-            
-            if (catNameEl.textContent.trim() === catName) {
-                catItem.classList.add('active');
-            }
-        });
-    }
 
 
 
