@@ -129,7 +129,7 @@ class ProductSearchWidget {
         sheets.forEach((stylesheet) => {
             const link = document.createElement('link');
             link.rel = 'stylesheet';
-            link.href = `https://aleklz89.github.io/widget/${stylesheet}`;
+            link.href = `${stylesheet}`;
 
             document.head.appendChild(link);
         });

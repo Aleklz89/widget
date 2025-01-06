@@ -110,7 +110,7 @@
 
 
 .widget-result-container.category {
-    display: flex;
+    display: block;
 }
 
 .widget-result-item {
