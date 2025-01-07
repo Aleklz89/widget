@@ -13,7 +13,7 @@ class ProductSearchWidget {
         this.searchHistory = [];
         this.abortController = null;
         this.currentQuery = null;
-        this.siteDomain = window.location.origin + window.location.pathname;
+        this.siteDomain = window.location.origin;
         this.allProducts = [];
         this.activeFilters = {};
 
@@ -428,21 +428,21 @@ class ProductSearchWidget {
         cButton.addEventListener('click', () => {
             widgetContainer.style.display = 'none';
             this.overlayEl.style.display = 'none';
-            document.body.style.overflow = ''; 
+            document.body.style.overflow = '';
 
-            
+
             const sInput = widgetContainer.querySelector('.widget-search-input');
             if (sInput) {
                 sInput.value = '';
             }
 
-            
+
             const resCont = widgetContainer.querySelector('.widget-result-container');
             if (resCont) {
                 resCont.innerHTML = '';
             }
 
-            
+
             const suggList = widgetContainer.querySelector('.widget-suggestions-list');
             if (suggList) {
                 suggList.style.display = 'none';
@@ -451,14 +451,14 @@ class ProductSearchWidget {
 
             const leftCol = this.widgetContainer.querySelector('.left-column');
             if (leftCol) {
-                leftCol.style.display = 'none'; 
+                leftCol.style.display = 'none';
             }
         });
 
         triggerInput.addEventListener('focus', () => {
             widgetContainer.style.display = 'flex';
             this.overlayEl.style.display = 'block';
-            document.body.style.overflow = 'hidden'; 
+            document.body.style.overflow = 'hidden';
             sInput.focus();
             const q = sInput.value.trim();
             if (!q) {
@@ -647,16 +647,16 @@ class ProductSearchWidget {
             hist.innerHTML = '<p></p>';
         } else {
             this.searchHistory.forEach((q) => {
-                
+
                 const item = document.createElement('div');
                 item.className = 'history-item';
 
-                
-                
-                const textP = document.createElement('p');
-                textP.textContent = q;   
 
-                
+
+                const textP = document.createElement('p');
+                textP.textContent = q;
+
+
                 item.addEventListener('click', () => {
                     const sIn = document.querySelector('.widget-search-input');
                     if (!sIn) return;
@@ -664,10 +664,10 @@ class ProductSearchWidget {
                     sIn.dispatchEvent(new Event('input'));
                 });
 
-                
+
                 item.appendChild(textP);
 
-                
+
                 hist.appendChild(item);
             });
         }
@@ -871,20 +871,20 @@ class ProductSearchWidget {
         const catAccordion = this.widgetContainer.querySelector('.category-accordion');
         const leftCol = this.widgetContainer.querySelector('.left-column');
 
-        
+
         categoriesContainer.innerHTML = '';
         resultContainer.innerHTML = '';
 
-        
+
         if (!products.length) {
             resultContainer.innerHTML = `<p>${this.translations.noProductsFound}</p>`;
-            
+
             if (!this.hasFilters) {
                 if (filterContainer) filterContainer.style.display = 'none';
                 if (catAccordion) catAccordion.style.display = 'none';
                 if (leftCol) leftCol.style.display = 'none';
             } else {
-                
+
                 if (filterContainer) filterContainer.style.display = 'flex';
                 if (catAccordion) catAccordion.style.display = 'none';
                 if (leftCol) leftCol.style.display = 'flex';
@@ -892,14 +892,14 @@ class ProductSearchWidget {
             return;
         }
 
-        
+
         if (!this.hasFilters) {
             if (filterContainer) filterContainer.style.display = 'none';
         } else {
             if (filterContainer) filterContainer.style.display = 'flex';
         }
 
-        
+
         const uniqueProducts = [];
         const usedIdsGlobal = new Set();
         for (const p of products) {
@@ -909,7 +909,7 @@ class ProductSearchWidget {
             }
         }
 
-        
+
         const catMap = {};
         uniqueProducts.forEach((product) => {
             if (!product.categories) return;
@@ -926,7 +926,7 @@ class ProductSearchWidget {
             });
         });
 
-        
+
         const catMapNoDupes = {};
         for (const catName in catMap) {
             const arr = catMap[catName].items;
@@ -938,7 +938,7 @@ class ProductSearchWidget {
                     filtered.push(prod);
                 }
             }
-            
+
             catMapNoDupes[catName] = {
                 items: filtered,
                 url: catMap[catName].url
@@ -947,7 +947,7 @@ class ProductSearchWidget {
 
         let catNames = Object.keys(catMapNoDupes);
 
-        
+
         if (!catNames.length) {
             if (catAccordion) catAccordion.style.display = 'none';
             resultContainer.innerHTML = `<p>${this.translations.noProductsFound}</p>`;
@@ -956,44 +956,39 @@ class ProductSearchWidget {
             if (catAccordion) catAccordion.style.display = 'flex';
         }
 
-        
+
         const usedSet = new Set();
         const categoryScores = {};
 
-        
+
         this.catAllItemsMap = {};
         this.catScoringSubsets = {};
 
-        console.log('[SCORE] Начинаем подсчёт очков для категорий.');
         catNames.forEach((catName) => {
             const items = catMapNoDupes[catName].items;
-            
+
             this.catAllItemsMap[catName] = items;
 
-            
+
             const inStock = items.filter((x) => x.availability);
             const outStock = items.filter((x) => !x.availability);
             const sortedItems = [...inStock, ...outStock];
 
-            
+
             const filteredItems = sortedItems.filter((p) => !usedSet.has(p.id));
 
-            
+
             const subsetCount = Math.min(this.maxItemsOnAllResults, filteredItems.length);
             const subset = filteredItems.slice(0, subsetCount);
 
-            console.log(`[SCORE] === Категория "${catName}" ===`);
-            console.log(
-                `   Берём первые ${subset.length} из ${filteredItems.length} (всего было ${sortedItems.length})`
-            );
 
-            
+
             let score = 0;
             subset.forEach((prd, idx) => {
                 let productScore = 0;
                 let reasons = [];
 
-                
+
                 if (prd.availability) {
                     productScore += 1;
                     reasons.push('+1 (товар в наличии)');
@@ -1002,7 +997,7 @@ class ProductSearchWidget {
                     reasons.push('-1 (товар нет в наличии)');
                 }
 
-                
+
                 const PLACEHOLDER_URL = 'https://i.pinimg.com/564x/0c/bb/aa/0cbbaab0deff7f188a7762d9569bf1b3.jpg';
                 if (!prd.image || prd.image === PLACEHOLDER_URL) {
                     productScore -= 1;
@@ -1010,45 +1005,31 @@ class ProductSearchWidget {
                 }
 
                 score += productScore;
-                console.log(
-                    `[SCORE] Товар №${idx + 1} (ID=${prd.id}, name="${prd.name}"): ${reasons.join(' | ')}, ` +
-                    `итог=${productScore}, суммарно=${score.toFixed(2)}`
-                );
+             
             });
 
             categoryScores[catName] = score;
-            console.log(`[SCORE] Итоговое число баллов для категории "${catName}" = ${score.toFixed(2)}\n`);
 
-            
+
             this.catScoringSubsets[catName] = subset;
 
-            
+
             subset.forEach((p) => usedSet.add(p.id));
         });
 
-        
+
         catNames.sort((a, b) => (categoryScores[b] || 0) - (categoryScores[a] || 0));
 
-        
+
         const allResultsName = this.translations.allResults || 'All results';
         const finalCats = [allResultsName, ...catNames];
 
-        console.log('[SCORE] ИТОГОВАЯ ТАБЛИЦА КАТЕГОРИЙ (по убыванию очков):');
-        catNames.forEach((cn, idx) => {
-            const catScore = categoryScores[cn] ?? 0;
-            console.log(`[SCORE] Место ${idx + 1}: "${cn}", счёт = ${catScore.toFixed(2)}`);
-        });
-        console.log('[SCORE] =====================\n');
 
-        
-        console.log('[DEBUG] catMapNoDupes final result:', catMapNoDupes);
-
-        
         finalCats.forEach((catName) => {
             const cItem = document.createElement('div');
             cItem.className = 'category-item';
 
-            
+
             cItem.dataset.catName = catName;
 
             let displayName = catName;
@@ -1060,7 +1041,7 @@ class ProductSearchWidget {
             cText.className = 'category-name';
             cText.textContent = displayName;
 
-            
+
             const cCount = document.createElement('div');
             cCount.className = 'category-count';
 
@@ -1073,9 +1054,9 @@ class ProductSearchWidget {
             cItem.appendChild(cText);
             cItem.appendChild(cCount);
 
-            
+
             cItem.addEventListener('click', async () => {
-                
+
                 Array.from(categoriesContainer.getElementsByClassName('category-item'))
                     .forEach((el) => el.classList.remove('active'));
                 cItem.classList.add('active');
@@ -1091,22 +1072,18 @@ class ProductSearchWidget {
             categoriesContainer.appendChild(cItem);
         });
 
-        
+
         const firstItem = categoriesContainer.querySelector('.category-item');
         if (firstItem) firstItem.classList.add('active');
 
         this.catMapNoDupes = catMapNoDupes;
-        console.log("[DEBUG] just assigned this.catMapNoDupes =", this.catMapNoDupes);
 
-        
+
+
         await this.renderAllCategories(finalCats, catMapNoDupes, resultContainer);
 
 
     }
-
-
-
-
 
 
 
@@ -1116,12 +1093,11 @@ class ProductSearchWidget {
         resultContainer,
         isSingle = false
     ) {
-        console.log("[DEBUG] inside renderAllCategories, about to render:", categoryNames);
 
-        
+
         resultContainer.innerHTML = '';
 
-        
+
         if (isSingle) {
             resultContainer.classList.add('category');
         } else {
@@ -1152,14 +1128,8 @@ class ProductSearchWidget {
 
 
                 if (!top4.length) {
-                    console.log(`[RENDER] Пропускаем категорию "${catName}", так как top4 пусто.`);
                     continue;
                 }
-
-                console.log(
-                    `[RENDER] Категория "${catName}": top4 (для score): ` +
-                    top4.map((p) => p.name).join(', ')
-                );
 
 
                 this.renderCategoryBlock(
@@ -1178,12 +1148,6 @@ class ProductSearchWidget {
                 const arr = groupedProducts[catName] || [];
                 if (!arr.length) continue;
 
-                console.log(
-                    `[RENDER] Одна категория "${catName}": все товары: ` +
-                    arr.map((p) => p.name).join(', ')
-                );
-
-
                 this.renderCategoryBlock(
                     catName,
                     arr,
@@ -1201,31 +1165,24 @@ class ProductSearchWidget {
 
     renderCategoryBlock(
         catName,
-        allItems,       
-        top4,           
+        allItems,
+        top4,
         productTemplate,
-        isSingleCat,    
+        isSingleCat,
         resultContainer
     ) {
 
-        console.log("[DEBUG] inside renderCategoryBlock for catName=", catName);
-        console.log("[DEBUG] this.catMapNoDupes?.[catName] =", this.catMapNoDupes?.[catName]);
-        
+
         const catBlock = document.createElement('div');
         catBlock.className = `category-block ${isSingleCat ? 'category-single' : 'category-multiple'}`;
 
         const allResultsName = this.translations.allResults || 'All results';
         let categoryUrl = '#';
 
-        console.log('[DEBUG] current catName:', catName);
 
         if (catName !== allResultsName && this.catMapNoDupes?.[catName]?.url) {
             categoryUrl = this.catMapNoDupes[catName].url;
         }
-
-        console.log('[DEBUG] catMapNoDupes final result:', this.catMapNoDupes);
-
-        console.log('[DEBUG] for catName=', catName, 'found categoryUrl=', categoryUrl);
 
         const titleHtml = `
           <h3>
@@ -1236,15 +1193,15 @@ class ProductSearchWidget {
         `;
         catBlock.innerHTML = titleHtml;
 
-        
+
         const productContainer = document.createElement('div');
         productContainer.className = 'product-container';
         catBlock.appendChild(productContainer);
 
-        
+
         resultContainer.appendChild(catBlock);
 
-        
+
         let itemsToRender;
         if (isSingleCat) {
             itemsToRender = allItems;
@@ -1252,7 +1209,7 @@ class ProductSearchWidget {
             itemsToRender = top4;
         }
 
-        
+
         if (!this.labelColorMap) {
             this.labelColorMap = {};
         }
@@ -1260,7 +1217,7 @@ class ProductSearchWidget {
         const PLACEHOLDER_URL =
             'https://i.pinimg.com/564x/0c/bb/aa/0cbbaab0deff7f188a7762d9569bf1b3.jpg';
 
-        
+
         const inStockWithImg = itemsToRender.filter(
             (p) => p.availability && p.image && p.image !== PLACEHOLDER_URL
         );
@@ -1274,7 +1231,7 @@ class ProductSearchWidget {
             (p) => !p.availability && (!p.image || p.image === PLACEHOLDER_URL)
         );
 
-        
+
         const sortedItems = [
             ...inStockWithImg,
             ...inStockNoImg,
@@ -1282,9 +1239,9 @@ class ProductSearchWidget {
             ...outStockNoImg,
         ];
 
-        
+
         sortedItems.forEach((prod) => {
-            
+
             let labelHtml = '';
             if (prod.label) {
                 if (!this.labelColorMap[prod.label]) {
@@ -1306,7 +1263,7 @@ class ProductSearchWidget {
               </div>`;
             }
 
-            
+
             let oldPriceValue = '';
             let oldPriceStyle = 'display: none;';
             if (prod.oldPrice && prod.oldPrice > 0 && prod.oldPrice !== prod.newPrice) {
@@ -1320,24 +1277,24 @@ class ProductSearchWidget {
             `.trim();
             }
 
-            
+
             const presenceText = prod.availability
                 ? this.translations.inStock
                 : this.translations.outOfStock;
 
-            
+
             const finalImageUrl =
                 prod.image && prod.image !== PLACEHOLDER_URL
                     ? prod.image
                     : PLACEHOLDER_URL;
 
-            
+
             let displayName = prod.name || 'No Name';
             if (displayName.length > 90) {
                 displayName = displayName.slice(0, 90) + '...';
             }
 
-            
+
             let pHtml = productTemplate;
             pHtml = safeReplace(pHtml, 'labelBlock', labelHtml);
             pHtml = safeReplace(pHtml, 'name', escapeHtml(displayName));
@@ -1348,16 +1305,16 @@ class ProductSearchWidget {
             pHtml = safeReplace(pHtml, 'oldPriceStyle', oldPriceStyle);
             pHtml = safeReplace(pHtml, 'imageUrl', escapeHtml(finalImageUrl));
 
-            
+
             const wrapperEl = document.createElement('div');
             wrapperEl.innerHTML = pHtml.trim();
 
             const linkWrap = document.createElement('a');
-            linkWrap.href = prod.url || '#';   
+            linkWrap.href = prod.url || '#';
             linkWrap.target = '_blank';
             linkWrap.className = 'product-link';
 
-            
+
             linkWrap.addEventListener('click', async () => {
                 try {
                     await fetch('https://smartsearch.spefix.com/api/product-transition', {
@@ -1373,7 +1330,7 @@ class ProductSearchWidget {
                 }
             });
 
-            
+
             if (!prod.availability) {
                 linkWrap.classList.add('out-of-stock');
             }
@@ -1382,7 +1339,7 @@ class ProductSearchWidget {
             productContainer.appendChild(linkWrap);
         });
 
-        
+
         const shownCount = sortedItems.length;
         const totalCount = allItems.length;
         if (!isSingleCat && totalCount > shownCount) {
@@ -1391,11 +1348,11 @@ class ProductSearchWidget {
             moreDiv.textContent = `${this.translations.more} ${totalCount - shownCount} ...`;
 
             moreDiv.addEventListener('click', () => {
-                
+
                 const singleObj = { [catName]: allItems };
                 this.renderAllCategories([catName], singleObj, resultContainer, true);
 
-                
+
                 this.activateCategory(catName);
             });
             productContainer.appendChild(moreDiv);
@@ -1410,7 +1367,7 @@ class ProductSearchWidget {
         allCatItems.forEach((el) => el.classList.remove('active'));
 
         allCatItems.forEach((catItem) => {
-            
+
             if (catItem.dataset.catName === catName) {
                 catItem.classList.add('active');
             }
