@@ -1,28 +1,7 @@
-.history-item::before {
-    content: "↻";
-
-    margin-right: 10px;
-    color: #999;
-    font-size: 14px;
-}
-
-
 .history-icon {
     margin-right: 10px;
     color: #999;
     font-size: 14px;
-}
-
-.history-item p {
-    margin: 0;
-    font-size: 14px;
-    color: #333;
-    flex-grow: 1;
-
-    text-overflow: ellipsis;
-
-    overflow: hidden;
-    white-space: nowrap;
 }
 
 
@@ -43,7 +22,7 @@
 
     left: 0;
     width: 100%;
-    max-height: 200px;
+
     overflow-y: auto;
 
     background: transparent;
@@ -69,9 +48,12 @@
 }
 
 .history-item {
+    display: flex;
+    
+    align-items: center;
+    
     width: 90%;
     padding: 8px 12px;
-
     cursor: pointer;
     transition: background-color 0.3s ease;
     background-color: #eef7ff;
@@ -80,6 +62,27 @@
 
 .history-item:hover {
     background: #f0f0f0;
+}
+
+
+.history-item::before {
+    content: "↻";
+    margin-right: 10px;
+    color: #999;
+    font-size: 14px;
+}
+
+
+.history-item p {
+    margin: 0;
+    font-size: 14px;
+    color: #333;
+
+    
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-grow: 1;
 }
 
 .history-icon {
@@ -403,12 +406,13 @@
         transform: scale(1);
         margin-top: 0px;
     }
+
 }
 
 
 
 
-/* 2) Экран шириной <= 500px и высотой <= 1000px */
+
 @media (max-width: 500px) and (max-height: 1000px) {
     .widget-history-list.show {
         display: flex !important;
@@ -436,14 +440,15 @@
 
         justify-content: flex-start;
 
-        margin-bottom: 300px;
+        margin-bottom: 10px;
         max-height: 450px;
         height: auto;
         width: 300px;
     }
+
 }
 
-/* 3) Экран шириной <= 500px и высотой >= 1001px */
+
 @media (max-width: 500px) and (min-height: 1001px) {
     .widget-history-list.show {
         display: flex !important;
@@ -478,7 +483,7 @@
     }
 }
 
-/* 1) Экран шириной <= 500px и высотой <= 800px */
+
 @media (max-width: 500px) and (max-height: 700px) {
     .widget-history-list.show {
         display: flex !important;
@@ -488,7 +493,7 @@
         opacity: 1;
         transform: scale(1);
         margin-top: 20px;
-        /* например */
+        
     }
 
     .left-column {

@@ -97,8 +97,8 @@
 
     display: grid;
 
-    /* вместо repeat(3, 1fr) используем auto-fit + minmax */
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
 
     gap: 20px;
 }
@@ -147,7 +147,7 @@
 
     display: flex;
     align-items: flex-end;
-    /* прижимает контент к нижней границе */
+    
 }
 
 .widget-result-item .product-presence {
@@ -276,9 +276,17 @@
         align-items: flex-start;
         padding: 0;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-        z-index: 1000;
+        z-index: 10000;
         overflow: hidden;
         font-family: "Montserrat", sans-serif;
+    }
+
+    .product-name {
+        height: auto;
+    }
+
+    .product-link {
+        width: 100%;
     }
 
 }

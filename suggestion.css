@@ -83,16 +83,16 @@
 
 .price-container {
     display: flex;
-    /* старая цена слева, новая справа */
+    
     align-items: center;
-    /* по вертикали по центру */
+    
     width: 65%;
     gap: 1px;
-    /* небольшой отступ между ценами */
+    
 }
 
 .old-price {
-    /* стиль для старой цены */
+    
     color: grey;
     font-size: 14px;
 
@@ -103,35 +103,35 @@
   или inline style через {{oldPriceStyle}} */
 
 .new-price {
-    /* новая цена красная, справа */
+    
     color: red;
     font-size: 14px;
     font-weight: 500;
     text-align: right;
     flex-shrink: 0;
-    /* чтобы не сжималось */
+    
 }
 
 .widget-overlay {
     display: none;
-    /* по умолчанию скрыт */
+    
     position: fixed;
-    /* перекрывает весь экран */
+    
     top: 0;
-    /* */
+    
     left: 0;
-    /* */
+    
     width: 100vw;
-    /* на всю ширину окна */
+    
     height: 100vh;
-    /* на всю высоту окна */
+    
     z-index: 9998;
-    /* чуть меньше, чем у виджета */
+    
 
-    /* затемнение + размытие (backdrop-filter) */
+    
     background: rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(5px);
 
-    /* чтобы клики по оверлею не проходили «сквозь» */
+    
     pointer-events: auto;
 }
