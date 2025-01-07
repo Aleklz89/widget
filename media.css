@@ -8,9 +8,9 @@
     background: #f9f9f9;
     border: 1px solid #ddd;
     display: none;
-    
+
     flex-direction: column;
-    
+
     max-height: 100%;
     width: 300px;
 
@@ -18,12 +18,12 @@
 
 .category-accordion-content {
     display: block;
-    
+
 }
 
 .category-accordion.collapsed .category-accordion-content {
     display: none;
-    
+
 }
 
 .category-accordion-header {
@@ -44,17 +44,41 @@
     flex: 1;
 }
 
+.widget-overlay {
+    display: none;
+    /* по умолчанию скрыт */
+    position: fixed;
+    /* перекрывает весь экран */
+    top: 0;
+    /* */
+    left: 0;
+    /* */
+    width: 100vw;
+    /* на всю ширину окна */
+    height: 100vh;
+    /* на всю высоту окна */
+    z-index: 9998;
+    /* чуть меньше, чем у виджета */
+
+    /* затемнение + размытие (backdrop-filter) */
+    background: rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(5px);
+
+    /* чтобы клики по оверлею не проходили «сквозь» */
+    pointer-events: auto;
+}
+
 @media (max-width: 1000px) {
 
     .categories-container {
         width: 100%;
-        
+
         max-height: 100%;
-        
+
         overflow-y: auto;
-        
+
         background-color: #f9f9f9;
-        
+
         box-sizing: border-box;
     }
 
@@ -64,14 +88,14 @@
 
     .categories-container {
         width: 60%;
-        
+
         max-height: 100%;
-        
+
         overflow-y: auto;
-        
+
         background-color: #f9f9f9;
-        
-        
+
+
         box-sizing: border-box;
     }
 
@@ -82,33 +106,33 @@
     .main-content-container {
         display: flex;
         flex-direction: column;
-        
+
         height: 100%;
-        
+
         width: 100%;
-        
+
     }
 
     .categories-container {
         width: 100%;
-        
+
         max-height: 100%;
-        
+
         overflow-y: auto;
-        
+
         background-color: #f9f9f9;
-        
+
         box-sizing: border-box;
     }
 
     .widget-result-container {
         display: flex;
         flex-wrap: wrap;
-        
+
         justify-content: flex-start;
         align-items: flex-start;
         gap: 20px;
-        
+
         flex-grow: 1;
         overflow-y: auto;
         background-color: #fff;
@@ -137,12 +161,13 @@
         background: #f9f9f9;
         border: 1px solid #ddd;
         display: none;
-        
+
         flex-direction: column;
-        
-        
+
+
         width: 100%;
     }
+
     .left-column {
         flex-direction: column;
     }

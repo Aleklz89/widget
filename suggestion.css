@@ -111,3 +111,27 @@
     flex-shrink: 0;
     /* чтобы не сжималось */
 }
+
+.widget-overlay {
+    display: none;
+    /* по умолчанию скрыт */
+    position: fixed;
+    /* перекрывает весь экран */
+    top: 0;
+    /* */
+    left: 0;
+    /* */
+    width: 100vw;
+    /* на всю ширину окна */
+    height: 100vh;
+    /* на всю высоту окна */
+    z-index: 9998;
+    /* чуть меньше, чем у виджета */
+
+    /* затемнение + размытие (backdrop-filter) */
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(5px);
+
+    /* чтобы клики по оверлею не проходили «сквозь» */
+    pointer-events: auto;
+}

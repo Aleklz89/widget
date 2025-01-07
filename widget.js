@@ -17,6 +17,10 @@ class ProductSearchWidget {
         this.allProducts = [];
         this.activeFilters = {};
 
+        this.overlayEl = document.createElement('div');
+        this.overlayEl.className = 'widget-overlay';
+        document.body.appendChild(this.overlayEl);
+
 
         this.maxItemsOnAllResults = 4;
 
@@ -129,7 +133,7 @@ class ProductSearchWidget {
         sheets.forEach((stylesheet) => {
             const link = document.createElement('link');
             link.rel = 'stylesheet';
-            link.href = `${stylesheet}`;
+            link.href = `https://aleklz89.github.io/widget/${stylesheet}`;
 
             document.head.appendChild(link);
         });
@@ -423,11 +427,38 @@ class ProductSearchWidget {
 
         cButton.addEventListener('click', () => {
             widgetContainer.style.display = 'none';
-        });
+            this.overlayEl.style.display = 'none';
+            document.body.style.overflow = ''; // Возвращаем прокрутку
 
+            // Очищаем поле ввода
+            const sInput = widgetContainer.querySelector('.widget-search-input');
+            if (sInput) {
+                sInput.value = '';
+            }
+
+            // Очищаем блок с результатами
+            const resCont = widgetContainer.querySelector('.widget-result-container');
+            if (resCont) {
+                resCont.innerHTML = '';
+            }
+
+            // Очищаем список подсказок
+            const suggList = widgetContainer.querySelector('.widget-suggestions-list');
+            if (suggList) {
+                suggList.style.display = 'none';
+                suggList.innerHTML = '';
+            }
+
+            const leftCol = this.widgetContainer.querySelector('.left-column');
+            if (leftCol) {
+                leftCol.style.display = 'none'; // скрываем
+            }
+        });
 
         triggerInput.addEventListener('focus', () => {
             widgetContainer.style.display = 'flex';
+            this.overlayEl.style.display = 'block';
+            document.body.style.overflow = 'hidden'; // Запрещаем прокрутку сайта
             sInput.focus();
             const q = sInput.value.trim();
             if (!q) {
