@@ -91,22 +91,18 @@
     background-color: #fff;
     box-sizing: border-box;
 
-    
     overflow-y: auto;
-    
     overflow-x: hidden;
-    
-
-    
     height: 100%;
 
-    
     display: grid;
-    
-    grid-template-columns: repeat(3, 1fr);
-    
+
+    /* вместо repeat(3, 1fr) используем auto-fit + minmax */
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+
     gap: 20px;
 }
+
 
 
 .widget-result-container.category {
@@ -145,8 +141,13 @@
 }
 
 .product-name {
+    height: 45px;
     font-size: 12px;
     color: #333;
+
+    display: flex;
+    align-items: flex-end;
+    /* прижимает контент к нижней границе */
 }
 
 .widget-result-item .product-presence {
@@ -196,24 +197,24 @@
 
 .old-price.hidden {
     display: none;
-    
+
 }
 
 .old-price.strike {
     color: grey;
 
     margin-right: 5px;
-    
+
 }
 
 .new-price {
     color: red;
-    
+
 }
 
 .new-price.with-gap {
     margin-left: 5px;
-    
+
 }
 
 
@@ -226,7 +227,7 @@
     color: grey;
 
     margin-right: 6px;
-    
+
 }
 
 

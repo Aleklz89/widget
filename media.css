@@ -129,8 +129,8 @@
         display: flex;
         flex-wrap: wrap;
 
-        justify-content: flex-start;
-        align-items: flex-start;
+        justify-content: space-around;
+        align-items: center;
         gap: 20px;
 
         flex-grow: 1;
@@ -163,7 +163,7 @@
         display: none;
 
         flex-direction: column;
-
+        max-height: 150px;
 
         width: 100%;
     }
@@ -173,7 +173,7 @@
     }
 
     .filter-container {
-        max-height: 200px;
+        max-height: 150px;
     }
 
 }

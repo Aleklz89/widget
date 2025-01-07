@@ -987,11 +987,11 @@ class ProductSearchWidget {
                     reasons.push('-1 (товар нет в наличии)');
                 }
 
-                // -1.5 за отсутствие (placeholder) картинки
+                // -1 за отсутствие (placeholder) картинки
                 const PLACEHOLDER_URL = 'https://i.pinimg.com/564x/0c/bb/aa/0cbbaab0deff7f188a7762d9569bf1b3.jpg';
                 if (!prd.image || prd.image === PLACEHOLDER_URL) {
-                    productScore -= 1.5;
-                    reasons.push('-1.5 (нет реальной картинки)');
+                    productScore -= 1;
+                    reasons.push('-1 (нет реальной картинки)');
                 }
 
                 score += productScore;
